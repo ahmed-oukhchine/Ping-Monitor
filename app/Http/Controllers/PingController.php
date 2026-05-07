@@ -196,12 +196,18 @@ class PingController extends Controller
     private function pingViaCommand(string $ipAddress): array
     {
         $isWindows = strtolower(PHP_OS_FAMILY) === 'windows';
-        $command   = $isWindows
-            ? ['ping', '-n', '1', '-w', '3000', $ipAddress]
-            : ['ping', '-c', '1', '-W', '3',    $ipAddress];
 
+        if ($isWindows) {
+            $command = ['ping', '-n', '1', '-w', '3000', $ipAddress];
+        } else {
+            // PHP-FPM on Linux often has a stripped PATH; resolve binary explicitly
+            $bin     = file_exists('/bin/ping') ? '/bin/ping' : (file_exists('/usr/bin/ping') ? '/usr/bin/ping' : 'ping');
+            $command = [$bin, '-c', '1', '-W', '3', $ipAddress];
+        }
+
+        // Use array form so proc_open bypasses the shell entirely (PHP 7.4+)
         $process = @proc_open(
-            implode(' ', array_map('escapeshellarg', $command)),
+            $command,
             [1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
             $pipes
         );
