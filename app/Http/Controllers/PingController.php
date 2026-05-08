@@ -8,29 +8,76 @@ use Illuminate\Http\Request;
 
 class PingController extends Controller
 {
-    public function index()
+    // ── API ──────────────────────────────────────────────────────────────────
+
+    public function apiTargets()
     {
         $targets = Target::withCount([
             'pingHistories as total_pings',
             'pingHistories as failed_pings' => fn($q) => $q->where('is_success', false),
-        ])->orderBy('created_at')->get();
+        ])
+        ->withAvg('pingHistories as avg_response_time', 'response_time')
+        ->with(['latestPing'])
+        ->orderBy('created_at')
+        ->get()
+        ->map(function ($t) {
+            $last = $t->latestPing;
+            return [
+                'id'                 => $t->id,
+                'name'               => $t->name,
+                'ip_address'         => $t->ip_address,
+                'total_pings'        => $t->total_pings,
+                'failed_pings'       => $t->failed_pings,
+                'uptime_percent'     => $t->total_pings > 0
+                    ? round(($t->total_pings - $t->failed_pings) / $t->total_pings * 100, 1)
+                    : null,
+                'avg_response_time'  => $t->avg_response_time !== null
+                    ? round($t->avg_response_time, 2)
+                    : null,
+                'last_status'        => $last?->is_success,
+                'last_response_time' => $last?->response_time,
+                'last_ping_at'       => $last?->created_at,
+            ];
+        });
 
-        return view('home', compact('targets'));
+        return response()->json($targets);
     }
 
-    public function history(Request $request)
+    public function apiHistory(Request $request)
     {
-        $targets   = Target::orderBy('name')->get();
-        $targetId  = $request->input('target_id');
+        $targets  = Target::orderBy('name')->get(['id', 'name']);
+        $targetId = $request->input('target_id');
 
-        $histories = PingHistory::with('target')
+        $histories = PingHistory::with('target:id,name,ip_address')
             ->when($targetId, fn($q) => $q->where('target_id', $targetId))
             ->orderBy('created_at', 'desc')
             ->paginate(50)
             ->withQueryString();
 
-        return view('history', compact('histories', 'targets', 'targetId'));
+        return response()->json([
+            'data'    => $histories->items(),
+            'meta'    => [
+                'current_page' => $histories->currentPage(),
+                'last_page'    => $histories->lastPage(),
+                'total'        => $histories->total(),
+            ],
+            'targets' => $targets,
+        ]);
     }
+
+    public function apiChartData(Target $target)
+    {
+        $data = PingHistory::where('target_id', $target->id)
+            ->orderBy('created_at', 'desc')
+            ->limit(60)
+            ->get(['is_success', 'response_time', 'created_at'])
+            ->reverse()
+            ->values();
+
+        return response()->json($data);
+    }
+
+    // ── CRUD ─────────────────────────────────────────────────────────────────
 
     public function store(Request $request)
     {
@@ -39,9 +86,9 @@ class PingController extends Controller
             'ip_address' => 'required|string|max:100',
         ]);
 
-        Target::create($request->only('name', 'ip_address'));
+        $target = Target::create($request->only('name', 'ip_address'));
 
-        return redirect()->route('home');
+        return response()->json($target, 201);
     }
 
     public function update(Request $request, Target $target)
@@ -53,14 +100,17 @@ class PingController extends Controller
 
         $target->update($request->only('name', 'ip_address'));
 
-        return redirect()->route('home');
+        return response()->json($target);
     }
 
     public function destroy(Target $target)
     {
         $target->delete();
-        return redirect()->route('home');
+
+        return response()->json(['deleted' => true]);
     }
+
+    // ── Ping ─────────────────────────────────────────────────────────────────
 
     public function ping(Target $target)
     {
@@ -102,9 +152,11 @@ class PingController extends Controller
         return response()->json(['results' => $results]);
     }
 
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
     private function lossPercent(int $targetId): int
     {
-        $total  = PingHistory::where('target_id', $targetId)->count();
+        $total = PingHistory::where('target_id', $targetId)->count();
         if ($total === 0) return 0;
         $failed = PingHistory::where('target_id', $targetId)->where('is_success', false)->count();
         return (int) round($failed / $total * 100);
@@ -112,23 +164,19 @@ class PingController extends Controller
 
     private function performPing(string $ipAddress): array
     {
-        // Resolve hostname → IP
         $ip = gethostbyname($ipAddress);
         if ($ip === $ipAddress && !filter_var($ip, FILTER_VALIDATE_IP)) {
             return ['success' => false, 'error' => 'Cannot resolve hostname', 'message' => 'Offline'];
         }
 
-        // Try raw ICMP socket (needs admin on Windows)
-        $socket = @socket_create(AF_INET, SOCK_RAW, 1);
+        $socket = function_exists('socket_create') ? @socket_create(AF_INET, SOCK_RAW, 1) : false;
         if ($socket) {
             $result = $this->pingViaSocket($socket, $ip);
-            // Only trust the socket result if it definitively answered
             if ($result !== null) {
                 return $result;
             }
         }
 
-        // Fallback: system ping command + TTL check
         return $this->pingViaCommand($ipAddress);
     }
 
@@ -149,10 +197,9 @@ class PingController extends Controller
 
         if (!@socket_sendto($socket, $packet, strlen($packet), 0, $ip, 0)) {
             socket_close($socket);
-            return null; // send failed → fall through to command
+            return null;
         }
 
-        // Read replies in a short loop; skip unrelated ICMP packets
         $deadline = $start + 2.0;
 
         while (microtime(true) < $deadline) {
@@ -162,7 +209,6 @@ class PingController extends Controller
             $received = @socket_recvfrom($socket, $response, 1024, 0, $from, $port);
 
             if ($received === false) {
-                // recvfrom timed out — inconclusive, let the command decide
                 socket_close($socket);
                 return null;
             }
@@ -170,27 +216,24 @@ class PingController extends Controller
             $ihl = (ord($response[0]) & 0x0F) * 4;
             if (strlen($response) < $ihl + 8) continue;
 
-            $icmp    = substr($response, $ihl); // skip IP header (variable length on Linux)
+            $icmp    = substr($response, $ihl);
             $type    = ord($icmp[0]);
             $replyId = unpack('n', substr($icmp, 4, 2))[1];
 
             if ($type === 0 && $replyId === $identifier) {
-                // Confirmed echo reply from our packet
                 $elapsed = round((microtime(true) - $start) * 1000, 2);
                 socket_close($socket);
                 return ['success' => true, 'response_time' => $elapsed, 'message' => 'Online'];
             }
 
             if ($type === 3) {
-                // ICMP Destination Unreachable — definitively offline
                 socket_close($socket);
                 return ['success' => false, 'error' => 'Destination unreachable', 'message' => 'Offline'];
             }
-            // Other ICMP type (redirect, TTL exceeded, etc.) → skip, keep waiting
         }
 
         socket_close($socket);
-        return null; // deadline passed with no conclusive answer → fall through
+        return null;
     }
 
     private function pingViaCommand(string $ipAddress): array
@@ -198,37 +241,81 @@ class PingController extends Controller
         $isWindows = strtolower(PHP_OS_FAMILY) === 'windows';
 
         if ($isWindows) {
-            $command = ['ping', '-n', '1', '-w', '3000', $ipAddress];
+            $commands = [
+                ['ping', '-n', '1', '-w', '3000', $ipAddress],
+            ];
         } else {
-            // PHP-FPM on Linux often has a stripped PATH; resolve binary explicitly
-            $bin     = file_exists('/bin/ping') ? '/bin/ping' : (file_exists('/usr/bin/ping') ? '/usr/bin/ping' : 'ping');
-            $command = [$bin, '-c', '1', '-W', '3', $ipAddress];
+            $bin = file_exists('/bin/ping')     ? '/bin/ping'
+                 : (file_exists('/usr/bin/ping') ? '/usr/bin/ping'
+                 : (file_exists('/usr/sbin/ping')? '/usr/sbin/ping' : 'ping'));
+
+            $commands = [
+                [$bin, '-c', '1', '-W', '3', $ipAddress],           // normal
+                ['sudo', '-n', $bin, '-c', '1', '-W', '3', $ipAddress], // sudo (if sudoers allows)
+            ];
         }
 
-        // Use array form so proc_open bypasses the shell entirely (PHP 7.4+)
+        foreach ($commands as $command) {
+            $result = $this->runPingCommand($command);
+            if ($result !== null) return $result;
+        }
+
+        // Last resort: TCP port check (no root needed, works for servers/routers with open ports)
+        return $this->pingViaTcp($ipAddress)
+            ?? ['success' => false, 'error' => 'Host unreachable', 'message' => 'Offline'];
+    }
+
+    private function runPingCommand(array $command): ?array
+    {
         $process = @proc_open(
             $command,
             [1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
             $pipes
         );
 
-        if (!is_resource($process)) {
-            return ['success' => false, 'error' => 'Could not run ping command', 'message' => 'Offline'];
-        }
+        if (!is_resource($process)) return null;
 
         stream_set_timeout($pipes[1], 5);
-        $stdout   = stream_get_contents($pipes[1]);
+        $stdout = stream_get_contents($pipes[1]);
+        $stderr = stream_get_contents($pipes[2]);
         fclose($pipes[1]);
         fclose($pipes[2]);
         $exitCode = proc_close($process);
 
-        // TTL= only appears when the target itself replies (not a router "unreachable")
-        if ($exitCode === 0 && preg_match('/TTL=/i', $stdout)) {
-            $responseTime = $this->parseResponseTime($stdout);
-            return ['success' => true, 'response_time' => $responseTime, 'message' => 'Online'];
+        // Permission error → tell the caller to try the next command
+        if (str_contains($stderr, 'Operation not permitted')
+            || str_contains($stderr, 'Lacking privilege')
+            || str_contains($stderr, 'permission denied')
+            || str_contains($stderr, 'SUID')) {
+            return null;
         }
 
-        return ['success' => false, 'error' => 'Host unreachable', 'message' => 'Offline'];
+        if ($exitCode === 0 && preg_match('/TTL=/i', $stdout)) {
+            return ['success' => true, 'response_time' => $this->parseResponseTime($stdout), 'message' => 'Online'];
+        }
+
+        // Command ran but host did not reply — definitive offline (don't try next command)
+        if (str_contains($stdout, 'bytes of data') || str_contains($stdout, 'statistics')
+            || str_contains($stdout, 'Pinging') || str_contains($stdout, 'PING')) {
+            return ['success' => false, 'error' => 'Host unreachable', 'message' => 'Offline'];
+        }
+
+        return null; // inconclusive — try next command
+    }
+
+    private function pingViaTcp(string $host): ?array
+    {
+        // Common ports: SSH, HTTP, HTTPS, Telnet, SNMP, RDP, SMB
+        foreach ([22, 80, 443, 23, 3389, 445] as $port) {
+            $start = microtime(true);
+            $conn  = @fsockopen($host, $port, $errno, $errstr, 2);
+            if ($conn) {
+                $elapsed = round((microtime(true) - $start) * 1000, 2);
+                fclose($conn);
+                return ['success' => true, 'response_time' => $elapsed, 'message' => 'Online'];
+            }
+        }
+        return null; // no TCP ports responded — cannot determine status
     }
 
     private function parseResponseTime(string $output): ?float

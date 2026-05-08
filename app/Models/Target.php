@@ -12,4 +12,9 @@ class Target extends Model
     {
         return $this->hasMany(PingHistory::class);
     }
+
+    public function latestPing()
+    {
+        return $this->hasOne(PingHistory::class)->latestOfMany();
+    }
 }
