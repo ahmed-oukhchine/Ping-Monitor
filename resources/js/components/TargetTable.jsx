@@ -3,51 +3,47 @@ import React from 'react';
 export default function TargetTable({ targets, loading, pinging, onPing, onEdit, onDelete, onChart }) {
     if (loading) {
         return (
-            <div className="card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--muted)' }}>
-                <i className="fas fa-spinner fa-spin" style={{ fontSize: 24 }}></i>
-                <div style={{ marginTop: 10 }}>Loading targets…</div>
+            <div className="bg-base-200 border border-base-300 rounded-xl flex items-center justify-center py-16 text-base-content/30">
+                <div className="text-center">
+                    <span className="loading loading-spinner loading-lg block mx-auto mb-3"></span>
+                    <p className="text-sm">Loading targets…</p>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="card" style={{ overflow: 'hidden' }}>
-            <div style={{ overflowX: 'auto' }}>
-                <table>
+        <div className="bg-base-200 border border-base-300 rounded-xl overflow-hidden">
+            <div className="overflow-x-auto">
+                <table className="w-full">
                     <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>IP Address</th>
-                            <th>Status</th>
-                            <th>Latency</th>
-                            <th>Avg Latency</th>
-                            <th>Uptime %</th>
-                            <th>Loss %</th>
-                            <th>Last Check</th>
-                            <th>Actions</th>
+                        <tr className="border-b border-base-300 bg-base-300/50">
+                            {['Device', 'IP Address', 'Status', 'Latency', 'Avg Latency', 'Uptime', 'Loss %', 'Last Check', 'Actions'].map(h => (
+                                <th key={h} className="text-left py-3 px-4 text-xs font-semibold text-base-content/50 uppercase tracking-wider whitespace-nowrap">
+                                    {h}
+                                </th>
+                            ))}
                         </tr>
                     </thead>
                     <tbody>
                         {targets.length === 0 ? (
                             <tr>
-                                <td colSpan={9} style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--muted)' }}>
-                                    <i className="fas fa-inbox" style={{ fontSize: 28, display: 'block', marginBottom: 8 }}></i>
-                                    No targets yet — add one above
+                                <td colSpan={9} className="text-center py-16 text-base-content/30">
+                                    <i className="fas fa-radar text-4xl block mb-3 opacity-20"></i>
+                                    <p className="text-sm">No targets yet — add one above</p>
                                 </td>
                             </tr>
-                        ) : (
-                            targets.map(t => (
-                                <TargetRow
-                                    key={t.id}
-                                    target={t}
-                                    isPinging={!!pinging[t.id]}
-                                    onPing={() => onPing(t)}
-                                    onEdit={() => onEdit(t)}
-                                    onDelete={() => onDelete(t)}
-                                    onChart={() => onChart(t)}
-                                />
-                            ))
-                        )}
+                        ) : targets.map(t => (
+                            <TargetRow
+                                key={t.id}
+                                target={t}
+                                isPinging={!!pinging[t.id]}
+                                onPing={() => onPing(t)}
+                                onEdit={() => onEdit(t)}
+                                onDelete={() => onDelete(t)}
+                                onChart={() => onChart(t)}
+                            />
+                        ))}
                     </tbody>
                 </table>
             </div>
@@ -58,83 +54,122 @@ export default function TargetTable({ targets, loading, pinging, onPing, onEdit,
 function TargetRow({ target: t, isPinging, onPing, onEdit, onDelete, onChart }) {
     const loss = t.total_pings > 0 ? Math.round(t.failed_pings / t.total_pings * 100) : null;
 
+    const latClass = (ms) => {
+        if (ms == null) return 'text-base-content/30';
+        if (ms < 50)   return 'lat-fast';
+        if (ms < 150)  return 'lat-medium';
+        return 'lat-slow';
+    };
+
     return (
-        <tr>
-            <td>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                    <i className="fas fa-server" style={{ color: '#8ab4f8', fontSize: 12 }}></i>
-                    <span style={{ fontWeight: 600 }}>{t.name}</span>
+        <tr className="border-b border-base-300/40 hover:bg-base-300/30 transition-colors duration-100 group">
+            <td className="py-3 px-4">
+                <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <i className="fas fa-server text-primary text-[11px]"></i>
+                    </div>
+                    <span className="font-semibold text-sm text-base-content">{t.name}</span>
                 </div>
             </td>
-            <td><code className="ip-code">{t.ip_address}</code></td>
-            <td><StatusBadge status={t.last_status} /></td>
-            <td className="mono" style={{ fontSize: 12 }}>
-                {t.last_response_time != null ? `${t.last_response_time} ms` : '—'}
+            <td className="py-3 px-4">
+                <code className="ip-code">{t.ip_address}</code>
             </td>
-            <td className="mono" style={{ fontSize: 12 }}>
-                {t.avg_response_time != null ? `${t.avg_response_time} ms` : '—'}
+            <td className="py-3 px-4">
+                <StatusIndicator status={t.last_status} />
             </td>
-            <td>
+            <td className="py-3 px-4">
+                <span className={`mono text-xs font-semibold tabular-nums ${latClass(t.last_response_time)}`}>
+                    {t.last_response_time != null ? `${t.last_response_time} ms` : '—'}
+                </span>
+            </td>
+            <td className="py-3 px-4">
+                <span className="mono text-xs text-base-content/50 tabular-nums">
+                    {t.avg_response_time != null ? `${t.avg_response_time} ms` : '—'}
+                </span>
+            </td>
+            <td className="py-3 px-4 min-w-36">
                 {t.uptime_percent != null
                     ? <UptimePct pct={t.uptime_percent} />
-                    : <span style={{ color: 'var(--muted)' }}>—</span>}
+                    : <span className="text-base-content/30 text-xs">—</span>}
             </td>
-            <td className="mono" style={{ fontSize: 12 }}>
+            <td className="py-3 px-4">
                 {loss != null
-                    ? <span style={{ color: loss === 0 ? 'var(--success)' : loss <= 25 ? 'var(--warning)' : 'var(--danger)', fontWeight: 600 }}>{loss}%</span>
-                    : <span style={{ color: 'var(--muted)' }}>—</span>}
+                    ? <span className={`mono text-xs font-bold tabular-nums ${loss === 0 ? 'lat-fast' : loss <= 25 ? 'lat-medium' : 'lat-slow'}`}>{loss}%</span>
+                    : <span className="text-base-content/30 text-xs">—</span>}
             </td>
-            <td className="mono" style={{ fontSize: 11, color: 'var(--muted)' }}>
-                {t.last_ping_at ? new Date(t.last_ping_at).toLocaleTimeString() : 'Never'}
+            <td className="py-3 px-4">
+                <span className="mono text-xs text-base-content/40 tabular-nums">
+                    {t.last_ping_at ? new Date(t.last_ping_at).toLocaleTimeString() : 'Never'}
+                </span>
             </td>
-            <td>
-                <div style={{ display: 'flex', gap: 5 }}>
-                    <ActionBtn onClick={onPing} disabled={isPinging} title="Ping now"
-                        color="var(--accent)" icon={isPinging ? 'fa-spinner fa-spin' : 'fa-satellite-dish'} />
-                    <ActionBtn onClick={onChart} title="Response chart"
-                        color="var(--warning)" icon="fa-chart-line" />
+            <td className="py-3 px-4">
+                <div className="flex items-center gap-1">
+                    <ActionBtn onClick={onPing} disabled={isPinging} title="Ping"
+                        cls="text-primary hover:bg-primary/10"
+                        icon={isPinging ? 'fa-spinner fa-spin' : 'fa-satellite-dish'}
+                        label={isPinging ? 'Pinging…' : 'Ping'} />
+                    <ActionBtn onClick={onChart} title="Chart"
+                        cls="text-warning hover:bg-warning/10"
+                        icon="fa-chart-line" label="Chart" />
                     <ActionBtn onClick={onEdit} title="Edit"
-                        color="var(--muted)" icon="fa-pen" />
+                        cls="text-base-content/50 hover:text-base-content hover:bg-base-300"
+                        icon="fa-pen" label="Edit" />
                     <ActionBtn onClick={onDelete} title="Delete"
-                        color="var(--danger)" icon="fa-trash" />
+                        cls="text-error hover:bg-error/10"
+                        icon="fa-trash" label="Delete" />
                 </div>
             </td>
         </tr>
     );
 }
 
-function StatusBadge({ status }) {
-    if (status === true)  return <span className="badge badge-success"><i className="fas fa-circle" style={{ fontSize: 7 }}></i> Online</span>;
-    if (status === false) return <span className="badge badge-danger"><i className="fas fa-circle" style={{ fontSize: 7 }}></i> Offline</span>;
-    return <span className="badge badge-secondary"><i className="fas fa-circle" style={{ fontSize: 7 }}></i> Unknown</span>;
-}
-
-function UptimePct({ pct }) {
-    const color = pct >= 99 ? 'var(--success)' : pct >= 90 ? 'var(--warning)' : 'var(--danger)';
+function StatusIndicator({ status }) {
+    if (status === true) return (
+        <div className="flex items-center gap-2">
+            <span className="relative flex h-2 w-2">
+                <span className="ping-slow absolute inline-flex h-full w-full rounded-full bg-success opacity-60"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
+            </span>
+            <span className="text-success text-xs font-semibold">Online</span>
+        </div>
+    );
+    if (status === false) return (
+        <div className="flex items-center gap-2">
+            <span className="inline-flex rounded-full h-2 w-2 bg-error"></span>
+            <span className="text-error text-xs font-semibold">Offline</span>
+        </div>
+    );
     return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-            <div style={{ flex: 1, height: 4, background: 'var(--bg-card2)', borderRadius: 2, overflow: 'hidden' }}>
-                <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 2, transition: 'width .3s' }}></div>
-            </div>
-            <span className="mono" style={{ fontSize: 11, color, minWidth: 34, textAlign: 'right', fontWeight: 600 }}>{pct}%</span>
+        <div className="flex items-center gap-2">
+            <span className="inline-flex rounded-full h-2 w-2 bg-base-content/20"></span>
+            <span className="text-base-content/40 text-xs font-semibold">Unknown</span>
         </div>
     );
 }
 
-function ActionBtn({ onClick, disabled, title, color, icon }) {
+function UptimePct({ pct }) {
+    const bar  = pct >= 99 ? 'bg-success' : pct >= 90 ? 'bg-warning' : 'bg-error';
+    const text = pct >= 99 ? 'lat-fast'  : pct >= 90 ? 'lat-medium' : 'lat-slow';
+    return (
+        <div className="flex items-center gap-2">
+            <div className="flex-1 bg-base-300 rounded-full h-1 overflow-hidden">
+                <div className={`h-full ${bar} rounded-full transition-all duration-500`} style={{ width: `${pct}%` }}></div>
+            </div>
+            <span className={`mono text-[11px] font-bold tabular-nums ${text} w-9 text-right`}>{pct}%</span>
+        </div>
+    );
+}
+
+function ActionBtn({ onClick, disabled, title, cls, icon, label }) {
     return (
         <button
-            className="action-btn"
             onClick={onClick}
             disabled={disabled}
             title={title}
-            style={{
-                background: `${color}18`,
-                borderColor: `${color}45`,
-                color,
-            }}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-100 disabled:opacity-40 disabled:cursor-not-allowed ${cls}`}
         >
-            <i className={`fas ${icon}`}></i>
+            <i className={`fas ${icon} text-[10px]`}></i>
+            <span>{label}</span>
         </button>
     );
 }
