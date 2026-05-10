@@ -15,7 +15,7 @@ class DatabaseSeeder extends Seeder
     {
         User::create([
             'name'     => 'Admin',
-            'email'    => 'admin@argusnet.local',
+            'email'    => 'ahmed.oukhchine@gmail.com',
             'password' => Hash::make('password'),
             'role'     => 'admin',
         ]);

@@ -25,11 +25,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/ping-all',              [PingController::class, 'pingAll']);
 
     Route::get('/api/users', [UserController::class, 'index']);
+    Route::put('/api/profile/password', [UserController::class, 'updateOwnPassword']);
 
     // Admin-only: CRUD on targets, groups, and users
     Route::middleware(EnsureAdmin::class)->group(function () {
-        Route::post('/api/users',           [UserController::class, 'store']);
-        Route::delete('/api/users/{user}',  [UserController::class, 'destroy']);
+        Route::post('/api/users',                        [UserController::class, 'store']);
+        Route::put('/api/users/{user}/password',         [UserController::class, 'changePassword']);
+        Route::delete('/api/users/{user}',               [UserController::class, 'destroy']);
         Route::post('/targets',                   [PingController::class, 'store']);
         Route::put('/targets/{target}',           [PingController::class, 'update']);
         Route::delete('/targets/{target}',        [PingController::class, 'destroy']);

@@ -13,6 +13,7 @@ export default function Sidebar({ onLogout, onThemeToggle, isLight, offlineCount
         { to: '/history',    label: 'History',    icon: 'fa-history',        show: true,    badge: null },
         { to: '/incidents',  label: 'Incidents',  icon: 'fa-exclamation-circle', show: true, badge: null },
         { to: '/users',      label: 'Users',      icon: 'fa-users',          show: isAdmin, badge: null },
+        { to: '/settings',   label: 'Settings',   icon: 'fa-cog',            show: true,    badge: null },
     ];
 
     return (

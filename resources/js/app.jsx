@@ -7,6 +7,7 @@ import Statistics from './pages/Statistics';
 import History from './pages/History';
 import Incidents from './pages/Incidents';
 import Users from './pages/Users';
+import Settings from './pages/Settings';
 import Login from './pages/Login';
 import Sidebar from './components/Sidebar';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -24,6 +25,7 @@ function AppContent() {
     const [incidentsMounted, setIncidentsMounted]  = useState(false);
     const [monitoringMounted, setMonitoringMounted] = useState(false);
     const [usersMounted,      setUsersMounted]      = useState(false);
+    const [settingsMounted,   setSettingsMounted]   = useState(false);
 
     // Shared targets state
     const [targets, setTargets]             = useState([]);
@@ -62,6 +64,7 @@ function AppContent() {
         if (pathname === '/incidents')  setIncidentsMounted(true);
         if (pathname === '/monitoring') setMonitoringMounted(true);
         if (pathname === '/users')      setUsersMounted(true);
+        if (pathname === '/settings')   setSettingsMounted(true);
     }, [pathname]);
 
     if (authLoading) {
@@ -81,6 +84,7 @@ function AppContent() {
     const onHistory    = pathname === '/history';
     const onIncidents  = pathname === '/incidents';
     const onUsers      = pathname === '/users';
+    const onSettings   = pathname === '/settings';
 
     return (
         <div className="flex min-h-screen bg-base-100">
@@ -118,6 +122,11 @@ function AppContent() {
                 {usersMounted && (
                     <div className="page-slot" style={{ display: onUsers ? 'block' : 'none' }}>
                         <Users />
+                    </div>
+                )}
+                {settingsMounted && (
+                    <div className="page-slot" style={{ display: onSettings ? 'block' : 'none' }}>
+                        <Settings />
                     </div>
                 )}
             </div>
