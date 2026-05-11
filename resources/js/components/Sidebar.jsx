@@ -34,14 +34,14 @@ export default function Sidebar({ onLogout, onThemeToggle, isLight, offlineCount
 
             {/* ── Navigation ───────────────────────────────────── */}
             <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-                {navItems.filter(i => i.show).map(item => {
+                {navItems.filter(i => i.show).map((item, idx) => {
                     const active = pathname === item.to;
                     return (
                         <Link
                             key={item.to}
                             to={item.to}
-                            style={{ textDecoration: 'none' }}
-                            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
+                            style={{ textDecoration: 'none', animationDelay: `${0.08 + idx * 0.05}s` }}
+                            className={`anim-fade-up flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
                                 active
                                     ? 'bg-primary/15 text-primary'
                                     : 'text-base-content/55 hover:bg-base-300/70 hover:text-base-content'

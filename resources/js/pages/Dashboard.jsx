@@ -246,7 +246,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
 
                 {/* ── Offline alert banner ──────────────────────── */}
                 {offlineTargets.length > 0 && (
-                    <div className="flex items-center gap-3 px-4 py-3 mb-4 bg-error/8 border border-error/25 rounded-xl">
+                    <div className="banner-enter flex items-center gap-3 px-4 py-3 mb-4 bg-error/8 border border-error/25 rounded-xl">
                         <span className="relative flex h-2.5 w-2.5 flex-shrink-0">
                             <span className="ping-slow absolute inline-flex h-full w-full rounded-full bg-error opacity-70"></span>
                             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-error"></span>
@@ -273,7 +273,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
 
                 {/* ── Fleet health bar ──────────────────────────── */}
                 {targets.length > 0 && (
-                    <div className="flex items-center gap-4 px-4 py-3 mb-4 bg-base-200 border border-base-300 rounded-xl">
+                    <div className="anim-fade-up anim-delay-2 flex items-center gap-4 px-4 py-3 mb-4 bg-base-200 border border-base-300 rounded-xl">
                         <div className="flex-1">
                             <div className="flex h-2 rounded-full overflow-hidden bg-base-300/60 gap-px">
                                 {stats.online  > 0 && <div className="bg-success transition-all duration-700" style={{ width: `${(stats.online  / stats.total) * 100}%` }}></div>}
@@ -296,7 +296,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                 )}
 
                 {/* Auto-refresh */}
-                <div className={`flex items-center gap-3 mb-4 px-4 py-2.5 rounded-xl border transition-colors ${
+                <div className={`anim-fade-up anim-delay-3 flex items-center gap-3 mb-4 px-4 py-2.5 rounded-xl border transition-colors ${
                     autoRefresh
                         ? 'bg-primary/5 border-primary/20'
                         : 'bg-base-200 border-base-300'
@@ -345,7 +345,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                 </div>
 
                 {/* Group filter bar */}
-                <div className="flex items-center flex-wrap gap-1.5 mb-4">
+                <div className="anim-fade-up anim-delay-4 flex items-center flex-wrap gap-1.5 mb-4">
                     <span className="text-[10px] font-semibold text-base-content/30 uppercase tracking-wider mr-1">Groups</span>
                     <button
                         onClick={() => setSelectedGroup(null)}

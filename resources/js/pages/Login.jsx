@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Login() {
     const { setUser }             = useAuth();
+    const navigate                = useNavigate();
     const [email, setEmail]       = useState('');
     const [password, setPassword] = useState('');
     const [showPw, setShowPw]     = useState(false);
@@ -17,6 +19,7 @@ export default function Login() {
         try {
             const { data } = await axios.post('/login', { email, password });
             setUser(data);
+            navigate('/');
         } catch (err) {
             setError(err.response?.data?.message || 'Invalid credentials. Please try again.');
         } finally {
@@ -30,8 +33,10 @@ export default function Login() {
             {/* Dot-grid background */}
             <div className="absolute inset-0 login-grid pointer-events-none"></div>
 
-            {/* Soft primary glow behind card */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[480px] h-[480px] rounded-full bg-primary/6 blur-3xl pointer-events-none"></div>
+            {/* Soft primary glow behind card — breathing animation */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+                <div className="glow-breathe w-[480px] h-[480px] rounded-full bg-primary/6 blur-3xl"></div>
+            </div>
 
             <div className="w-full max-w-sm relative z-10">
                 <div className="modal-enter bg-base-200 border border-base-300 rounded-2xl p-8 shadow-2xl">
@@ -56,7 +61,7 @@ export default function Login() {
 
                     {/* Error */}
                     {error && (
-                        <div className="mb-4 flex items-center gap-2 px-3 py-2.5 bg-error/10 border border-error/25 rounded-xl text-error text-xs">
+                        <div className="msg-enter mb-4 flex items-center gap-2 px-3 py-2.5 bg-error/10 border border-error/25 rounded-xl text-error text-xs">
                             <i className="fas fa-exclamation-circle flex-shrink-0"></i>
                             {error}
                         </div>

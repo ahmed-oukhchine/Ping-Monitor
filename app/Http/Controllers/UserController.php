@@ -24,13 +24,14 @@ class UserController extends Controller
             'name'     => 'required|string|max:100',
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
+            'role'     => 'required|string|in:tester,admin',
         ]);
 
         $user = User::create([
             'name'     => $request->name,
             'email'    => $request->email,
             'password' => $request->password,
-            'role'     => 'tester',
+            'role'     => $request->role,
         ]);
 
         return response()->json([

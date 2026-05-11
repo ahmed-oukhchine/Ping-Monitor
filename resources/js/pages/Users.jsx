@@ -17,6 +17,7 @@ export default function Users() {
     const [email, setEmail]       = useState('');
     const [password, setPassword]           = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [role, setRole]                   = useState('tester');
     const [showPw, setShowPw]               = useState(false);
     const [showConfirmPw, setShowConfirmPw] = useState(false);
     const [saving, setSaving]               = useState(false);
@@ -33,7 +34,7 @@ export default function Users() {
     useEffect(() => { fetchUsers(); }, []);
 
     const resetForm = () => {
-        setName(''); setEmail(''); setPassword(''); setConfirmPassword('');
+        setName(''); setEmail(''); setPassword(''); setConfirmPassword(''); setRole('tester');
         setShowPw(false); setShowConfirmPw(false); setFormError(''); setShowForm(false);
     };
 
@@ -46,7 +47,7 @@ export default function Users() {
         setSaving(true);
         setFormError('');
         try {
-            const { data } = await axios.post('/api/users', { name, email, password });
+            const { data } = await axios.post('/api/users', { name, email, password, role });
             setUsers(u => [...u, data]);
             setNewestId(data.id);
             setTimeout(() => setNewestId(null), 1800);
@@ -97,7 +98,7 @@ export default function Users() {
                             className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold border border-primary/40 text-primary rounded-lg hover:bg-primary/10 transition-colors"
                         >
                             <i className="fas fa-plus text-[10px]"></i>
-                            New Tester
+                            New User
                         </button>
                     )}
                 </div>
@@ -108,7 +109,7 @@ export default function Users() {
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
                                 <div className="w-0.5 h-4 rounded-full bg-primary/50 flex-shrink-0"></div>
-                                <h2 className="text-sm font-semibold text-base-content">Create Tester Account</h2>
+                                <h2 className="text-sm font-semibold text-base-content">Create User Account</h2>
                             </div>
                             <button onClick={resetForm} className="w-7 h-7 rounded-lg hover:bg-base-300 flex items-center justify-center text-base-content/40 hover:text-base-content transition-colors">
                                 <i className="fas fa-times text-xs"></i>
@@ -116,7 +117,7 @@ export default function Users() {
                         </div>
 
                         <form onSubmit={createUser} className="space-y-3">
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-3 gap-3">
                                 <div>
                                     <label className="block text-xs font-medium text-base-content/60 mb-1">Full Name</label>
                                     <input
@@ -138,6 +139,18 @@ export default function Users() {
                                         required
                                         className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors"
                                     />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-base-content/60 mb-1">Role</label>
+                                    <select
+                                        value={role}
+                                        onChange={e => setRole(e.target.value)}
+                                        required
+                                        className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors"
+                                    >
+                                        <option value="tester">Tester</option>
+                                        <option value="admin">Administrator</option>
+                                    </select>
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-3">
@@ -211,7 +224,7 @@ export default function Users() {
                                     className="flex items-center gap-2 px-4 py-2 text-xs font-semibold bg-primary text-white rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity shadow-[0_0_14px_color-mix(in_oklch,var(--color-primary)_35%,transparent)]"
                                 >
                                     <i className={`fas ${saving ? 'fa-spinner fa-spin' : 'fa-user-plus'} text-xs`}></i>
-                                    {saving ? 'Creating…' : 'Create Tester'}
+                                    {saving ? 'Creating…' : 'Create User'}
                                 </button>
                                 <button type="button" onClick={resetForm} className="px-4 py-2 text-sm font-medium text-base-content/50 hover:text-base-content transition-colors">
                                     Cancel
@@ -223,7 +236,7 @@ export default function Users() {
 
                 {/* ── Delete error banner ─────────────────────── */}
                 {deleteError && (
-                    <div className="anim-fade-up flex items-center gap-2 px-3 py-2.5 rounded-xl bg-error/10 border border-error/20 text-xs text-error mb-5">
+                    <div className="msg-enter flex items-center gap-2 px-3 py-2.5 rounded-xl bg-error/10 border border-error/20 text-xs text-error mb-5">
                         <i className="fas fa-exclamation-circle flex-shrink-0"></i>
                         <span className="flex-1">{deleteError}</span>
                         <button onClick={() => setDeleteError('')} className="text-error/50 hover:text-error font-bold text-sm leading-none">×</button>

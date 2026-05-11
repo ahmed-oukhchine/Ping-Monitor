@@ -3,10 +3,38 @@ import React from 'react';
 export default function TargetTable({ targets, loading, pinging, onPing, onEdit, onDelete, onChart, onDetail, onPause, onResume, isAdmin }) {
     if (loading) {
         return (
-            <div className="bg-base-200 border border-base-300 rounded-xl flex items-center justify-center py-20 text-base-content/30">
-                <div className="text-center">
-                    <span className="loading loading-spinner loading-lg block mx-auto mb-3"></span>
-                    <p className="text-sm">Loading targets…</p>
+            <div className="bg-base-200 border border-base-300 rounded-xl overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead>
+                            <tr className="border-b border-base-300/80 bg-base-300/25">
+                                {['Device', 'Location', 'IP Address', 'Status', 'Latency', 'Avg Latency', 'Uptime', 'Loss %', 'Last Check', 'Actions'].map(h => (
+                                    <th key={h} className="text-left py-3 px-4 text-[10px] font-semibold text-base-content/35 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {[...Array(6)].map((_, i) => (
+                                <tr key={i} className="border-b border-base-300/30" style={{ animationDelay: `${i * 0.06}s` }}>
+                                    <td className="py-3.5 px-4">
+                                        <div className="flex items-center gap-2.5">
+                                            <div className="skeleton-row w-8 h-8 rounded-xl flex-shrink-0" style={{ animationDelay: `${i * 0.06}s` }}></div>
+                                            <div className="skeleton-row h-4 w-24 rounded" style={{ animationDelay: `${i * 0.06 + 0.05}s` }}></div>
+                                        </div>
+                                    </td>
+                                    <td className="py-3.5 px-4"><div className="skeleton-row h-3.5 w-20 rounded" style={{ animationDelay: `${i * 0.06}s` }}></div></td>
+                                    <td className="py-3.5 px-4"><div className="skeleton-row h-5 w-24 rounded-md" style={{ animationDelay: `${i * 0.06}s` }}></div></td>
+                                    <td className="py-3.5 px-4"><div className="skeleton-row h-6 w-16 rounded-full" style={{ animationDelay: `${i * 0.06}s` }}></div></td>
+                                    <td className="py-3.5 px-4"><div className="skeleton-row h-3.5 w-12 rounded" style={{ animationDelay: `${i * 0.06}s` }}></div></td>
+                                    <td className="py-3.5 px-4"><div className="skeleton-row h-3.5 w-12 rounded" style={{ animationDelay: `${i * 0.06}s` }}></div></td>
+                                    <td className="py-3.5 px-4"><div className="skeleton-row h-2 w-24 rounded-full" style={{ animationDelay: `${i * 0.06}s` }}></div></td>
+                                    <td className="py-3.5 px-4"><div className="skeleton-row h-3.5 w-8 rounded" style={{ animationDelay: `${i * 0.06}s` }}></div></td>
+                                    <td className="py-3.5 px-4"><div className="skeleton-row h-3.5 w-16 rounded" style={{ animationDelay: `${i * 0.06}s` }}></div></td>
+                                    <td className="py-3.5 px-4"></td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         );

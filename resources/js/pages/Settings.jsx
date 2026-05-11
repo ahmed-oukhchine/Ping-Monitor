@@ -45,7 +45,7 @@ export default function Settings() {
             <div className="max-w-lg mx-auto px-6 py-6">
 
                 {/* Header */}
-                <div className="flex items-center gap-3 mb-6">
+                <div className="anim-fade-up flex items-center gap-3 mb-6">
                     <div className="w-1 h-7 rounded-full bg-primary flex-shrink-0"></div>
                     <div>
                         <h1 className="text-base font-bold text-base-content leading-tight">Settings</h1>
@@ -54,7 +54,7 @@ export default function Settings() {
                 </div>
 
                 {/* Account info */}
-                <div className="bg-base-200 border border-base-300 rounded-xl p-5 mb-4">
+                <div className="anim-fade-up anim-delay-1 bg-base-200 border border-base-300 rounded-xl p-5 mb-4">
                     <div className="flex items-center gap-3 mb-4">
                         <div className="w-0.5 h-4 rounded-full bg-primary/50 flex-shrink-0"></div>
                         <h2 className="text-sm font-semibold text-base-content">Account</h2>
@@ -80,14 +80,14 @@ export default function Settings() {
                 </div>
 
                 {/* Change password */}
-                <div className="bg-base-200 border border-base-300 rounded-xl p-5">
+                <div className="anim-fade-up anim-delay-2 bg-base-200 border border-base-300 rounded-xl p-5">
                     <div className="flex items-center gap-2 mb-4">
                         <div className="w-0.5 h-4 rounded-full bg-primary/50 flex-shrink-0"></div>
                         <h2 className="text-sm font-semibold text-base-content">Change Password</h2>
                     </div>
 
                     {success && (
-                        <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-success/10 border border-success/25 text-xs text-success mb-4">
+                        <div className="msg-enter flex items-center gap-2 px-3 py-2.5 rounded-lg bg-success/10 border border-success/25 text-xs text-success mb-4">
                             <i className="fas fa-check-circle text-[10px]"></i>
                             Password updated successfully.
                         </div>
@@ -158,7 +158,7 @@ export default function Settings() {
                         </div>
 
                         {error && (
-                            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-error/10 border border-error/25 text-xs text-error">
+                            <div className="msg-enter flex items-center gap-2 px-3 py-2 rounded-lg bg-error/10 border border-error/25 text-xs text-error">
                                 <i className="fas fa-exclamation-circle text-[10px]"></i>
                                 {error}
                             </div>
