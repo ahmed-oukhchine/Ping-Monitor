@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, useLocation } from 'react-router-dom';
 import axios from 'axios';
@@ -8,6 +8,7 @@ import History from './pages/History';
 import Incidents from './pages/Incidents';
 import Users from './pages/Users';
 import Settings from './pages/Settings';
+import AuditLog from './pages/AuditLog';
 import Login from './pages/Login';
 import Sidebar from './components/Sidebar';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -26,23 +27,50 @@ function AppContent() {
     const [monitoringMounted, setMonitoringMounted] = useState(false);
     const [usersMounted,      setUsersMounted]      = useState(false);
     const [settingsMounted,   setSettingsMounted]   = useState(false);
+    const [auditLogMounted,   setAuditLogMounted]   = useState(false);
 
     // Shared targets state
     const [targets, setTargets]             = useState([]);
     const [targetsLoading, setTargetsLoading] = useState(true);
 
-    // Theme
-    const [theme, setTheme] = useState(
-        () => document.documentElement.getAttribute('data-theme') || 'dark'
-    );
-    const isLight = theme === 'light';
+    const mainRef = useRef(null);
 
-    const toggleTheme = () => {
-        const next = isLight ? 'dark' : 'light';
-        document.documentElement.setAttribute('data-theme', next);
-        localStorage.setItem('argusnet_theme', next);
-        setTheme(next);
+    useEffect(() => {
+        mainRef.current?.scrollTo({ top: 0, behavior: 'instant' });
+    }, [pathname]);
+
+    // Theme
+    const [themePref, setThemePref] = useState(
+        () => localStorage.getItem('argusnet_theme') || 'system'
+    );
+
+    const getResolved = (pref) => {
+        if (pref === 'system') {
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        return pref;
     };
+
+    useEffect(() => {
+        const resolved = getResolved(themePref);
+        document.documentElement.setAttribute('data-theme', resolved);
+        localStorage.setItem('argusnet_theme', themePref);
+    }, [themePref]);
+
+    useEffect(() => {
+        const mq = window.matchMedia('(prefers-color-scheme: dark)');
+        const handler = () => {
+            if (themePref === 'system') {
+                document.documentElement.setAttribute('data-theme', mq.matches ? 'dark' : 'light');
+            }
+        };
+        mq.addEventListener('change', handler);
+        return () => mq.removeEventListener('change', handler);
+    }, [themePref]);
+
+    const isLight = getResolved(themePref) === 'light';
+
+    const setTheme = (mode) => setThemePref(mode);
 
     const logout = () => {
         setUser(null);
@@ -65,6 +93,7 @@ function AppContent() {
         if (pathname === '/monitoring') setMonitoringMounted(true);
         if (pathname === '/users')      setUsersMounted(true);
         if (pathname === '/settings')   setSettingsMounted(true);
+        if (pathname === '/audit-log')  setAuditLogMounted(true);
     }, [pathname]);
 
     if (authLoading) {
@@ -85,17 +114,19 @@ function AppContent() {
     const onIncidents  = pathname === '/incidents';
     const onUsers      = pathname === '/users';
     const onSettings   = pathname === '/settings';
+    const onAuditLog   = pathname === '/audit-log';
 
     return (
         <div className="flex min-h-screen bg-base-100">
             <Sidebar
                 onLogout={logout}
-                onThemeToggle={toggleTheme}
+                onCycleTheme={setTheme}
+                themePref={themePref}
                 isLight={isLight}
                 offlineCount={targets.filter(t => !t.is_paused && t.last_status === false).length}
             />
 
-            <div className="flex-1 pl-56">
+            <div ref={mainRef} className="flex-1 pl-56 overflow-y-auto" style={{ height: '100vh' }}>
                 <div className="page-slot" style={{ display: onDashboard ? 'block' : 'none' }}>
                     <Statistics targets={targets} loading={targetsLoading} onRefresh={fetchTargets} />
                 </div>
@@ -127,6 +158,11 @@ function AppContent() {
                 {settingsMounted && (
                     <div className="page-slot" style={{ display: onSettings ? 'block' : 'none' }}>
                         <Settings />
+                    </div>
+                )}
+                {auditLogMounted && (
+                    <div className="page-slot" style={{ display: onAuditLog ? 'block' : 'none' }}>
+                        <AuditLog />
                     </div>
                 )}
             </div>

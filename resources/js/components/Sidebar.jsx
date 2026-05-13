@@ -2,7 +2,10 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
-export default function Sidebar({ onLogout, onThemeToggle, isLight, offlineCount = 0 }) {
+const themeIcons = { light: 'fa-sun', dark: 'fa-moon', system: 'fa-desktop' };
+const themeLabels = { light: 'Light', dark: 'Dark', system: 'System' };
+
+export default function Sidebar({ onLogout, onCycleTheme, themePref, isLight, offlineCount = 0 }) {
     const { pathname } = useLocation();
     const { user } = useAuth();
     const isAdmin = user?.role === 'admin';
@@ -13,6 +16,7 @@ export default function Sidebar({ onLogout, onThemeToggle, isLight, offlineCount
         { to: '/history',    label: 'History',    icon: 'fa-history',        show: true,    badge: null },
         { to: '/incidents',  label: 'Incidents',  icon: 'fa-exclamation-circle', show: true, badge: null },
         { to: '/users',      label: 'Users',      icon: 'fa-users',          show: isAdmin, badge: null },
+        { to: '/audit-log',  label: 'Audit Log',  icon: 'fa-clipboard-list', show: isAdmin, badge: null },
         { to: '/settings',   label: 'Settings',   icon: 'fa-cog',            show: true,    badge: null },
     ];
 
@@ -63,14 +67,19 @@ export default function Sidebar({ onLogout, onThemeToggle, isLight, offlineCount
             <div className="px-3 pb-4 pt-3 border-t border-base-300 flex-shrink-0 space-y-1">
 
                 {/* Theme toggle */}
-                <button
-                    onClick={onThemeToggle}
-                    title={isLight ? 'Switch to Dark mode' : 'Switch to Light mode'}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-base-content/50 hover:bg-base-300/70 hover:text-base-content transition-all"
-                >
-                    <i className={`fas ${isLight ? 'fa-moon' : 'fa-sun'} text-xs w-4 text-center flex-shrink-0 text-base-content/35`}></i>
-                    {isLight ? 'Dark Mode' : 'Light Mode'}
-                </button>
+                <div className="flex items-center gap-0.5 bg-base-300/60 rounded-lg p-0.5">
+                    {['light', 'dark', 'system'].map(mode => (
+                        <button key={mode} onClick={() => onCycleTheme(mode)}
+                            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md text-xs font-medium transition-all ${
+                                themePref === mode
+                                    ? 'bg-primary/15 text-primary shadow-sm'
+                                    : 'text-base-content/45 hover:text-base-content'
+                            }`}>
+                            <i className={`fas ${themeIcons[mode]} text-[10px]`}></i>
+                            {themeLabels[mode]}
+                        </button>
+                    ))}
+                </div>
 
                 {/* User card */}
                 <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-base-300/40">

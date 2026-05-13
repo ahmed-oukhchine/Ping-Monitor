@@ -42,6 +42,8 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
     const timerRef      = useRef(null);
     const cdownRef      = useRef(null);
     const inProgressRef = useRef(false);
+    const targetsRef    = useRef(targets);
+    targetsRef.current  = targets;
 
     useEffect(() => { fetchTargets(); fetchGroups(); }, []);
 
@@ -68,6 +70,10 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
         cdownRef.current = setInterval(() => setCountdown(c => c <= 1 ? interval_ : c - 1), 1000);
 
         const scheduleNext = () => {
+            if (inProgressRef.current) {
+                timerRef.current = setTimeout(scheduleNext, 3000);
+                return;
+            }
             localStorage.setItem(LS_NEXT, JSON.stringify(Date.now() + interval_ * 1000));
             pingAll(true);
         };
@@ -121,17 +127,21 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
         inProgressRef.current = true;
         if (!auto) setPingAllLoading(true);
         try {
-            const { data } = await axios.post('/ping-all');
-            const map = {};
-            data.results.forEach(r => { map[r.target_id] = r; });
-            setTargets(ts => ts.map(t => {
-                const r = map[t.id]; if (!r) return t;
-                const total = t.total_pings + 1, failed = t.failed_pings + (r.success ? 0 : 1);
-                return { ...t, last_status: r.success, last_response_time: r.response_time ?? null,
-                    last_ping_at: new Date().toISOString(), total_pings: total, failed_pings: failed,
-                    uptime_percent: Math.round((total - failed) / total * 100 * 10) / 10,
-                    threshold_status: r.threshold_status ?? null };
-            }));
+            const toPing = targetsRef.current.filter(t => !t.is_paused);
+            for (const target of toPing) {
+                setPinging(p => ({ ...p, [target.id]: true }));
+                try {
+                    const { data } = await axios.post(`/targets/${target.id}/ping`);
+                    setTargets(ts => ts.map(t => {
+                        if (t.id !== target.id) return t;
+                        const total = t.total_pings + 1, failed = t.failed_pings + (data.success ? 0 : 1);
+                        return { ...t, last_status: data.success, last_response_time: data.response_time ?? null,
+                            last_ping_at: new Date().toISOString(), total_pings: total, failed_pings: failed,
+                            uptime_percent: Math.round((total - failed) / total * 100 * 10) / 10,
+                            threshold_status: data.threshold_status ?? null };
+                    }));
+                } finally { setPinging(p => ({ ...p, [target.id]: false })); }
+            }
         } finally { inProgressRef.current = false; if (!auto) setPingAllLoading(false); }
     };
 
@@ -213,8 +223,8 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
     };
 
     return (
-        <div className="min-h-screen bg-base-100">
-            <div className="max-w-screen-xl mx-auto px-6 py-6">
+            <div className="min-h-screen bg-base-100">
+                <div className="max-w-screen-xl mx-auto px-6 py-6">
 
                 <div className="flex items-center justify-between mb-5">
                     <div className="flex items-center gap-3">

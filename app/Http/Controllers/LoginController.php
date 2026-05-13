@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -35,6 +36,7 @@ class LoginController extends Controller
         $request->session()->regenerate();
 
         $user = Auth::user();
+        AuditLog::log('login', 'user', $user->id);
         return response()->json([
             'id'    => $user->id,
             'name'  => $user->name,
@@ -45,6 +47,7 @@ class LoginController extends Controller
 
     public function destroy(Request $request)
     {
+        AuditLog::log('logout', 'user', Auth::id());
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

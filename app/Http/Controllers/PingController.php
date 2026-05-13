@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\TargetDownAlert;
+use App\Models\AuditLog;
 use App\Models\Group;
 use App\Models\PingHistory;
 use App\Models\Target;
@@ -268,11 +269,16 @@ class PingController extends Controller
             'group_ids.*'            => 'integer|exists:groups,id',
         ]);
 
-        $target = Target::create($request->only('name', 'ip_address', 'location', 'notes', 'warn_ms', 'critical_ms', 'alert_email', 'alert_consecutive', 'alert_cooldown_minutes'));
+        $data = $request->only('name', 'ip_address', 'location', 'notes', 'warn_ms', 'critical_ms', 'alert_email', 'alert_consecutive', 'alert_cooldown_minutes');
+        $data['alert_consecutive'] ??= 3;
+        $data['alert_cooldown_minutes'] ??= 60;
+        $target = Target::create($data);
 
         if ($request->filled('group_ids')) {
             $target->groups()->sync($request->group_ids);
         }
+
+        AuditLog::log('created', 'target', $target->id, null, $target->toArray());
 
         return response()->json($target, 201);
     }
@@ -293,14 +299,21 @@ class PingController extends Controller
             'group_ids.*'            => 'integer|exists:groups,id',
         ]);
 
-        $target->update($request->only('name', 'ip_address', 'location', 'notes', 'warn_ms', 'critical_ms', 'alert_email', 'alert_consecutive', 'alert_cooldown_minutes'));
+        $old = $target->toArray();
+        $data = $request->only('name', 'ip_address', 'location', 'notes', 'warn_ms', 'critical_ms', 'alert_email', 'alert_consecutive', 'alert_cooldown_minutes');
+        $data['alert_consecutive'] ??= 3;
+        $data['alert_cooldown_minutes'] ??= 60;
+        $target->update($data);
         $target->groups()->sync($request->input('group_ids', []));
+
+        AuditLog::log('updated', 'target', $target->id, $old, $target->fresh()->toArray());
 
         return response()->json($target);
     }
 
     public function destroy(Target $target)
     {
+        AuditLog::log('deleted', 'target', $target->id, $target->toArray());
         $target->delete();
 
         return response()->json(['deleted' => true]);
@@ -323,6 +336,11 @@ class PingController extends Controller
 
         $result['loss_percent']     = $this->lossPercent($target->id);
         $result['threshold_status'] = $this->thresholdStatus($target, $result['response_time'] ?? null);
+
+        AuditLog::log('pinged', 'target', $target->id, null, [
+            'success' => $result['success'],
+            'response_time' => $result['response_time'] ?? null,
+        ]);
 
         return response()->json($result);
     }
@@ -352,18 +370,26 @@ class PingController extends Controller
             $results[] = $result;
         }
 
+        AuditLog::log('ping_all', 'target', null, null, [
+            'total' => count($results),
+            'success' => count(array_filter($results, fn($r) => $r['success'])),
+            'failed' => count(array_filter($results, fn($r) => !$r['success'])),
+        ]);
+
         return response()->json(['results' => $results]);
     }
 
     public function pause(Target $target)
     {
         $target->update(['is_paused' => true]);
+        AuditLog::log('paused', 'target', $target->id);
         return response()->json(['is_paused' => true]);
     }
 
     public function resume(Target $target)
     {
         $target->update(['is_paused' => false]);
+        AuditLog::log('resumed', 'target', $target->id);
         return response()->json(['is_paused' => false]);
     }
 

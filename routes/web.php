@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PingController;
@@ -29,6 +30,7 @@ Route::middleware('auth')->group(function () {
 
     // Admin-only: CRUD on targets, groups, and users
     Route::middleware(EnsureAdmin::class)->group(function () {
+        Route::get('/api/audit-logs',                    [AuditLogController::class, 'index']);
         Route::post('/api/users',                        [UserController::class, 'store']);
         Route::put('/api/users/{user}/password',         [UserController::class, 'changePassword']);
         Route::delete('/api/users/{user}',               [UserController::class, 'destroy']);

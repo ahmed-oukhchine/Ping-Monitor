@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -34,6 +35,7 @@ class UserController extends Controller
             'role'     => $request->role,
         ]);
 
+        AuditLog::log('created', 'user', $user->id, null, $user->fresh()->toArray());
         return response()->json([
             'id'         => $user->id,
             'name'       => $user->name,
@@ -59,7 +61,7 @@ class UserController extends Controller
         }
 
         $user->update(['password' => Hash::make($request->password)]);
-
+        AuditLog::log('password_changed', 'user', $user->id);
         return response()->json(['updated' => true]);
     }
 
@@ -70,7 +72,7 @@ class UserController extends Controller
         ]);
 
         $user->update(['password' => Hash::make($request->password)]);
-
+        AuditLog::log('password_changed_by_admin', 'user', $user->id);
         return response()->json(['updated' => true]);
     }
 
@@ -83,6 +85,7 @@ class UserController extends Controller
             return response()->json(['message' => 'Admin accounts cannot be deleted'], 422);
         }
 
+        AuditLog::log('deleted', 'user', $user->id, $user->toArray());
         $user->delete();
         return response()->json(['deleted' => true]);
     }

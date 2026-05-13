@@ -139,7 +139,13 @@ function TargetRow({ target: t, isPinging, isAdmin, onPing, onEdit, onDelete, on
 
             {/* Status */}
             <td className="py-3.5 px-4">
-                <StatusBadge status={t.last_status} isPaused={t.is_paused} />
+                {isPinging
+                    ? <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-base-300/60 text-base-content/35 border border-base-300 whitespace-nowrap">
+                        <i className="fas fa-spinner fa-spin text-[10px]"></i>
+                        Checking…
+                      </span>
+                    : <StatusBadge status={t.last_status} isPaused={t.is_paused} />
+                }
             </td>
 
             {/* Last latency */}
@@ -191,7 +197,7 @@ function TargetRow({ target: t, isPinging, isAdmin, onPing, onEdit, onDelete, on
                     <ActionBtn onClick={onPing} disabled={isPinging}
                         title={isPinging ? 'Pinging…' : 'Ping now'}
                         cls="text-primary hover:bg-primary/15"
-                        icon={isPinging ? 'fa-spinner fa-spin' : 'fa-satellite-dish'} />
+                        icon="fa-satellite-dish" />
                     <ActionBtn onClick={onChart} title="Latency chart"
                         cls="text-warning/70 hover:bg-warning/12 hover:text-warning"
                         icon="fa-chart-line" />

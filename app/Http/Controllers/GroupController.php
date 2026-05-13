@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use App\Models\Group;
 use Illuminate\Http\Request;
 
@@ -19,7 +20,9 @@ class GroupController extends Controller
             'color' => 'required|string|max:20',
         ]);
 
-        return response()->json(Group::create($request->only('name', 'color')), 201);
+        $group = Group::create($request->only('name', 'color'));
+        AuditLog::log('created', 'group', $group->id, null, $group->toArray());
+        return response()->json($group, 201);
     }
 
     public function update(Request $request, Group $group)
@@ -29,13 +32,16 @@ class GroupController extends Controller
             'color' => 'required|string|max:20',
         ]);
 
+        $old = $group->toArray();
         $group->update($request->only('name', 'color'));
+        AuditLog::log('updated', 'group', $group->id, $old, $group->toArray());
 
         return response()->json($group);
     }
 
     public function destroy(Group $group)
     {
+        AuditLog::log('deleted', 'group', $group->id, $group->toArray());
         $group->delete();
 
         return response()->json(['deleted' => true]);
