@@ -21,10 +21,10 @@ class DatabaseSeeder extends Seeder
         ]);
 
         User::create([
-            'name'     => 'Tester',
-            'email'    => 'tester@argusnet.local',
+            'name'     => 'User',
+            'email'    => 'user@argusnet.local',
             'password' => Hash::make('password'),
-            'role'     => 'tester',
+            'role'     => 'user',
         ]);
     }
 }

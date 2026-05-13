@@ -17,7 +17,7 @@ export default function Users() {
     const [email, setEmail]       = useState('');
     const [password, setPassword]           = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [role, setRole]                   = useState('tester');
+    const [role, setRole]                   = useState('user');
     const [showPw, setShowPw]               = useState(false);
     const [showConfirmPw, setShowConfirmPw] = useState(false);
     const [saving, setSaving]               = useState(false);
@@ -34,7 +34,7 @@ export default function Users() {
     useEffect(() => { fetchUsers(); }, []);
 
     const resetForm = () => {
-        setName(''); setEmail(''); setPassword(''); setConfirmPassword(''); setRole('tester');
+        setName(''); setEmail(''); setPassword(''); setConfirmPassword(''); setRole('user');
         setShowPw(false); setShowConfirmPw(false); setFormError(''); setShowForm(false);
     };
 
@@ -75,7 +75,7 @@ export default function Users() {
     };
 
     const admins  = users.filter(u => u.role === 'admin');
-    const testers = users.filter(u => u.role === 'tester');
+    const usersList = users.filter(u => u.role === 'user');
 
     return (
         <div className="min-h-screen bg-base-100">
@@ -148,7 +148,7 @@ export default function Users() {
                                         required
                                         className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors"
                                     >
-                                        <option value="tester">Tester</option>
+                                        <option value="user">User</option>
                                         <option value="admin">Administrator</option>
                                     </select>
                                 </div>
@@ -280,25 +280,25 @@ export default function Users() {
                             <div className="flex items-center gap-2 mb-2 px-1">
                                 <div className="w-0.5 h-3 rounded-full bg-primary/40 flex-shrink-0"></div>
                                 <p className="text-[10px] font-semibold text-base-content/35 uppercase tracking-wider">
-                                    Testers
+                                    Users
                                     <span className="ml-2 text-base-content/25 normal-case tracking-normal font-normal">Can view and ping — no CRUD access</span>
                                 </p>
                             </div>
-                            {testers.length === 0 ? (
+                            {usersList.length === 0 ? (
                                 <div className="bg-base-200 border border-base-300 border-dashed rounded-xl flex items-center justify-center py-12 text-base-content/30">
                                     <div className="text-center">
                                         <i className="fas fa-user-plus text-2xl block mb-2 opacity-30"></i>
-                                        <p className="text-sm">No testers yet — create one above</p>
+                                        <p className="text-sm">No users yet — create one above</p>
                                     </div>
                                 </div>
                             ) : (
                                 <div className="users-list bg-base-200 border border-base-300 rounded-xl overflow-hidden">
-                                    {testers.map((u, i) => (
+                                    {usersList.map((u, i) => (
                                         <UserRow
                                             key={u.id}
                                             user={u}
                                             isMe={u.id === me?.id}
-                                            isLast={i === testers.length - 1}
+                                            isLast={i === usersList.length - 1}
                                             deleting={deleting === u.id}
                                             isExiting={exitingId === u.id}
                                             isNew={newestId === u.id}
