@@ -1,59 +1,125 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+<div align="center">
+  <br/>
+  <a href="https://github.com/ahmed-oukhchine/Ping-Monitor">
+    <img src="https://img.shields.io/badge/ArgusNet-PingMonitor-2563eb?style=for-the-badge" alt="ArgusNet"/>
+  </a>
+  <br/>
+  <p align="center">
+    <strong>Enterprise Network Monitoring Platform</strong>
+    <br/>
+    <sub>Built with Laravel · React · daisyUI · Recharts</sub>
+  </p>
+  <br/>
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+  [![Laravel](https://img.shields.io/badge/Laravel-12.x-FF2D20?logo=laravel&logoColor=white)](https://laravel.com)
+  [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev)
+  [![SQLite](https://img.shields.io/badge/Database-SQLite-003B57?logo=sqlite&logoColor=white)](https://sqlite.org)
+  [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-## About Laravel
+</div>
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 📋 Overview
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+ArgusNet is a **real-time network monitoring dashboard** that tracks device availability, response times, and uptime across your infrastructure. It combines a Laravel REST API with a modern React SPA to deliver live status updates, automated alerting, and historical reporting.
 
-## Learning Laravel
+## ✨ Features
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+| Feature | Description |
+|---|---|
+| **Live Dashboard** | Real-time device status with auto-refresh and offline alerts |
+| **Network Statistics** | Health score, latency distribution, best/worst performers |
+| **Ping History** | Searchable, filterable history with CSV export |
+| **SLA Reports** | Per-device uptime %, response time trends, and daily breakdowns |
+| **Incident Tracking** | Automatic outage detection with duration calculation |
+| **Target Groups** | Organize devices into color-coded groups with filtering |
+| **Threshold Alerts** | Configurable latency warnings and critical limits |
+| **Email Notifications** | Automatic alerts on consecutive failures with cooldown |
+| **Audit Logging** | Full trail of all CRUD and ping operations |
+| **Role-Based Access** | Admin / Tester / Viewer roles with route-level enforcement |
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 🖥️ Screenshots
 
-## Laravel Sponsors
+<div align="center">
+  <img src="https://via.placeholder.com/800x450/1a1a2e/ffffff?text=Dashboard" alt="Dashboard" width="49%"/>
+  <img src="https://via.placeholder.com/800x450/1a1a2e/ffffff?text=Reports" alt="Reports" width="49%"/>
+</div>
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## 🚀 Quick Start
 
-### Premium Partners
+### Prerequisites
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+- PHP 8.2+
+- Composer
+- Node.js 20+
+- SQLite (included)
 
-## Contributing
+### Installation
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+# Clone the repository
+git clone https://github.com/ahmed-oukhchine/Ping-Monitor.git
+cd Ping-Monitor
 
-## Code of Conduct
+# Install PHP dependencies
+composer install
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+# Install frontend dependencies
+npm install
 
-## Security Vulnerabilities
+# Environment setup
+cp .env.example .env
+php artisan key:generate
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# Database
+touch database/database.sqlite
+php artisan migrate --seed
 
-## License
+# Start the development servers
+php artisan serve
+npm run dev
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+The app will be available at `http://localhost:8000`.
+
+### Scheduled Auto-Polling
+
+```bash
+# Add to your system crontab:
+* * * * * cd /path/to/project && php artisan schedule:run >> /dev/null 2>&1
+```
+
+## 📁 Project Structure
+
+```
+├── app/
+│   ├── Console/Commands/     # Artisan commands (PingAll, etc.)
+│   ├── Http/
+│   │   ├── Controllers/      # API controllers
+│   │   └── Middleware/        # EnsureAdmin middleware
+│   ├── Mail/                  # Mailable classes for alerts
+│   └── Models/                # Eloquent models
+├── database/
+│   ├── migrations/            # Schema definitions
+│   └── seeders/               # Test data seeders
+├── resources/
+│   └── js/
+│       ├── pages/             # React page components
+│       ├── components/        # Shared UI components
+│       └── contexts/          # Auth context
+├── routes/
+│   ├── web.php                # API routes
+│   └── console.php            # Scheduled tasks
+└── public/                    # Built assets
+```
+
+## 🧪 Running Tests
+
+```bash
+php artisan test
+```
+
+## 📄 License
+
+This project is open-sourced under the [MIT license](LICENSE).
