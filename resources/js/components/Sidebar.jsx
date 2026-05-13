@@ -17,11 +17,12 @@ export default function Sidebar({ onLogout, onCycleTheme, themePref, isLight, of
         { to: '/incidents',  label: 'Incidents',  icon: 'fa-exclamation-circle', show: true, badge: null },
         { to: '/users',      label: 'Users',      icon: 'fa-users',          show: isAdmin, badge: null },
         { to: '/audit-log',  label: 'Audit Log',  icon: 'fa-clipboard-list', show: isAdmin, badge: null },
+        { to: '/reports',    label: 'Reports',    icon: 'fa-file-alt',       show: true,    badge: null },
         { to: '/settings',   label: 'Settings',   icon: 'fa-cog',            show: true,    badge: null },
     ];
 
     return (
-        <aside className="sidebar-animate fixed top-0 left-0 h-screen w-56 bg-base-200 border-r border-base-300 flex flex-col z-50">
+        <aside className="sidebar-animate fixed top-0 left-0 h-screen w-56 bg-base-200 border-r border-base-300 flex flex-col z-50 shadow-xl shadow-black/15">
 
             {/* ── Logo ─────────────────────────────────────────── */}
             <div className="px-4 py-5 border-b border-base-300 flex-shrink-0">
@@ -47,7 +48,7 @@ export default function Sidebar({ onLogout, onCycleTheme, themePref, isLight, of
                             style={{ textDecoration: 'none', animationDelay: `${0.08 + idx * 0.05}s` }}
                             className={`anim-fade-up flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
                                 active
-                                    ? 'bg-primary/15 text-primary'
+                                    ? 'bg-primary/15 text-primary shadow-sm'
                                     : 'text-base-content/55 hover:bg-base-300/70 hover:text-base-content'
                             }`}
                         >

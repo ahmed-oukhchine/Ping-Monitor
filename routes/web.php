@@ -4,6 +4,7 @@ use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PingController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\UserController;
 use App\Http\Middleware\EnsureAdmin;
 use Illuminate\Support\Facades\Route;
@@ -25,8 +26,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/targets/{target}/ping', [PingController::class, 'ping'])->name('targets.ping');
     Route::post('/ping-all',              [PingController::class, 'pingAll']);
 
+    Route::get('/api/report', [ReportController::class, 'apiReport']);
     Route::get('/api/users', [UserController::class, 'index']);
     Route::put('/api/profile/password', [UserController::class, 'updateOwnPassword']);
+    Route::put('/api/profile', [UserController::class, 'updateOwnProfile']);
 
     // Admin-only: CRUD on targets, groups, and users
     Route::middleware(EnsureAdmin::class)->group(function () {

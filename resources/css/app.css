@@ -10,22 +10,22 @@
   themes: dark --default, light;
 }
 
-/* ── Dark theme ── */
+/* ── Dark theme (lighter neutral gray) ── */
 [data-theme="dark"] {
-  --color-base-100:    oklch(0.135 0.015 260);
-  --color-base-200:    oklch(0.170 0.018 260);
-  --color-base-300:    oklch(0.220 0.020 260);
-  --color-base-content:oklch(0.940 0.010 260);
-  --color-primary:     oklch(0.560 0.200 260);
+  --color-base-100:    oklch(0.220 0.006 285);
+  --color-base-200:    oklch(0.255 0.008 285);
+  --color-base-300:    oklch(0.305 0.010 285);
+  --color-base-content:oklch(0.890 0.004 285);
+  --color-primary:     oklch(0.560 0.196 260);
   --color-primary-content: oklch(0.98 0 0);
-  --color-success:     oklch(0.600 0.180 150);
+  --color-success:     oklch(0.620 0.180 150);
   --color-success-content: oklch(0.10 0 0);
-  --color-error:       oklch(0.580 0.240 20);
+  --color-error:       oklch(0.600 0.240 20);
   --color-error-content: oklch(0.98 0 0);
-  --color-warning:     oklch(0.720 0.170 70);
+  --color-warning:     oklch(0.740 0.170 70);
   --color-warning-content: oklch(0.10 0 0);
-  --color-neutral:     oklch(0.220 0.020 260);
-  --color-neutral-content: oklch(0.940 0.010 260);
+  --color-neutral:     oklch(0.305 0.010 285);
+  --color-neutral-content: oklch(0.890 0.004 285);
 }
 
 /* ── Eye-friendly light theme (warm off-white) ── */
@@ -255,7 +255,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 .stat-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 8px 28px color-mix(in oklch, var(--color-primary) 10%, transparent);
+    box-shadow: 0 8px 28px color-mix(in oklch, var(--color-base-content) 8%, transparent);
 }
 
 /* Button press */

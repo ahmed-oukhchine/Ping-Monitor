@@ -9,6 +9,7 @@ import Incidents from './pages/Incidents';
 import Users from './pages/Users';
 import Settings from './pages/Settings';
 import AuditLog from './pages/AuditLog';
+import Reports from './pages/Reports';
 import Login from './pages/Login';
 import Sidebar from './components/Sidebar';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -28,6 +29,7 @@ function AppContent() {
     const [usersMounted,      setUsersMounted]      = useState(false);
     const [settingsMounted,   setSettingsMounted]   = useState(false);
     const [auditLogMounted,   setAuditLogMounted]   = useState(false);
+    const [reportsMounted,    setReportsMounted]    = useState(false);
 
     // Shared targets state
     const [targets, setTargets]             = useState([]);
@@ -94,6 +96,7 @@ function AppContent() {
         if (pathname === '/users')      setUsersMounted(true);
         if (pathname === '/settings')   setSettingsMounted(true);
         if (pathname === '/audit-log')  setAuditLogMounted(true);
+        if (pathname === '/reports')    setReportsMounted(true);
     }, [pathname]);
 
     if (authLoading) {
@@ -115,6 +118,7 @@ function AppContent() {
     const onUsers      = pathname === '/users';
     const onSettings   = pathname === '/settings';
     const onAuditLog   = pathname === '/audit-log';
+    const onReports    = pathname === '/reports';
 
     return (
         <div className="flex min-h-screen bg-base-100">
@@ -163,6 +167,11 @@ function AppContent() {
                 {auditLogMounted && (
                     <div className="page-slot" style={{ display: onAuditLog ? 'block' : 'none' }}>
                         <AuditLog active={onAuditLog} />
+                    </div>
+                )}
+                {reportsMounted && (
+                    <div className="page-slot" style={{ display: onReports ? 'block' : 'none' }}>
+                        <Reports />
                     </div>
                 )}
             </div>
