@@ -68,6 +68,7 @@ function StatusDot({ status, paused }) {
 export default function Statistics({ targets = [], loading = false }) {
     const [activeTab, setActiveTab] = useState('latency');
     const [tick, setTick] = useState(0);
+    useEffect(() => { const id = setInterval(() => setTick(t => t + 1), 1000); return () => clearInterval(id); }, []);
     const [isDark, setIsDark] = useState(
         () => (document.documentElement.getAttribute('data-theme') || 'dark') !== 'light'
     );
@@ -78,11 +79,6 @@ export default function Statistics({ targets = [], loading = false }) {
         );
         obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
         return () => obs.disconnect();
-    }, []);
-
-    useEffect(() => {
-        const id = setInterval(() => setTick(t => t + 1), 30000);
-        return () => clearInterval(id);
     }, []);
 
     const C = isDark ? {

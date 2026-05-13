@@ -162,7 +162,7 @@ function AppContent() {
                 )}
                 {auditLogMounted && (
                     <div className="page-slot" style={{ display: onAuditLog ? 'block' : 'none' }}>
-                        <AuditLog />
+                        <AuditLog active={onAuditLog} />
                     </div>
                 )}
             </div>

@@ -32,6 +32,7 @@ class AuditLogController extends Controller
             'current_page' => $logs->currentPage(),
             'last_page'    => $logs->lastPage(),
             'total'        => $logs->total(),
+            'today_count'  => AuditLog::whereDate('created_at', today())->count(),
             'actions'      => AuditLog::select('action')->distinct()->orderBy('action')->pluck('action'),
             'users'        => User::orderBy('name')->get(['id', 'name']),
         ]);

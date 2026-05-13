@@ -45,17 +45,44 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
     const targetsRef    = useRef(targets);
     targetsRef.current  = targets;
 
+    const timeAgoShort = (dateStr) => {
+        if (!dateStr) return '—';
+        const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+        if (diff < 60) return `${diff}s`;
+        if (diff < 3600) return `${Math.floor(diff / 60)}m`;
+        return `${Math.floor(diff / 3600)}h`;
+    };
+
+    const sentinelRef = useRef(null);
+    const [showFloatAlert, setShowFloatAlert] = useState(false);
+    const [expandedFloat, setExpandedFloat] = useState(false);
+
+    useEffect(() => {
+        const el = sentinelRef.current;
+        if (!el) return;
+        const obs = new IntersectionObserver(
+            ([entry]) => setShowFloatAlert(!entry.isIntersecting),
+            { threshold: 0 }
+        );
+        obs.observe(el);
+        return () => obs.disconnect();
+    }, []);
+
     useEffect(() => { fetchTargets(); fetchGroups(); }, []);
 
     useEffect(() => {
-        if (targets.length > 0) setLastUpdated(new Date());
+        if (targets.length > 0) {
+            const dates = targets.map(t => t.last_ping_at).filter(Boolean).map(d => new Date(d).getTime());
+            const latest = dates.length > 0 ? new Date(Math.max(...dates)) : new Date();
+            setLastUpdated(latest);
+        }
     }, [targets]);
 
     useEffect(() => {
-        if (!lastUpdated) return;
+        if (!lastUpdated || pingAllLoading) return;
         const id = setInterval(() => setTick(t => t + 1), 1000);
         return () => clearInterval(id);
-    }, [lastUpdated]);
+    }, [lastUpdated, pingAllLoading]);
 
     useEffect(() => {
         clearInterval(timerRef.current);
@@ -145,6 +172,29 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
         } finally { inProgressRef.current = false; if (!auto) setPingAllLoading(false); }
     };
 
+    const pingOffline = async () => {
+        if (inProgressRef.current) return;
+        inProgressRef.current = true;
+        setPingAllLoading(true);
+        try {
+            const offline = targetsRef.current.filter(t => !t.is_paused && t.last_status === false);
+            for (const target of offline) {
+                setPinging(p => ({ ...p, [target.id]: true }));
+                try {
+                    const { data } = await axios.post(`/targets/${target.id}/ping`);
+                    setTargets(ts => ts.map(t => {
+                        if (t.id !== target.id) return t;
+                        const total = t.total_pings + 1, failed = t.failed_pings + (data.success ? 0 : 1);
+                        return { ...t, last_status: data.success, last_response_time: data.response_time ?? null,
+                            last_ping_at: new Date().toISOString(), total_pings: total, failed_pings: failed,
+                            uptime_percent: Math.round((total - failed) / total * 100 * 10) / 10,
+                            threshold_status: data.threshold_status ?? null };
+                    }));
+                } finally { setPinging(p => ({ ...p, [target.id]: false })); }
+            }
+        } finally { inProgressRef.current = false; setPingAllLoading(false); }
+    };
+
     const addTarget = async (data) => {
         await axios.post('/targets', data);
         setShowAdd(false);
@@ -217,6 +267,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
     const fmtLastUpdated = () => {
         if (!lastUpdated) return null;
         const secs = Math.floor((Date.now() - lastUpdated) / 1000);
+        if (secs < 5)    return 'just now';
         if (secs < 60)  return `${secs}s ago`;
         if (secs < 3600) return `${Math.floor(secs / 60)}m ago`;
         return `${Math.floor(secs / 3600)}h ago`;
@@ -255,6 +306,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                 </div>
 
                 {/* ── Offline alert banner ──────────────────────── */}
+                <div ref={sentinelRef} className="h-px"></div>
                 {offlineTargets.length > 0 && (
                     <div className="banner-enter flex items-center gap-3 px-4 py-3 mb-4 bg-error/8 border border-error/25 rounded-xl">
                         <span className="relative flex h-2.5 w-2.5 flex-shrink-0">
@@ -272,8 +324,9 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                                 </span>
                             ))}
                         </div>
-                        <button onClick={() => pingAll()} disabled={pingAllLoading}
-                            className="ml-auto flex-shrink-0 text-[11px] font-semibold text-error/70 hover:text-error hover:bg-error/10 px-2.5 py-1 rounded-lg transition-all">
+                        <button onClick={() => pingOffline()} disabled={pingAllLoading}
+                            className="ml-auto flex-shrink-0 flex items-center gap-1.5 text-[11px] font-semibold text-error/70 hover:text-error hover:bg-error/10 px-2.5 py-1 rounded-lg transition-all">
+                            {pingAllLoading ? <i className="fas fa-spinner fa-spin text-[9px]"></i> : <i className="fas fa-play text-[9px]"></i>}
                             Check now
                         </button>
                     </div>
@@ -422,7 +475,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
 
                 <TargetTable targets={filteredTargets} loading={loading} pinging={pinging} isAdmin={isAdmin}
                     onPing={pingTarget} onEdit={setEditTarget} onDelete={setDeleteTarget} onChart={setChartTarget}
-                    onDetail={setDetailTargetId} onPause={pauseTarget} onResume={resumeTarget} />
+                    onDetail={setDetailTargetId} onPause={pauseTarget} onResume={resumeTarget} paused={pingAllLoading} />
             </div>
 
             {showAdd && (
@@ -453,6 +506,46 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                     />
                 ) : null;
             })()}
+
+            {/* ── Floating offline alert on scroll ──────────────── */}
+            {offlineTargets.length > 0 && showFloatAlert && (
+                <div className="fixed top-4 right-6 z-50 pointer-events-none">
+                    <div className="anim-slide-down pointer-events-auto">
+                    <div className="bg-error/15 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl shadow-error/20 min-w-[260px] overflow-hidden">
+                        {/* Pill bar */}
+                        <div className="flex items-center gap-2.5 px-4 py-2.5 cursor-pointer hover:bg-white/5 transition-colors"
+                            onClick={() => setExpandedFloat(!expandedFloat)}>
+                            <span className="relative flex h-2.5 w-2.5">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-error"></span>
+                            </span>
+                            <span className="text-xs font-bold tabular-nums text-error flex-1">{offlineTargets.length} device{offlineTargets.length !== 1 ? 's' : ''} offline</span>
+                            <button onClick={e => { e.stopPropagation(); pingOffline(); }}
+                                disabled={pingAllLoading}
+                                className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold bg-error/20 text-error rounded-lg hover:bg-error/30 transition-colors disabled:opacity-50">
+                                <i className={`fas ${pingAllLoading ? 'fa-spinner fa-spin' : 'fa-play'} text-[8px]`}></i>
+                                Check
+                            </button>
+                        </div>
+
+                        {/* Expanded device list */}
+                        {expandedFloat && (
+                            <div className="border-t border-white/10 px-3 py-2 space-y-1 max-h-48 overflow-y-auto">
+                                {offlineTargets.map(t => (
+                                    <div key={t.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/5 transition-colors text-[11px] text-error/90">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-error/50 flex-shrink-0"></span>
+                                        <span className="font-medium truncate flex-1">{t.name}</span>
+                                        <span className="text-error/50 tabular-nums flex-shrink-0">
+                                            {t.last_ping_at ? timeAgoShort(t.last_ping_at) : '—'}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

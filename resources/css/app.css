@@ -12,31 +12,28 @@
 
 /* ── Dark theme ── */
 [data-theme="dark"] {
-  --color-base-100:    oklch(0.175 0 0);
-  --color-base-200:    oklch(0.215 0 0);
-  --color-base-300:    oklch(0.270 0 0);
-  --color-base-content:oklch(0.920 0 0);
-  --color-primary:     oklch(0.607 0.195 255);
+  --color-base-100:    oklch(0.135 0.015 260);
+  --color-base-200:    oklch(0.170 0.018 260);
+  --color-base-300:    oklch(0.220 0.020 260);
+  --color-base-content:oklch(0.940 0.010 260);
+  --color-primary:     oklch(0.560 0.200 260);
   --color-primary-content: oklch(0.98 0 0);
-  --color-success:     oklch(0.670 0.165 160);
+  --color-success:     oklch(0.600 0.180 150);
   --color-success-content: oklch(0.10 0 0);
-  --color-error:       oklch(0.635 0.220 25);
+  --color-error:       oklch(0.580 0.240 20);
   --color-error-content: oklch(0.98 0 0);
-  --color-warning:     oklch(0.765 0.150 75);
+  --color-warning:     oklch(0.720 0.170 70);
   --color-warning-content: oklch(0.10 0 0);
-  --color-neutral:     oklch(0.215 0 0);
-  --color-neutral-content: oklch(0.920 0 0);
+  --color-neutral:     oklch(0.220 0.020 260);
+  --color-neutral-content: oklch(0.940 0.010 260);
 }
 
 /* ── Eye-friendly light theme (warm off-white) ── */
 [data-theme="light"] {
-  /* Backgrounds: warm cream instead of cold white */
   --color-base-100:    oklch(0.975 0.010 88);
   --color-base-200:    oklch(0.952 0.014 88);
   --color-base-300:    oklch(0.900 0.018 88);
-  /* Text: soft dark slate — readable but not pitch-black */
   --color-base-content:oklch(0.230 0.018 258);
-  /* Accents: slightly desaturated so they don't pop harshly */
   --color-primary:     oklch(0.510 0.175 255);
   --color-primary-content: oklch(0.97 0 0);
   --color-success:     oklch(0.510 0.140 158);
@@ -51,6 +48,8 @@
 
 /* ── Global ── */
 html, body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; }
+
+
 
 /* ── Login background dot-grid ── */
 .login-grid {
@@ -114,6 +113,13 @@ select.outline-none:focus {
     to   { opacity: 1; transform: scale(1)    translateY(0); }
 }
 .msg-enter { animation: msg-pop 0.22s cubic-bezier(0.22, 1, 0.36, 1); }
+
+/* ── Floating alert slide-down ── */
+@keyframes slide-down {
+    from { opacity: 0; transform: translateY(-20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.anim-slide-down { animation: slide-down 0.3s cubic-bezier(0.22, 1, 0.36, 1); }
 
 /* ── Skeleton shimmer for loading states ── */
 @keyframes skeleton-shimmer {

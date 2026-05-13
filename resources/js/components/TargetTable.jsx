@@ -1,6 +1,18 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
-export default function TargetTable({ targets, loading, pinging, onPing, onEdit, onDelete, onChart, onDetail, onPause, onResume, isAdmin }) {
+function timeAgo(dateStr) {
+    if (!dateStr) return null;
+    const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+    if (diff < 5)    return 'just now';
+    if (diff < 60)   return `${diff}s ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400)return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
+}
+
+export default function TargetTable({ targets, loading, pinging, onPing, onEdit, onDelete, onChart, onDetail, onPause, onResume, isAdmin, paused = false }) {
+    const [, forceRender] = useState(0);
+    useEffect(() => { if (paused) return; const id = setInterval(() => forceRender(t => t + 1), 1000); return () => clearInterval(id); }, [paused]);
     if (loading) {
         return (
             <div className="bg-base-200 border border-base-300 rounded-xl overflow-hidden">
@@ -140,7 +152,7 @@ function TargetRow({ target: t, isPinging, isAdmin, onPing, onEdit, onDelete, on
             {/* Status */}
             <td className="py-3.5 px-4">
                 {isPinging
-                    ? <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-base-300/60 text-base-content/35 border border-base-300 whitespace-nowrap">
+                    ? <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-primary/15 text-primary border border-primary/30 whitespace-nowrap shadow-[0_0_10px_color-mix(in_oklch,var(--color-primary)_25%,transparent)]">
                         <i className="fas fa-spinner fa-spin text-[10px]"></i>
                         Checking…
                       </span>
@@ -187,7 +199,7 @@ function TargetRow({ target: t, isPinging, isAdmin, onPing, onEdit, onDelete, on
             {/* Last check */}
             <td className="py-3.5 px-4">
                 <span className="mono text-xs text-base-content/35 tabular-nums">
-                    {t.last_ping_at ? new Date(t.last_ping_at).toLocaleTimeString() : <span className="text-base-content/20">Never</span>}
+                    {t.last_ping_at ? timeAgo(t.last_ping_at) : <span className="text-base-content/20">Never</span>}
                 </span>
             </td>
 
