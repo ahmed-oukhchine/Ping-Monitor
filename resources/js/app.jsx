@@ -30,6 +30,7 @@ function AppContent() {
     const [settingsMounted,   setSettingsMounted]   = useState(false);
     const [auditLogMounted,   setAuditLogMounted]   = useState(false);
     const [reportsMounted,    setReportsMounted]    = useState(false);
+    const [sidebarOpen, setSidebarOpen]             = useState(true);
 
     // Shared targets state
     const [targets, setTargets]             = useState([]);
@@ -123,6 +124,8 @@ function AppContent() {
     return (
         <div className="flex min-h-screen bg-base-100">
             <Sidebar
+                open={sidebarOpen}
+                onToggle={() => setSidebarOpen(o => !o)}
                 onLogout={logout}
                 onCycleTheme={setTheme}
                 themePref={themePref}
@@ -130,7 +133,7 @@ function AppContent() {
                 offlineCount={targets.filter(t => !t.is_paused && t.last_status === false).length}
             />
 
-            <div ref={mainRef} className="flex-1 pl-56 overflow-y-auto" style={{ height: '100vh' }}>
+            <div ref={mainRef} className={`flex-1 overflow-y-auto transition-all duration-300 ${sidebarOpen ? 'pl-56' : 'pl-16'}`} style={{ height: '100vh' }}>
                 <div className="page-slot" style={{ display: onDashboard ? 'block' : 'none' }}>
                     <Statistics targets={targets} loading={targetsLoading} onRefresh={fetchTargets} />
                 </div>

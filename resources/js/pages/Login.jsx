@@ -40,7 +40,7 @@ export default function Login() {
                     {/* Brand */}
                     <div className="flex items-center gap-3 mb-8">
                         <div className="w-10 h-10 rounded-xl bg-primary/15 border border-primary/25 flex items-center justify-center flex-shrink-0 shadow-[0_0_18px_color-mix(in_oklch,var(--color-primary)_28%,transparent)]">
-                            <i className="fas fa-satellite-dish text-primary"></i>
+                            <img src="/logo.svg" alt="ArgusNet" className="w-6 h-6" />
                         </div>
                         <div className="leading-none">
                             <div className="font-bold text-base-content tracking-wide">ArgusNet</div>
