@@ -139,7 +139,7 @@ class PingController extends Controller
                 ->chunk(500, function ($rows) use ($handle) {
                     foreach ($rows as $row) {
                         fputcsv($handle, [
-                            $row->created_at->format('Y-m-d H:i:s'),
+                            '="' . $row->created_at->format('Y-m-d H:i:s') . '"',
                             $row->target?->name ?? '',
                             $row->target?->ip_address ?? '',
                             $row->is_success ? 'Online' : 'Offline',
