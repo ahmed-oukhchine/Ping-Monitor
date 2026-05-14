@@ -17,6 +17,7 @@ export default function Login() {
         try {
             const { data } = await axios.post('/login', { email, password });
             setUser(data);
+            window.location.href = '/';
         } catch (err) {
             setError(err.response?.data?.message || 'Invalid credentials. Please try again.');
         } finally {

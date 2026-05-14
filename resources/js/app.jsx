@@ -74,9 +74,9 @@ function AppContent() {
 
     const setTheme = (mode) => setThemePref(mode);
 
-    const logout = () => {
+    const logout = async () => {
+        try { await axios.post('/logout'); } catch {}
         setUser(null);
-        axios.post('/logout').catch(() => {});
     };
 
     const fetchTargets = async () => {

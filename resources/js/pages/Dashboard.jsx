@@ -146,7 +146,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                     uptime_percent: Math.round((total - failed) / total * 100 * 10) / 10,
                     threshold_status: data.threshold_status ?? null };
             }));
-        } finally { setPinging(p => ({ ...p, [target.id]: false })); }
+        } catch {} finally { setPinging(p => ({ ...p, [target.id]: false })); }
     };
 
     const pingAll = async (auto = false) => {
@@ -167,7 +167,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                             uptime_percent: Math.round((total - failed) / total * 100 * 10) / 10,
                             threshold_status: data.threshold_status ?? null };
                     }));
-                } finally { setPinging(p => ({ ...p, [target.id]: false })); }
+                } catch {} finally { setPinging(p => ({ ...p, [target.id]: false })); }
             }
         } finally { inProgressRef.current = false; if (!auto) setPingAllLoading(false); }
     };
@@ -190,7 +190,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                             uptime_percent: Math.round((total - failed) / total * 100 * 10) / 10,
                             threshold_status: data.threshold_status ?? null };
                     }));
-                } finally { setPinging(p => ({ ...p, [target.id]: false })); }
+                } catch {} finally { setPinging(p => ({ ...p, [target.id]: false })); }
             }
         } finally { inProgressRef.current = false; setPingAllLoading(false); }
     };
