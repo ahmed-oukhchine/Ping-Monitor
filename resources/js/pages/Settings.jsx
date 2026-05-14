@@ -8,8 +8,14 @@ const sections = [
 ];
 
 export default function Settings() {
-    const { user } = useAuth();
+    const { user, setUser } = useAuth();
     const [active, setActive] = useState('account');
+
+    const [name, setName] = useState(user?.name || '');
+    const [email, setEmail] = useState(user?.email || '');
+    const [profileSaving, setProfileSaving] = useState(false);
+    const [profileSuccess, setProfileSuccess] = useState(false);
+    const [profileError, setProfileError] = useState('');
 
     const [currentPw, setCurrentPw]   = useState('');
     const [newPw, setNewPw]           = useState('');
@@ -23,6 +29,20 @@ export default function Settings() {
     const reset = () => {
         setCurrentPw(''); setNewPw(''); setConfirmPw('');
         setError(''); setSuccess(false);
+    };
+
+    const saveProfile = async () => {
+        if (!name.trim() || !email.trim()) { setProfileError('Name and email are required.'); return; }
+        setProfileSaving(true); setProfileError(''); setProfileSuccess(false);
+        try {
+            const { data } = await axios.put('/api/profile', { name, email });
+            setUser(data.user);
+            setProfileSuccess(true);
+        } catch (err) {
+            const errs = err.response?.data?.errors;
+            if (errs?.email) setProfileError(errs.email[0]);
+            else setProfileError(err.response?.data?.message || 'Failed to update profile.');
+        } finally { setProfileSaving(false); }
     };
 
     const handleSubmit = async (e) => {
@@ -87,14 +107,26 @@ export default function Settings() {
                                     <div className="w-0.5 h-4 rounded-full bg-primary/50 flex-shrink-0"></div>
                                     <h2 className="text-sm font-semibold text-base-content">Account</h2>
                                 </div>
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between py-2 border-b border-base-300/60">
-                                        <span className="text-xs text-base-content/50">Name</span>
-                                        <span className="text-sm font-medium text-base-content">{user?.name}</span>
+
+                                {profileSuccess && (
+                                    <div className="msg-enter flex items-center gap-2 px-3 py-2.5 rounded-lg bg-success/10 border border-success/25 text-xs text-success mb-4">
+                                        <i className="fas fa-check-circle text-[10px]"></i>
+                                        Profile updated successfully.
                                     </div>
-                                    <div className="flex items-center justify-between py-2 border-b border-base-300/60">
-                                        <span className="text-xs text-base-content/50">Email</span>
-                                        <span className="text-sm font-medium text-base-content">{user?.email}</span>
+                                )}
+
+                                <div className="space-y-3">
+                                    <div>
+                                        <label className="block text-xs font-medium text-base-content/60 mb-1">Name</label>
+                                        <input type="text" value={name}
+                                            onChange={e => setName(e.target.value)}
+                                            className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-base-content/60 mb-1">Email</label>
+                                        <input type="email" value={email}
+                                            onChange={e => setEmail(e.target.value)}
+                                            className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors" />
                                     </div>
                                     <div className="flex items-center justify-between py-2">
                                         <span className="text-xs text-base-content/50">Role</span>
@@ -103,6 +135,19 @@ export default function Settings() {
                                                 ? 'bg-primary/15 text-primary border-primary/25'
                                                 : 'bg-base-300/60 text-base-content/50 border-base-300'
                                         }`}>{user?.role}</span>
+                                    </div>
+                                    {profileError && (
+                                        <div className="msg-enter flex items-center gap-2 px-3 py-2 rounded-lg bg-error/10 border border-error/25 text-xs text-error">
+                                            <i className="fas fa-exclamation-circle text-[10px]"></i>
+                                            {profileError}
+                                        </div>
+                                    )}
+                                    <div className="flex items-center gap-2 pt-1">
+                                        <button onClick={saveProfile} disabled={profileSaving}
+                                            className="flex items-center gap-2 px-4 py-2 text-xs font-semibold bg-primary text-white rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity shadow-[0_0_14px_color-mix(in_oklch,var(--color-primary)_35%,transparent)]">
+                                            <i className={`fas ${profileSaving ? 'fa-spinner fa-spin' : 'fa-save'} text-xs`}></i>
+                                            {profileSaving ? 'Saving…' : 'Save'}
+                                        </button>
                                     </div>
                                 </div>
                             </div>

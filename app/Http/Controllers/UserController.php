@@ -65,6 +65,20 @@ class UserController extends Controller
         return response()->json(['updated' => true]);
     }
 
+    public function updateOwnProfile(Request $request)
+    {
+        $user = Auth::user();
+        $request->validate([
+            'name'  => 'required|string|max:100',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+        ]);
+
+        $old = $user->fresh()->toArray();
+        $user->update($request->only(['name', 'email']));
+        AuditLog::log('updated', 'user', $user->id, $old, $user->fresh()->toArray());
+        return response()->json(['updated' => true, 'user' => $user->fresh()]);
+    }
+
     public function changePassword(Request $request, User $user)
     {
         $request->validate([
