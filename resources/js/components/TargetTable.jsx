@@ -279,13 +279,13 @@ function TargetRow({ target: t, isPinging, isAdmin, onPing, onEdit, onDelete, on
 
 function StatusBadge({ status, isPaused }) {
     if (isPaused) return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-warning/10 text-warning/90 border border-warning/20 whitespace-nowrap">
+        <span className="status-pill inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-warning/12 text-warning border border-warning/25 whitespace-nowrap">
             <i className="fas fa-pause text-[8px]"></i>
             Maintenance
         </span>
     );
     if (status === true) return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-success/10 text-success border border-success/20 whitespace-nowrap">
+        <span className="status-pill status-pill-online inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-success/12 text-success border border-success/25 whitespace-nowrap">
             <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
                 <span className="ping-slow absolute inline-flex h-full w-full rounded-full bg-success opacity-60"></span>
                 <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-success"></span>
@@ -294,7 +294,7 @@ function StatusBadge({ status, isPaused }) {
         </span>
     );
     if (status === false) return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-error/10 text-error border border-error/20 whitespace-nowrap offline-pulse">
+        <span className="status-pill status-pill-offline inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-error/12 text-error border border-error/25 whitespace-nowrap">
             <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-error"></span>

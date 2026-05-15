@@ -73,7 +73,7 @@ export default function TargetDetailModal({ target: t, isAdmin, isPinging, onPin
     return (
         <div className="backdrop-enter fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
             <div
-                className="modal-enter bg-base-200 border border-base-300 rounded-2xl shadow-2xl w-full max-w-xl flex flex-col"
+                className="modal-enter modal-glass w-full max-w-xl flex flex-col"
                 style={{ maxHeight: '88vh' }}
                 onClick={e => e.stopPropagation()}
             >
