@@ -28,16 +28,13 @@ export default function Login() {
     return (
         <div className="min-h-screen bg-base-100 flex items-center justify-center px-4 relative overflow-hidden">
 
-            {/* Dot-grid background */}
             <div className="absolute inset-0 login-grid pointer-events-none"></div>
 
-            {/* Soft primary glow behind card */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[480px] h-[480px] rounded-full bg-primary/6 blur-3xl pointer-events-none"></div>
 
             <div className="w-full max-w-sm relative z-10">
                 <div className="modal-enter bg-base-200 border border-base-300 rounded-2xl p-8 shadow-2xl">
 
-                    {/* Brand */}
                     <div className="flex items-center gap-3 mb-8">
                         <div className="w-10 h-10 rounded-xl bg-primary/15 border border-primary/25 flex items-center justify-center flex-shrink-0 shadow-[0_0_18px_color-mix(in_oklch,var(--color-primary)_28%,transparent)]">
                             <img src="/logo.svg" alt="ArgusNet" className="w-6 h-6" />
@@ -48,14 +45,12 @@ export default function Login() {
                         </div>
                     </div>
 
-                    {/* Title */}
                     <div className="flex items-center gap-2.5 mb-1">
                         <div className="w-1 h-6 rounded-full bg-primary flex-shrink-0"></div>
                         <h2 className="text-lg font-bold text-base-content " >Sign in</h2>
                     </div>
                     <p className="text-xs text-base-content/40 mb-6 pl-3.5">Enter your credentials to continue</p>
 
-                    {/* Error */}
                     {error && (
                         <div className="mb-4 flex items-center gap-2 px-3 py-2.5 bg-error/10 border border-error/25 rounded-xl text-error text-xs">
                             <i className="fas fa-exclamation-circle flex-shrink-0"></i>

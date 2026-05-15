@@ -50,7 +50,6 @@ export default function GroupManagerModal({ groups, onSave, onDelete, onClose })
         <div className="backdrop-enter fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
             <div className="modal-enter bg-base-200 border border-base-300 rounded-2xl shadow-2xl w-full max-w-lg" onClick={e => e.stopPropagation()}>
 
-                {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-base-300">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
@@ -66,7 +65,6 @@ export default function GroupManagerModal({ groups, onSave, onDelete, onClose })
                     </button>
                 </div>
 
-                {/* Group list */}
                 <div className="px-6 py-4 max-h-64 overflow-y-auto">
                     {groups.length === 0 ? (
                         <div className="text-center py-8">
@@ -124,7 +122,6 @@ export default function GroupManagerModal({ groups, onSave, onDelete, onClose })
                     )}
                 </div>
 
-                {/* Add new group */}
                 <form onSubmit={submitNew} className="px-6 py-4 border-t border-base-300">
                     <div className="flex items-center gap-2 mb-2.5">
                         <div className="w-0.5 h-3.5 rounded-full bg-primary/50 flex-shrink-0"></div>

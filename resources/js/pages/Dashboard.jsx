@@ -131,7 +131,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
 
     const fetchGroups = async () => {
         try { const { data } = await axios.get('/api/groups'); setGroups(data); }
-        catch { /* ignore */ }
+        catch {}
     };
 
     const pingTarget = async (target) => {
@@ -305,7 +305,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                     </div>
                 </div>
 
-                {/* ── Offline alert banner ──────────────────────── */}
+
                 <div ref={sentinelRef} className="h-px"></div>
                 {offlineTargets.length > 0 && (
                     <div className="banner-enter flex items-center gap-3 px-4 py-3 mb-4 bg-error/8 border border-error/25 rounded-xl">
@@ -334,7 +334,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
 
                 <StatsBar stats={stats} />
 
-                {/* ── Fleet health bar ──────────────────────────── */}
+
                 {targets.length > 0 && (
                     <div className="anim-fade-up anim-delay-2 flex items-center gap-4 px-4 py-3 mb-4 bg-base-200 border border-base-300 rounded-xl">
                         <div className="flex-1">
@@ -358,7 +358,6 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                     </div>
                 )}
 
-                {/* Auto-refresh */}
                 <div className={`anim-fade-up anim-delay-3 flex items-center gap-3 mb-4 px-4 py-2.5 rounded-xl border transition-colors ${
                     autoRefresh
                         ? 'bg-primary/5 border-primary/20'
@@ -407,7 +406,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                     </div>
                 </div>
 
-                {/* Group filter bar */}
+
                 <div className="anim-fade-up anim-delay-4 flex items-center flex-wrap gap-1.5 mb-4">
                     <span className="text-[10px] font-semibold text-base-content/30 uppercase tracking-wider mr-1">Groups</span>
                     <button
@@ -455,7 +454,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                     )}
                 </div>
 
-                {/* ── Active monitors header ────────────────────── */}
+
                 <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                         <div className="w-0.5 h-3.5 rounded-full bg-primary/50 flex-shrink-0"></div>
@@ -507,12 +506,12 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                 ) : null;
             })()}
 
-            {/* ── Floating offline alert on scroll ──────────────── */}
+
             {offlineTargets.length > 0 && showFloatAlert && (
                 <div className="fixed top-4 right-6 z-50 pointer-events-none">
                     <div className="anim-slide-down pointer-events-auto">
                     <div className="bg-error/15 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl shadow-error/20 min-w-[260px] overflow-hidden">
-                        {/* Pill bar */}
+
                         <div className="flex items-center gap-2.5 px-4 py-2.5 cursor-pointer hover:bg-white/5 transition-colors"
                             onClick={() => setExpandedFloat(!expandedFloat)}>
                             <span className="relative flex h-2.5 w-2.5">
@@ -528,7 +527,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                             </button>
                         </div>
 
-                        {/* Expanded device list */}
+
                         {expandedFloat && (
                             <div className="border-t border-white/10 px-3 py-2 space-y-1 max-h-48 overflow-y-auto">
                                 {offlineTargets.map(t => (

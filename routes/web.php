@@ -5,15 +5,14 @@ use App\Http\Controllers\GroupController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PingController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SnmpController;
 use App\Http\Controllers\UserController;
 use App\Http\Middleware\EnsureAdmin;
 use Illuminate\Support\Facades\Route;
 
-// Public auth routes
 Route::post('/login',  [LoginController::class, 'store']);
 Route::post('/logout', [LoginController::class, 'destroy'])->middleware('auth');
 
-// All routes below require authentication
 Route::middleware('auth')->group(function () {
     Route::get('/api/user',                        [LoginController::class, 'show']);
     Route::get('/api/targets',                     [PingController::class, 'apiTargets']);
@@ -27,11 +26,15 @@ Route::middleware('auth')->group(function () {
     Route::post('/ping-all',              [PingController::class, 'pingAll']);
 
     Route::get('/api/report', [ReportController::class, 'apiReport']);
+    Route::get('/api/snmp/interfaces',       [SnmpController::class, 'allInterfaces']);
+    Route::get('/api/snmp/{target}/interfaces', [SnmpController::class, 'interfaces']);
+    Route::post('/api/snmp/{target}/discover',  [SnmpController::class, 'discover'])->middleware(EnsureAdmin::class);
+    Route::post('/api/snmp/{target}/poll',      [SnmpController::class, 'poll']);
+
     Route::get('/api/users', [UserController::class, 'index']);
     Route::put('/api/profile/password', [UserController::class, 'updateOwnPassword']);
     Route::put('/api/profile', [UserController::class, 'updateOwnProfile']);
 
-    // Admin-only: CRUD on targets, groups, and users
     Route::middleware(EnsureAdmin::class)->group(function () {
         Route::get('/api/audit-logs',                    [AuditLogController::class, 'index']);
         Route::post('/api/users',                        [UserController::class, 'store']);
@@ -49,5 +52,4 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-// Catch-all: serve React SPA
 Route::get('/{any}', fn() => view('app'))->where('any', '.*');

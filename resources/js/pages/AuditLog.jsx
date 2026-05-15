@@ -99,7 +99,7 @@ export default function AuditLog({ active = false }) {
             setTodayCount(data.today_count);
             setActions(data.actions);
             setUsers(data.users);
-        } catch { /* ignore */ }
+        } catch {}
         finally { setLoading(false); }
     };
 
@@ -158,7 +158,6 @@ export default function AuditLog({ active = false }) {
         <div className="min-h-screen bg-base-100">
             <div className="max-w-5xl mx-auto px-6 py-6">
 
-                {/* ── Header ──────────────────────────────────── */}
                 <div className="anim-fade-up flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
                         <div className="w-1 h-7 rounded-full bg-primary flex-shrink-0"></div>
@@ -171,7 +170,6 @@ export default function AuditLog({ active = false }) {
                     </div>
                 </div>
 
-                {/* ── Stats summary ────────────────────────────── */}
                 <div className="anim-fade-up anim-delay-1 grid grid-cols-3 gap-3 mb-5">
                     {statsConfig.map((s, i) => (
                         <div key={s.label}
@@ -192,7 +190,6 @@ export default function AuditLog({ active = false }) {
                     ))}
                 </div>
 
-                {/* ── Filters ──────────────────────────────────── */}
                 <div className="anim-fade-up anim-delay-1 flex items-center flex-wrap gap-2 mb-3 p-3 bg-base-200/50 border border-base-300/40 rounded-xl">
                     <i className="fas fa-filter text-xs text-base-content/30"></i>
                     <select value={filterAction} onChange={e => setFilterAction(e.target.value)}
@@ -226,14 +223,12 @@ export default function AuditLog({ active = false }) {
                     )}
                 </div>
 
-                {/* ── Result count ─────────────────────────────── */}
                 {!loading && logs.length > 0 && (
                     <div className="anim-fade-up anim-delay-1 text-[11px] text-base-content/30 mb-3 tabular-nums">
                         Showing <strong className="text-base-content/50">{from}–{to}</strong> of <strong className="text-base-content/50">{total.toLocaleString()}</strong>
                     </div>
                 )}
 
-                {/* ── Loading ──────────────────────────────────── */}
                 {loading ? (
                     <div className="space-y-2">
                         {[1,2,3,4,5].map(i => (
@@ -258,7 +253,6 @@ export default function AuditLog({ active = false }) {
                     </div>
                 ) : (
                     <>
-                        {/* ── Timeline ────────────────────────────── */}
                         <div className="space-y-1.5">
                                 {logs.map((log, idx) => {
                                     const meta = actionMeta[log.action] ?? { label: log.action?.replace(/_/g, ' '), color: 'default', icon: 'fa-circle' };
@@ -288,7 +282,6 @@ export default function AuditLog({ active = false }) {
                                                 onClick={() => setExpandedId(expanded ? null : log.id)}>
 
                                                     <div className="flex items-center gap-3 px-4 py-3">
-                                                        {/* Time */}
                                                         <div className="w-14 flex-shrink-0">
                                                             <div className="text-xs font-medium text-base-content/70 tabular-nums leading-tight">
                                                                 {log.created_at?.slice(11, 19)}
@@ -298,13 +291,11 @@ export default function AuditLog({ active = false }) {
                                                             </div>
                                                         </div>
 
-                                                        {/* Badge */}
                                                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${c.bg} ${c.border} ${c.text} flex-shrink-0`}>
                                                             <i className={`fas ${meta.icon} text-[9px]`}></i>
                                                             {meta.label}
                                                         </span>
 
-                                                        {/* Who */}
                                                         <span className="flex items-center gap-1.5 text-xs text-base-content/60 min-w-0 flex-1">
                                                             <span className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden text-white text-[9px] font-bold"
                                                                 style={{ backgroundColor: nameColor(log.user?.name) }}>
@@ -318,25 +309,21 @@ export default function AuditLog({ active = false }) {
                                                             </span>
                                                         </span>
 
-                                                        {/* Target */}
                                                         <span className="hidden sm:flex items-center gap-1.5 text-xs text-base-content/40">
                                                             <i className="fas fa-tag text-[9px]"></i>
                                                             <span className="capitalize">{log.target_type ?? '—'}</span>
                                                             {log.target_id && <span className="text-base-content/20">#{log.target_id}</span>}
                                                         </span>
 
-                                                        {/* IP */}
                                                         {log.ip_address && (
                                                             <span className="hidden md:block text-[10px] text-base-content/20 tabular-nums font-mono">
                                                                 {log.ip_address}
                                                             </span>
                                                         )}
 
-                                                        {/* Expand icon */}
                                                         <i className={`fas fa-chevron-${expanded ? 'up' : 'down'} text-[9px] text-base-content/20 transition-transform flex-shrink-0`}></i>
                                                     </div>
 
-                                                    {/* ── Expanded details ── */}
                                                     <div className={`transition-all duration-200 ease-in-out ${expanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
                                                         {expanded && (
                                                             <div className="border-t border-base-300/20 px-4 py-3 space-y-3 text-xs">
@@ -411,7 +398,6 @@ export default function AuditLog({ active = false }) {
                                 })}
                             </div>
 
-                        {/* ── Pagination ──────────────────────────── */}
                         {lastPage > 1 && (
                             <div className="flex items-center justify-center gap-1.5 mt-6">
                                 <button disabled={page <= 1} onClick={() => fetchLogs(page - 1)}

@@ -5,7 +5,6 @@ import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, LabelList,
 } from 'recharts';
 
-// ── helpers ──────────────────────────────────────────────────────────────────
 const shorten  = (s, n = 18) => s.length > n ? s.slice(0, n - 1) + '…' : s;
 const latColor = (ms)  => ms  < 50  ? '#22c55e' : ms  < 150 ? '#f59e0b' : '#ef4444';
 const pctColor = (pct) => pct >= 99 ? '#22c55e' : pct >= 90 ? '#f59e0b' : '#ef4444';
@@ -27,7 +26,6 @@ function healthScore(online, total, maintenance, globalUptime, globalLatency) {
     return Math.round(Math.min(100, Math.max(0, onlineScore + uptimeScore + latScore)));
 }
 
-// ── sub-components ────────────────────────────────────────────────────────────
 function ScoreRing({ score }) {
     const r = 38;
     const circ = 2 * Math.PI * r;
@@ -64,7 +62,6 @@ function StatusDot({ status, paused }) {
     return <span className="w-2 h-2 rounded-full bg-base-content/20 flex-shrink-0 inline-block"></span>;
 }
 
-// ── main component ────────────────────────────────────────────────────────────
 export default function Statistics({ targets = [], loading = false }) {
     const [activeTab, setActiveTab] = useState('latency');
     const [tick, setTick] = useState(0);
@@ -87,7 +84,6 @@ export default function Statistics({ targets = [], loading = false }) {
         tick: '#374151', grid: 'rgba(0,0,0,0.07)', axis: 'rgba(0,0,0,0.15)', bg: 'rgba(0,0,0,0.02)',
     };
 
-    // ── derived ───────────────────────────────────────────────────────────────
     const online      = targets.filter(t => !t.is_paused && t.last_status === true).length;
     const offline     = targets.filter(t => !t.is_paused && t.last_status === false).length;
     const maintenance = targets.filter(t =>  t.is_paused).length;
@@ -114,27 +110,22 @@ export default function Statistics({ targets = [], loading = false }) {
         { name: 'Unknown',     value: unknown,      color: '#6b7280' },
     ].filter(d => d.value > 0);
 
-    // worst performers — bottom 5 by uptime (must have ping data)
     const worstPerformers = [...targets]
         .filter(t => t.total_pings > 0 && !t.is_paused)
         .sort((a, b) => (a.uptime_percent ?? 100) - (b.uptime_percent ?? 100))
         .slice(0, 5);
 
-    // best performers — top 3 by uptime (must have enough pings to be meaningful)
     const bestPerformers = [...targets]
         .filter(t => t.total_pings >= 3 && !t.is_paused && t.uptime_percent != null)
         .sort((a, b) => b.uptime_percent - a.uptime_percent || (a.avg_response_time ?? 9999) - (b.avg_response_time ?? 9999))
         .slice(0, 3);
 
-    // highest latency device
     const highestLatency = [...targets]
         .filter(t => t.avg_response_time != null)
         .sort((a, b) => b.avg_response_time - a.avg_response_time)[0] ?? null;
 
-    // most pings (most monitored)
     const mostPinged = [...targets].sort((a, b) => (b.total_pings ?? 0) - (a.total_pings ?? 0))[0] ?? null;
 
-    // chart data
     const byLatency = [...targets]
         .filter(t => t.avg_response_time != null)
         .sort((a, b) => b.avg_response_time - a.avg_response_time)
@@ -190,7 +181,6 @@ export default function Statistics({ targets = [], loading = false }) {
         );
     };
 
-    // ── empty / loading states ─────────────────────────────────────────────────
     if (loading) return (
         <div className="min-h-screen bg-base-100 flex items-center justify-center">
             <div className="text-center">
@@ -217,12 +207,10 @@ export default function Statistics({ targets = [], loading = false }) {
         </div>
     );
 
-    // ── main render ───────────────────────────────────────────────────────────
     return (
         <div className="min-h-screen bg-base-100">
             <div className="max-w-screen-xl mx-auto px-6 py-6 space-y-4">
 
-                {/* ── Header ──────────────────────────────────────────────── */}
                 <div className="anim-fade-up flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="w-1 h-7 rounded-full bg-primary flex-shrink-0"></div>
@@ -233,7 +221,6 @@ export default function Statistics({ targets = [], loading = false }) {
                     </div>
                 </div>
 
-                {/* ── Health score hero ───────────────────────────────────── */}
                 <div className="anim-fade-up anim-delay-1 bg-base-200 border border-base-300 rounded-xl p-5 flex items-center gap-6">
                     {score !== null && <ScoreRing score={score} />}
                     <div className="flex-1 min-w-0">
@@ -247,7 +234,6 @@ export default function Statistics({ targets = [], loading = false }) {
                         </div>
                     </div>
 
-                    {/* Highlight mini-cards */}
                     <div className="flex gap-3 flex-shrink-0">
                         {highestLatency && (
                             <div className="bg-base-300/50 border border-base-300 rounded-xl px-4 py-3 text-center min-w-[110px]">
@@ -277,7 +263,6 @@ export default function Statistics({ targets = [], loading = false }) {
                     </div>
                 </div>
 
-                {/* ── Offline alert banner ─────────────────────────────────── */}
                 {offline > 0 && (
                     <div className="banner-enter bg-error/8 border border-error/25 rounded-xl p-4">
                         <div className="flex items-center gap-2 mb-3">
@@ -306,7 +291,6 @@ export default function Statistics({ targets = [], loading = false }) {
                     </div>
                 )}
 
-                {/* ── Fleet health bar ─────────────────────────────────────── */}
                 <div className="anim-fade-up anim-delay-2 flex items-center gap-4 px-4 py-3 bg-base-200 border border-base-300 rounded-xl">
                     <div className="flex-1">
                         <div className="flex h-2.5 rounded-full overflow-hidden bg-base-300/60 gap-px">
@@ -328,7 +312,6 @@ export default function Statistics({ targets = [], loading = false }) {
                     </div>
                 </div>
 
-                {/* ── Summary cards ────────────────────────────────────────── */}
                 <div className="grid grid-cols-3 gap-3">
                     {[
                         { label: 'Total Devices', value: targets.length,
@@ -371,7 +354,6 @@ export default function Statistics({ targets = [], loading = false }) {
                     ))}
                 </div>
 
-                {/* ── Donut + Fleet health ─────────────────────────────────── */}
                 <div className="anim-fade-up anim-delay-4 grid grid-cols-2 gap-4">
                     <div className="bg-base-200 border border-base-300 rounded-xl p-5">
                         <div className="flex items-center gap-2 mb-4">
@@ -431,10 +413,8 @@ export default function Statistics({ targets = [], loading = false }) {
                     </div>
                 </div>
 
-                {/* ── Worst + Best performers ──────────────────────────────── */}
                 <div className="anim-fade-up anim-delay-5 grid grid-cols-2 gap-4">
 
-                    {/* Worst performers */}
                     <div className="bg-base-200 border border-base-300 rounded-xl p-5">
                         <div className="flex items-center gap-2 mb-4">
                             <div className="w-0.5 h-3.5 rounded-full bg-error/60 flex-shrink-0"></div>
@@ -469,7 +449,6 @@ export default function Statistics({ targets = [], loading = false }) {
                         )}
                     </div>
 
-                    {/* Best performers */}
                     <div className="bg-base-200 border border-base-300 rounded-xl p-5">
                         <div className="flex items-center gap-2 mb-4">
                             <div className="w-0.5 h-3.5 rounded-full bg-success/60 flex-shrink-0"></div>
@@ -510,7 +489,6 @@ export default function Statistics({ targets = [], loading = false }) {
                     </div>
                 </div>
 
-                {/* ── Per-device breakdown chart ───────────────────────────── */}
                 <div className="anim-fade-up anim-delay-6 bg-base-200 border border-base-300 rounded-xl p-5">
                     <div className="flex items-center justify-between mb-5">
                         <div className="flex items-center gap-2">

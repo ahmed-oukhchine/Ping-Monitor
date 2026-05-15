@@ -10,11 +10,13 @@ class Target extends Model
         'name', 'ip_address', 'location', 'notes',
         'warn_ms', 'critical_ms', 'is_paused',
         'alert_email', 'alert_consecutive', 'alert_cooldown_minutes', 'alerted_at',
+        'snmp_enabled', 'snmp_community', 'snmp_version',
     ];
 
     protected $casts = [
-        'is_paused'  => 'boolean',
-        'alerted_at' => 'datetime',
+        'is_paused'    => 'boolean',
+        'snmp_enabled' => 'boolean',
+        'alerted_at'   => 'datetime',
     ];
 
     public function pingHistories()
@@ -30,5 +32,10 @@ class Target extends Model
     public function groups()
     {
         return $this->belongsToMany(Group::class);
+    }
+
+    public function networkInterfaces()
+    {
+        return $this->hasMany(NetworkInterface::class);
     }
 }

@@ -31,7 +31,6 @@ export default function Sidebar({ open, onToggle, onLogout, onCycleTheme, themeP
         <aside className={`fixed top-0 left-0 h-screen bg-base-200 border-r border-base-300 flex flex-col z-50 shadow-xl shadow-black/15 transition-all duration-300 ${
             open ? 'w-56' : 'w-16'
         }`}>
-            {/* ── Logo / Toggle ── */}
             <button onClick={onToggle} className="px-4 py-5 border-b border-base-300 flex-shrink-0 flex items-center justify-center w-full hover:bg-base-300/30 transition-colors cursor-pointer">
                 <div className="flex items-center justify-center w-full">
                 <div className="w-9 h-9 flex-shrink-0">
@@ -53,7 +52,6 @@ export default function Sidebar({ open, onToggle, onLogout, onCycleTheme, themeP
             </div>
             </button>
 
-            {/* ── Navigation ── */}
             <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
                 {navItems.filter(i => i.show).map((item) => {
                     const active = pathname === item.to;
@@ -88,7 +86,6 @@ export default function Sidebar({ open, onToggle, onLogout, onCycleTheme, themeP
                 })}
             </nav>
 
-            {/* ── Bottom ── */}
             {open && (
                 <div className="px-3 pb-4 pt-3 border-t border-base-300 flex-shrink-0 space-y-1">
                     <div className="flex items-center gap-0.5 bg-base-300/60 rounded-lg p-0.5">

@@ -17,8 +17,6 @@ class PingController extends Controller
         private readonly PingService $ping,
     ) {}
 
-    // ── API ──────────────────────────────────────────────────────────────────
-
     public function apiTargets()
     {
         $targets = Target::withCount([
@@ -53,6 +51,9 @@ class PingController extends Controller
                 'alert_email'            => $t->alert_email,
                 'alert_consecutive'      => $t->alert_consecutive,
                 'alert_cooldown_minutes' => $t->alert_cooldown_minutes,
+                'snmp_enabled'           => $t->snmp_enabled,
+                'snmp_community'         => $t->snmp_community,
+                'snmp_version'           => $t->snmp_version,
                 'last_status'            => $last?->is_success,
                 'last_response_time'     => $last?->response_time,
                 'last_ping_at'           => $last?->created_at,
@@ -67,10 +68,10 @@ class PingController extends Controller
     {
         $targets  = Target::orderBy('name')->get(['id', 'name']);
         $targetId = $request->input('target_id');
-        $status   = $request->input('status');    // 'online' | 'offline'
-        $dateFrom = $request->input('date_from'); // Y-m-d
-        $dateTo   = $request->input('date_to');   // Y-m-d
-        $latency  = $request->input('latency');   // 'fast' | 'medium' | 'slow'
+        $status   = $request->input('status');
+        $dateFrom = $request->input('date_from');
+        $dateTo   = $request->input('date_to');
+        $latency  = $request->input('latency');
 
         $applyFilters = function ($q) use ($targetId, $status, $dateFrom, $dateTo, $latency) {
             return $q
@@ -136,7 +137,7 @@ class PingController extends Controller
 
         $callback = function () use ($applyFilters) {
             $handle = fopen('php://output', 'w');
-            fputs($handle, "\xEF\xBB\xBF"); // UTF-8 BOM for Excel
+            fputs($handle, "\xEF\xBB\xBF");
             fputcsv($handle, ['Time', 'Target', 'IP Address', 'Status', 'Latency (ms)', 'Error']);
 
             $applyFilters(PingHistory::with('target:id,name,ip_address'))
@@ -183,7 +184,6 @@ class PingController extends Controller
 
         $query->chunk(1000, function ($pings) use (&$incidents, &$currentTargetId, &$openIncident) {
             foreach ($pings as $ping) {
-                // Crossed into a new target's block
                 if ($ping->target_id !== $currentTargetId) {
                     if ($openIncident !== null) {
                         $openIncident['ongoing'] = true;
@@ -225,7 +225,6 @@ class PingController extends Controller
             $incidents[] = $openIncident;
         }
 
-        // Most recent first
         usort($incidents, fn($a, $b) => $b['started_at'] <=> $a['started_at']);
 
         $total = count($incidents);
@@ -256,8 +255,6 @@ class PingController extends Controller
         return response()->json($data);
     }
 
-    // ── CRUD ─────────────────────────────────────────────────────────────────
-
     public function store(Request $request)
     {
         $request->validate([
@@ -270,11 +267,14 @@ class PingController extends Controller
             'alert_email'            => 'nullable|email|max:255',
             'alert_consecutive'      => 'nullable|integer|min:1|max:20',
             'alert_cooldown_minutes' => 'nullable|integer|min:1|max:10080',
+            'snmp_enabled'           => 'boolean',
+            'snmp_community'         => 'nullable|string|max:100',
+            'snmp_version'           => 'nullable|string|in:1,2c,3',
             'group_ids'              => 'nullable|array',
             'group_ids.*'            => 'integer|exists:groups,id',
         ]);
 
-        $data = $request->only('name', 'ip_address', 'location', 'notes', 'warn_ms', 'critical_ms', 'alert_email', 'alert_consecutive', 'alert_cooldown_minutes');
+        $data = $request->only('name', 'ip_address', 'location', 'notes', 'warn_ms', 'critical_ms', 'alert_email', 'alert_consecutive', 'alert_cooldown_minutes', 'snmp_enabled', 'snmp_community', 'snmp_version');
         $data['alert_consecutive'] ??= 3;
         $data['alert_cooldown_minutes'] ??= 60;
         $target = Target::create($data);
@@ -300,12 +300,15 @@ class PingController extends Controller
             'alert_email'            => 'nullable|email|max:255',
             'alert_consecutive'      => 'nullable|integer|min:1|max:20',
             'alert_cooldown_minutes' => 'nullable|integer|min:1|max:10080',
+            'snmp_enabled'           => 'boolean',
+            'snmp_community'         => 'nullable|string|max:100',
+            'snmp_version'           => 'nullable|string|in:1,2c,3',
             'group_ids'              => 'nullable|array',
             'group_ids.*'            => 'integer|exists:groups,id',
         ]);
 
         $old = $target->toArray();
-        $data = $request->only('name', 'ip_address', 'location', 'notes', 'warn_ms', 'critical_ms', 'alert_email', 'alert_consecutive', 'alert_cooldown_minutes');
+        $data = $request->only('name', 'ip_address', 'location', 'notes', 'warn_ms', 'critical_ms', 'alert_email', 'alert_consecutive', 'alert_cooldown_minutes', 'snmp_enabled', 'snmp_community', 'snmp_version');
         $data['alert_consecutive'] ??= 3;
         $data['alert_cooldown_minutes'] ??= 60;
         $target->update($data);
@@ -323,8 +326,6 @@ class PingController extends Controller
 
         return response()->json(['deleted' => true]);
     }
-
-    // ── Ping ─────────────────────────────────────────────────────────────────
 
     public function ping(Target $target)
     {
@@ -388,11 +389,8 @@ class PingController extends Controller
         return response()->json(['is_paused' => false]);
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
     private function maybeAlert(Target $target, bool $success): void
     {
-        // On recovery, reset cooldown so the next outage always alerts
         if ($success) {
             if ($target->alerted_at) {
                 $target->update(['alerted_at' => null]);

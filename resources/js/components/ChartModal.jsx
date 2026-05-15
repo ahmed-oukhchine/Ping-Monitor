@@ -12,7 +12,6 @@ export default function ChartModal({ target, onClose }) {
         () => (document.documentElement.getAttribute('data-theme') || 'dark') !== 'light'
     );
 
-    // Stay in sync with the theme toggle while the modal is open
     useEffect(() => {
         const obs = new MutationObserver(() =>
             setIsDark((document.documentElement.getAttribute('data-theme') || 'dark') !== 'light')
@@ -43,9 +42,8 @@ export default function ChartModal({ target, onClose }) {
     const uptime      = data.length ? Math.round(onlineCount / data.length * 100) : null;
     const uptimeColor = uptime == null ? 'text-base-content/30' : uptime >= 99 ? 'text-success' : uptime >= 90 ? 'text-warning' : 'text-error';
 
-    // All chart colors in one object — no CSS variables in SVG attributes (they don't work there)
     const C = isDark ? {
-        tickLabel:  '#c9cdd6',          // bright enough to read clearly
+        tickLabel:  '#c9cdd6',
         tickFaint:  'rgba(255,255,255,0.18)',
         axisLine:   'rgba(255,255,255,0.12)',
         grid:       'rgba(255,255,255,0.06)',
@@ -95,7 +93,6 @@ export default function ChartModal({ target, onClose }) {
                 </div>
 
                 <div className="px-6 py-5">
-                    {/* Stat cards */}
                     <div className="grid grid-cols-4 gap-3 mb-5">
                         {[
                             { label: 'Uptime', value: uptime != null ? `${uptime}%`         : '—', cls: uptimeColor },
@@ -110,7 +107,6 @@ export default function ChartModal({ target, onClose }) {
                         ))}
                     </div>
 
-                    {/* Chart */}
                     {loading ? (
                         <div className="flex items-center justify-center py-12 text-base-content/30">
                             <span className="loading loading-spinner loading-lg"></span>

@@ -63,7 +63,6 @@ export default function Reports() {
         <div className="min-h-screen bg-base-100">
             <div className="max-w-screen-xl mx-auto px-6 py-6 space-y-4">
 
-                {/* ── Header ─────────────────────────────────────── */}
                 <div className="anim-fade-up flex items-center gap-3">
                     <div className="w-1 h-7 rounded-full bg-primary flex-shrink-0"></div>
                     <div className="flex-1 min-w-0">
@@ -88,7 +87,6 @@ export default function Reports() {
                     </div>
                 </div>
 
-                {/* ── Filter bar ──────────────────────────────────── */}
                 <div className="anim-fade-up anim-delay-1 bg-base-200 border border-base-300 rounded-xl px-4 py-3 flex items-center flex-wrap gap-x-4 gap-y-2.5">
 
                     <div className="flex items-center gap-2">
@@ -147,7 +145,6 @@ export default function Reports() {
                     </div>
                 ) : (
                     <>
-                        {/* ── Summary cards ──────────────────────────────── */}
                         {summary && (
                             <div className="grid grid-cols-4 gap-3">
                                 {[
@@ -178,7 +175,6 @@ export default function Reports() {
                             </div>
                         )}
 
-                        {/* ── Uptime trend chart ────────────────────────── */}
                         {daily.length > 1 && (
                             <div className="anim-fade-up anim-delay-3 bg-base-200 border border-base-300 rounded-xl p-5">
                                 <div className="flex items-center gap-2 mb-5">
@@ -220,7 +216,6 @@ export default function Reports() {
                             </div>
                         )}
 
-                        {/* ── Per-target breakdown table ──────────────── */}
                         <div className="anim-fade-up anim-delay-4 bg-base-200 border border-base-300 rounded-xl overflow-hidden">
                             <div className="flex items-center gap-2 px-5 py-4 border-b border-base-300">
                                 <div className="w-0.5 h-3.5 rounded-full bg-primary/50 flex-shrink-0"></div>
@@ -306,7 +301,6 @@ export default function Reports() {
                             </div>
                         </div>
 
-                        {/* ── Worst performers bar chart ──────────────── */}
                         {stats.length > 1 && (
                             <div className="anim-fade-up anim-delay-5 bg-base-200 border border-base-300 rounded-xl p-5">
                                 <div className="flex items-center gap-2 mb-5">

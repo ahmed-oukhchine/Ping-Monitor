@@ -28,7 +28,6 @@ export default function StatsChartModal({ targets, onClose }) {
     const latColor = (ms)  => ms  < 50  ? '#22c55e' : ms  < 150 ? '#f59e0b' : '#ef4444';
     const pctColor = (pct) => pct >= 99 ? '#22c55e' : pct >= 90 ? '#f59e0b' : '#ef4444';
 
-    // ── Counts ──────────────────────────────────────────────────────────────
     const online      = targets.filter(t => !t.is_paused && t.last_status === true).length;
     const offline     = targets.filter(t => !t.is_paused && t.last_status === false).length;
     const maintenance = targets.filter(t =>  t.is_paused).length;
@@ -41,7 +40,6 @@ export default function StatsChartModal({ targets, onClose }) {
         { name: 'Unknown',     value: unknown,      color: '#6b7280' },
     ].filter(d => d.value > 0);
 
-    // ── Fleet averages ───────────────────────────────────────────────────────
     const withLatency = targets.filter(t => t.avg_response_time != null);
     const globalLatency = withLatency.length
         ? (withLatency.reduce((s, t) => s + t.avg_response_time, 0) / withLatency.length).toFixed(1)
@@ -52,7 +50,6 @@ export default function StatsChartModal({ targets, onClose }) {
         ? (withUptime.reduce((s, t) => s + t.uptime_percent, 0) / withUptime.length).toFixed(1)
         : null;
 
-    // ── Per-target datasets ──────────────────────────────────────────────────
     const byLatency = [...targets]
         .filter(t => t.avg_response_time != null)
         .sort((a, b) => b.avg_response_time - a.avg_response_time)
@@ -81,7 +78,6 @@ export default function StatsChartModal({ targets, onClose }) {
     ];
     const tab = tabs.find(t => t.id === activeTab);
 
-    // ── Tooltips ─────────────────────────────────────────────────────────────
     const PieTooltip = ({ active, payload }) => {
         if (!active || !payload?.length) return null;
         return (
@@ -116,7 +112,6 @@ export default function StatsChartModal({ targets, onClose }) {
                 style={{ maxHeight: '88vh' }}
                 onClick={e => e.stopPropagation()}
             >
-                {/* ── Header ───────────────────────────────────────────── */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-base-300 flex-shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
@@ -137,7 +132,6 @@ export default function StatsChartModal({ targets, onClose }) {
 
                 <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
 
-                    {/* ── Summary cards ────────────────────────────────── */}
                     <div className="grid grid-cols-4 gap-3">
                         {[
                             { label: 'Total Devices', value: targets.length,   cls: 'text-base-content',  icon: 'fa-server',       bg: 'bg-primary/10',  ic: 'text-primary'  },
@@ -157,7 +151,6 @@ export default function StatsChartModal({ targets, onClose }) {
                         ))}
                     </div>
 
-                    {/* ── Donut + Fleet health ─────────────────────────── */}
                     <div className="grid grid-cols-2 gap-4">
                         <div className="bg-base-300/30 border border-base-300 rounded-xl p-4">
                             <h4 className="text-[11px] font-semibold text-base-content/40 uppercase tracking-wider mb-3">Status Distribution</h4>
@@ -206,7 +199,6 @@ export default function StatsChartModal({ targets, onClose }) {
                         </div>
                     </div>
 
-                    {/* ── Per-device bar charts ─────────────────────────── */}
                     <div className="bg-base-300/30 border border-base-300 rounded-xl p-4">
                         <div className="flex items-center justify-between mb-4">
                             <h4 className="text-[11px] font-semibold text-base-content/40 uppercase tracking-wider">Per-Device Breakdown</h4>

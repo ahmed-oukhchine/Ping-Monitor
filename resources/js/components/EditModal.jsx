@@ -16,6 +16,8 @@ export default function EditModal({ target, groups = [], onSave, onClose }) {
     const [alertEmail, setAlertEmail]             = useState(target.alert_email || '');
     const [alertConsecutive, setAlertConsecutive] = useState(target.alert_consecutive ?? 3);
     const [alertCooldown, setAlertCooldown]       = useState(target.alert_cooldown_minutes ?? 60);
+    const [snmpEnabled, setSnmpEnabled]           = useState(!!target.snmp_enabled);
+    const [snmpCommunity, setSnmpCommunity]       = useState(target.snmp_community || '');
     const [loading, setLoading]     = useState(false);
 
     const toggleGroup = (id) => {
@@ -39,6 +41,9 @@ export default function EditModal({ target, groups = [], onSave, onClose }) {
                 alert_email:            alertEnabled && alertEmail.trim() ? alertEmail.trim() : null,
                 alert_consecutive:      alertEnabled ? parseInt(alertConsecutive) || 3 : null,
                 alert_cooldown_minutes: alertEnabled ? parseInt(alertCooldown)    || 60 : null,
+                snmp_enabled:           snmpEnabled,
+                snmp_community:         snmpEnabled && snmpCommunity.trim() ? snmpCommunity.trim() : null,
+                snmp_version:           '2c',
             });
         } finally {
             setLoading(false);
@@ -164,25 +169,51 @@ export default function EditModal({ target, groups = [], onSave, onClose }) {
                             </div>
                         </div>
 
-                        {/* Alert Settings */}
-                        <div className="border border-base-300 rounded-xl overflow-hidden">
-                            <button type="button"
-                                onClick={() => setAlertEnabled(v => !v)}
-                                className="w-full flex items-center justify-between px-4 py-2.5 bg-base-300/30 hover:bg-base-300/50 transition-colors">
+                        <div className="border-t border-base-300/60 pt-3 mt-2">
+                            <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <i className="fas fa-bell text-[11px] text-base-content/40"></i>
+                                    <i className="fas fa-network-wired text-[11px] text-primary/60"></i>
+                                    <span className="text-xs font-semibold text-base-content/55">SNMP Monitoring</span>
+                                    <span className="text-base-content/30 text-xs font-normal">optional</span>
+                                </div>
+                                <button type="button" onClick={() => setSnmpEnabled(v => !v)}
+                                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer ${snmpEnabled ? 'bg-primary' : 'bg-base-300'}`}>
+                                    <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${snmpEnabled ? 'translate-x-[18px]' : 'translate-x-[3px]'}`} />
+                                </button>
+                            </div>
+                            <div className={`overflow-hidden transition-all duration-200 ${snmpEnabled ? 'max-h-40 mt-3' : 'max-h-0'}`}>
+                                <div className="flex flex-col gap-3">
+                                    <div>
+                                        <label className="block text-[11px] font-semibold text-base-content/45 mb-1.5">
+                                            <i className="fas fa-key text-[9px] mr-1"></i>Community string
+                                        </label>
+                                        <input type="text" className={INPUT}
+                                            placeholder="public"
+                                            value={snmpCommunity} onChange={e => setSnmpCommunity(e.target.value)}
+                                            required={snmpEnabled} />
+                                    </div>
+                                    <div className="text-[10px] text-base-content/30 leading-relaxed">
+                                        <i className="fas fa-info-circle mr-1"></i>
+                                        After saving, run <strong>snmp:discover</strong> on this target from the Monitoring page.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="border-t border-base-300/60 pt-3 mt-2">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <i className="fas fa-bell text-[11px] text-warning/60"></i>
                                     <span className="text-xs font-semibold text-base-content/55">Email Alerts</span>
                                     <span className="text-base-content/30 text-xs font-normal">optional</span>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    {alertEnabled && (
-                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-primary/15 text-primary">ON</span>
-                                    )}
-                                    <i className={`fas fa-chevron-${alertEnabled ? 'up' : 'down'} text-[9px] text-base-content/30`}></i>
-                                </div>
-                            </button>
-                            {alertEnabled && (
-                                <div className="px-4 py-3 flex flex-col gap-3 border-t border-base-300">
+                                <button type="button" onClick={() => setAlertEnabled(v => !v)}
+                                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer ${alertEnabled ? 'bg-primary' : 'bg-base-300'}`}>
+                                    <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${alertEnabled ? 'translate-x-[18px]' : 'translate-x-[3px]'}`} />
+                                </button>
+                            </div>
+                            <div className={`overflow-hidden transition-all duration-200 ${alertEnabled ? 'max-h-60 mt-3' : 'max-h-0'}`}>
+                                <div className="flex flex-col gap-3">
                                     <div>
                                         <label className="block text-[11px] font-semibold text-base-content/45 mb-1.5">
                                             <i className="fas fa-envelope text-[9px] mr-1"></i>Alert email
@@ -211,7 +242,7 @@ export default function EditModal({ target, groups = [], onSave, onClose }) {
                                         </div>
                                     </div>
                                 </div>
-                            )}
+                            </div>
                         </div>
 
                     </div>

@@ -14,6 +14,8 @@ export default function AddModal({ groups = [], onSave, onClose }) {
     const [alertEmail, setAlertEmail]     = useState('');
     const [alertConsecutive, setAlertConsecutive] = useState(3);
     const [alertCooldown, setAlertCooldown]       = useState(60);
+    const [snmpEnabled, setSnmpEnabled]   = useState(false);
+    const [snmpCommunity, setSnmpCommunity] = useState('');
     const [loading, setLoading]         = useState(false);
     const [error, setError]             = useState('');
 
@@ -39,6 +41,9 @@ export default function AddModal({ groups = [], onSave, onClose }) {
                 alert_email:             alertEnabled && alertEmail.trim() ? alertEmail.trim() : null,
                 alert_consecutive:       alertEnabled ? parseInt(alertConsecutive) || 3 : null,
                 alert_cooldown_minutes:  alertEnabled ? parseInt(alertCooldown)    || 60 : null,
+                snmp_enabled:            snmpEnabled,
+                snmp_community:          snmpEnabled && snmpCommunity.trim() ? snmpCommunity.trim() : null,
+                snmp_version:            '2c',
             });
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to add target.');
@@ -167,7 +172,37 @@ export default function AddModal({ groups = [], onSave, onClose }) {
                             </div>
                         </div>
 
-                        {/* Alert Settings */}
+                        <div className="border border-base-300 rounded-xl overflow-hidden">
+                            <button type="button"
+                                onClick={() => setSnmpEnabled(v => !v)}
+                                className="w-full flex items-center justify-between px-4 py-2.5 bg-base-300/30 hover:bg-base-300/50 transition-colors">
+                                <div className="flex items-center gap-2">
+                                    <i className="fas fa-network-wired text-[11px] text-base-content/40"></i>
+                                    <span className="text-xs font-semibold text-base-content/55">SNMP Monitoring</span>
+                                    <span className="text-base-content/30 text-xs font-normal">optional</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    {snmpEnabled && (
+                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-primary/15 text-primary">ON</span>
+                                    )}
+                                    <i className={`fas fa-chevron-${snmpEnabled ? 'up' : 'down'} text-[9px] text-base-content/30`}></i>
+                                </div>
+                            </button>
+                            {snmpEnabled && (
+                                <div className="px-4 py-3 flex flex-col gap-3 border-t border-base-300">
+                                    <div>
+                                        <label className="block text-[11px] font-semibold text-base-content/45 mb-1.5">
+                                            <i className="fas fa-key text-[9px] mr-1"></i>Community string
+                                        </label>
+                                        <input type="text" className={INPUT}
+                                            placeholder="public"
+                                            value={snmpCommunity} onChange={e => setSnmpCommunity(e.target.value)}
+                                            required={snmpEnabled} />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
                         <div className="border border-base-300 rounded-xl overflow-hidden">
                             <button type="button"
                                 onClick={() => setAlertEnabled(v => !v)}

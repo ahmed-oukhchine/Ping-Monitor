@@ -2,8 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
 export default function TargetDetailModal({ target: t, isAdmin, isPinging, onPing, onEdit, onDelete, onChart, onPause, onResume, onClose }) {
-    const [history, setHistory]     = useState([]);
+    const [history, setHistory]         = useState([]);
     const [histLoading, setHistLoading] = useState(true);
+    const [interfaces, setInterfaces]   = useState([]);
+    const [ifacesLoading, setIfacesLoading] = useState(false);
+    const [quickCommunity, setQuickCommunity] = useState(t.snmp_community || '');
+    const [quickSaving, setQuickSaving] = useState(false);
     const prevPinging = useRef(isPinging);
 
     const fetchHistory = () => {
@@ -16,7 +20,26 @@ export default function TargetDetailModal({ target: t, isAdmin, isPinging, onPin
 
     useEffect(() => { fetchHistory(); }, [t.id]);
 
-    // Refresh history once a ping finishes
+    const fetchInterfaces = async () => {
+        setIfacesLoading(true);
+        try {
+            const { data } = await axios.get(`/api/snmp/${t.id}/interfaces`);
+            setInterfaces(data);
+        } catch {} finally { setIfacesLoading(false); }
+    };
+
+    const discoverInterfaces = async () => {
+        setIfacesLoading(true);
+        try {
+            await axios.post(`/api/snmp/${t.id}/discover`);
+            await fetchInterfaces();
+        } catch {} finally { setIfacesLoading(false); }
+    };
+
+    useEffect(() => {
+        if (t.snmp_enabled) fetchInterfaces();
+    }, [t.id, t.snmp_enabled]);
+
     useEffect(() => {
         if (prevPinging.current && !isPinging) fetchHistory();
         prevPinging.current = isPinging;
@@ -54,7 +77,6 @@ export default function TargetDetailModal({ target: t, isAdmin, isPinging, onPin
                 style={{ maxHeight: '88vh' }}
                 onClick={e => e.stopPropagation()}
             >
-                {/* ── Header ─────────────────────────────────────────── */}
                 <div className="flex items-start justify-between px-6 py-4 border-b border-base-300 flex-shrink-0">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
@@ -134,7 +156,6 @@ export default function TargetDetailModal({ target: t, isAdmin, isPinging, onPin
                     </button>
                 </div>
 
-                {/* ── Stats ──────────────────────────────────────────── */}
                 <div className="px-6 py-4 border-b border-base-300 flex-shrink-0">
                     <div className="grid grid-cols-3 gap-2">
                         {stats.map(s => (
@@ -146,7 +167,6 @@ export default function TargetDetailModal({ target: t, isAdmin, isPinging, onPin
                     </div>
                 </div>
 
-                {/* ── Maintenance banner ──────────────────────────────── */}
                 {t.is_paused && (
                     <div className="mx-6 mt-0 px-4 py-3 rounded-xl bg-warning/10 border border-warning/25 flex items-center gap-3 flex-shrink-0">
                         <i className="fas fa-tools text-warning text-sm flex-shrink-0"></i>
@@ -157,7 +177,6 @@ export default function TargetDetailModal({ target: t, isAdmin, isPinging, onPin
                     </div>
                 )}
 
-                {/* ── Threshold status ────────────────────────────────── */}
                 {(t.warn_ms || t.critical_ms) && (
                     <div className="px-6 py-3 border-b border-base-300 flex-shrink-0">
                         <div className="flex items-center justify-between">
@@ -198,7 +217,67 @@ export default function TargetDetailModal({ target: t, isAdmin, isPinging, onPin
                     </div>
                 )}
 
-                {/* ── Recent Activity ─────────────────────────────────── */}
+                {!t.snmp_enabled && isAdmin && (
+                    <div className="px-6 py-3 border-b border-base-300 flex-shrink-0">
+                        <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-semibold text-base-content/35 uppercase tracking-wider flex items-center gap-1.5">
+                                <i className="fas fa-network-wired text-[9px]"></i>
+                                SNMP Interfaces
+                            </span>
+                            <button onClick={() => { onEdit(t); onClose(); }}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-semibold bg-primary/15 text-primary border border-primary/25 hover:bg-primary/25 transition-all">
+                                <i className="fas fa-cog text-[9px]"></i>
+                                Configure SNMP
+                            </button>
+                        </div>
+                        <p className="text-[11px] text-base-content/30 py-2">SNMP not enabled. Click Configure to set up.</p>
+                    </div>
+                )}
+                {t.snmp_enabled && (
+                    <div className="px-6 py-3 border-b border-base-300 flex-shrink-0">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-[10px] font-semibold text-base-content/35 uppercase tracking-wider flex items-center gap-1.5">
+                                <i className="fas fa-network-wired text-[9px]"></i>
+                                SNMP Interfaces
+                            </span>
+                            <div className="flex items-center gap-2">
+                                {interfaces.length === 0 && !ifacesLoading && (
+                                    <button onClick={discoverInterfaces}
+                                        className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-semibold bg-primary/15 text-primary border border-primary/25 hover:bg-primary/25 transition-all">
+                                        <i className="fas fa-search text-[8px]"></i>
+                                        Discover
+                                    </button>
+                                )}
+                                {ifacesLoading && (
+                                    <span className="loading loading-spinner loading-xs text-primary"></span>
+                                )}
+                            </div>
+                        </div>
+                        {ifacesLoading && interfaces.length === 0 ? (
+                            <p className="text-[11px] text-base-content/30 py-2 text-center">Discovering…</p>
+                        ) : interfaces.length === 0 ? (
+                            <p className="text-[11px] text-base-content/30 py-2">No interfaces discovered yet.</p>
+                        ) : (
+                            <div className="flex flex-col gap-0.5 max-h-36 overflow-y-auto">
+                                {interfaces.map((iface) => (
+                                    <div key={iface.id} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-base-300/30 transition-colors">
+                                        {iface.is_up ? (
+                                            <span className="w-1.5 h-1.5 rounded-full bg-success flex-shrink-0"></span>
+                                        ) : (
+                                            <span className="w-1.5 h-1.5 rounded-full bg-error flex-shrink-0"></span>
+                                        )}
+                                        <span className="mono text-[10px] text-base-content/50 w-6 flex-shrink-0">{iface.snmp_index}</span>
+                                        <span className="text-[11px] text-base-content flex-1 truncate">{iface.name}</span>
+                                        <span className={`text-[9px] font-semibold tabular-nums ${iface.is_up ? 'text-success/70' : 'text-error/70'}`}>
+                                            {iface.is_up ? 'UP' : 'DOWN'}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 <div className="flex-1 overflow-y-auto min-h-0 px-6 py-4">
                     <div className="flex items-center justify-between mb-3">
                         <h4 className="text-[11px] font-semibold text-base-content/40 uppercase tracking-wider">Recent Activity</h4>
@@ -244,7 +323,6 @@ export default function TargetDetailModal({ target: t, isAdmin, isPinging, onPin
                     )}
                 </div>
 
-                {/* ── Footer actions ──────────────────────────────────── */}
                 <div className="flex items-center justify-between px-6 py-4 border-t border-base-300 flex-shrink-0">
                     <div className="flex items-center gap-2">
                         <button
@@ -262,6 +340,13 @@ export default function TargetDetailModal({ target: t, isAdmin, isPinging, onPin
                             <i className="fas fa-chart-line text-xs"></i>
                             Full Chart
                         </button>
+                        {t.snmp_enabled && interfaces.length > 0 && (
+                            <button onClick={fetchInterfaces}
+                                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-info/80 border border-info/20 rounded-lg hover:bg-info/10 hover:text-info transition-all">
+                                <i className="fas fa-sync text-xs"></i>
+                                Poll
+                            </button>
+                        )}
                     </div>
 
                     {isAdmin && (

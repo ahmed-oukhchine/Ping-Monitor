@@ -32,7 +32,6 @@ function AppContent() {
     const [reportsMounted,    setReportsMounted]    = useState(false);
     const [sidebarOpen, setSidebarOpen]             = useState(true);
 
-    // Shared targets state
     const [targets, setTargets]             = useState([]);
     const [targetsLoading, setTargetsLoading] = useState(true);
 
@@ -42,7 +41,6 @@ function AppContent() {
         mainRef.current?.scrollTo({ top: 0, behavior: 'instant' });
     }, [pathname]);
 
-    // Theme
     const [themePref, setThemePref] = useState(
         () => localStorage.getItem('argusnet_theme') || 'system'
     );
@@ -84,7 +82,7 @@ function AppContent() {
         try {
             const { data } = await axios.get('/api/targets');
             setTargets(data);
-        } catch { /* 401 handled by auth guard */ }
+        } catch {}
         finally { setTargetsLoading(false); }
     };
 

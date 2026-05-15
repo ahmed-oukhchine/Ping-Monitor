@@ -12,7 +12,6 @@ export default function Users() {
     const [newestId, setNewestId]       = useState(null);
     const [deleteError, setDeleteError] = useState('');
 
-    // Form state
     const [name, setName]         = useState('');
     const [email, setEmail]       = useState('');
     const [password, setPassword]           = useState('');
@@ -27,7 +26,7 @@ export default function Users() {
         try {
             const { data } = await axios.get('/api/users');
             setUsers(data);
-        } catch { /* ignore */ }
+        } catch {}
         finally { setLoading(false); }
     };
 
@@ -81,7 +80,6 @@ export default function Users() {
         <div className="min-h-screen bg-base-100">
             <div className="max-w-3xl mx-auto px-6 py-6">
 
-                {/* ── Header ──────────────────────────────────── */}
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
                         <div className="w-1 h-7 rounded-full bg-primary flex-shrink-0"></div>
@@ -103,7 +101,6 @@ export default function Users() {
                     )}
                 </div>
 
-                {/* ── Create form ─────────────────────────────── */}
                 {showForm && (
                     <div className="form-enter bg-base-200 border border-base-300 rounded-xl p-5 mb-5">
                         <div className="flex items-center justify-between mb-4">
@@ -234,7 +231,6 @@ export default function Users() {
                     </div>
                 )}
 
-                {/* ── Delete error banner ─────────────────────── */}
                 {deleteError && (
                     <div className="msg-enter flex items-center gap-2 px-3 py-2.5 rounded-xl bg-error/10 border border-error/20 text-xs text-error mb-5">
                         <i className="fas fa-exclamation-circle flex-shrink-0"></i>
@@ -243,7 +239,6 @@ export default function Users() {
                     </div>
                 )}
 
-                {/* ── User list ───────────────────────────────── */}
                 {loading ? (
                     <div className="flex items-center justify-center py-20 text-base-content/30">
                         <span className="loading loading-spinner loading-md"></span>
@@ -251,7 +246,6 @@ export default function Users() {
                 ) : (
                     <div className="space-y-5">
 
-                        {/* Admins */}
                         {admins.length > 0 && (
                             <div>
                                 <div className="flex items-center gap-2 mb-2 px-1">
@@ -275,7 +269,6 @@ export default function Users() {
                             </div>
                         )}
 
-                        {/* Testers */}
                         <div>
                             <div className="flex items-center gap-2 mb-2 px-1">
                                 <div className="w-0.5 h-3 rounded-full bg-primary/40 flex-shrink-0"></div>

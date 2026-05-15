@@ -119,7 +119,6 @@ function TargetRow({ target: t, isPinging, isAdmin, onPing, onEdit, onDelete, on
         <tr onClick={onDetail}
             className={`target-row border-b border-base-300/30 group cursor-pointer ${t.is_paused ? 'paused-row' : ''}`}>
 
-            {/* Device */}
             <td className="py-3.5 px-4">
                 <div className="flex items-center gap-2.5">
                     <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 border ${iconBg}`}>
@@ -136,7 +135,6 @@ function TargetRow({ target: t, isPinging, isAdmin, onPing, onEdit, onDelete, on
                 </div>
             </td>
 
-            {/* Location */}
             <td className="py-3.5 px-4">
                 <div className="flex items-center gap-1.5 text-xs text-base-content/50">
                     <i className="fas fa-map-marker-alt text-base-content/25 text-[10px] flex-shrink-0"></i>
@@ -144,12 +142,10 @@ function TargetRow({ target: t, isPinging, isAdmin, onPing, onEdit, onDelete, on
                 </div>
             </td>
 
-            {/* IP */}
             <td className="py-3.5 px-4">
                 <code className="ip-code">{t.ip_address}</code>
             </td>
 
-            {/* Status */}
             <td className="py-3.5 px-4">
                 {isPinging
                     ? <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-primary/15 text-primary border border-primary/30 whitespace-nowrap shadow-[0_0_10px_color-mix(in_oklch,var(--color-primary)_25%,transparent)]">
@@ -160,7 +156,6 @@ function TargetRow({ target: t, isPinging, isAdmin, onPing, onEdit, onDelete, on
                 }
             </td>
 
-            {/* Last latency */}
             <td className="py-3.5 px-4">
                 <div className="flex items-center gap-1.5">
                     <span className={`mono text-xs tabular-nums ${latClass(t.last_response_time)}`}>
@@ -175,35 +170,30 @@ function TargetRow({ target: t, isPinging, isAdmin, onPing, onEdit, onDelete, on
                 </div>
             </td>
 
-            {/* Avg latency */}
             <td className="py-3.5 px-4">
                 <span className="mono text-xs text-base-content/45 tabular-nums">
                     {t.avg_response_time != null ? `${t.avg_response_time} ms` : <span className="text-base-content/20">—</span>}
                 </span>
             </td>
 
-            {/* Uptime bar */}
             <td className="py-3.5 px-4 min-w-36">
                 {t.uptime_percent != null
                     ? <UptimePct pct={t.uptime_percent} />
                     : <span className="text-base-content/20 text-xs">—</span>}
             </td>
 
-            {/* Loss */}
             <td className="py-3.5 px-4">
                 {loss != null
                     ? <span className={`mono text-xs tabular-nums ${loss === 0 ? 'text-success font-bold' : loss <= 25 ? 'text-warning font-bold' : 'text-error font-bold'}`}>{loss}%</span>
                     : <span className="text-base-content/20 text-xs">—</span>}
             </td>
 
-            {/* Last check */}
             <td className="py-3.5 px-4">
                 <span className="mono text-xs text-base-content/35 tabular-nums">
                     {t.last_ping_at ? timeAgo(t.last_ping_at) : <span className="text-base-content/20">Never</span>}
                 </span>
             </td>
 
-            {/* Actions */}
             <td className="py-3.5 px-4" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                     <ActionBtn onClick={onPing} disabled={isPinging}

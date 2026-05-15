@@ -41,7 +41,6 @@ export default function Incidents() {
         <div className="min-h-screen bg-base-100">
             <div className="max-w-screen-lg mx-auto px-6 py-6">
 
-                {/* ── Header ───────────────────────────────────────── */}
                 <div className="anim-fade-up flex items-center gap-3 mb-4">
                     <div className="w-1 h-7 rounded-full bg-primary flex-shrink-0"></div>
                     <div className="flex-1 min-w-0">
@@ -76,7 +75,6 @@ export default function Incidents() {
                     </div>
                 </div>
 
-                {/* ── Filter bar ───────────────────────────────────── */}
                 <div className="anim-fade-up anim-delay-1 bg-base-200 border border-base-300 rounded-xl px-4 py-3 mb-4 flex items-center flex-wrap gap-x-4 gap-y-2.5">
 
                     <div className="flex items-center gap-2">
@@ -117,7 +115,6 @@ export default function Incidents() {
                     )}
                 </div>
 
-                {/* ── Table ────────────────────────────────────────── */}
                 <div className="anim-fade-up anim-delay-2 bg-base-200 border border-base-300 rounded-xl overflow-hidden">
                     {loading ? (
                         <div className="flex items-center justify-center py-16 text-base-content/30">

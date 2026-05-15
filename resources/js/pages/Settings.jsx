@@ -80,7 +80,6 @@ export default function Settings() {
 
                 <div className="flex gap-6">
 
-                    {/* ── Sidebar ────────────────────────────────── */}
                     <div className="anim-fade-up anim-delay-1 w-56 flex-shrink-0 space-y-0.5">
                         {sections.map(s => {
                             const act = active === s.id;
@@ -98,7 +97,6 @@ export default function Settings() {
                         })}
                     </div>
 
-                    {/* ── Content ─────────────────────────────────── */}
                     <div className="flex-1 min-w-0">
 
                         {active === 'account' && (
