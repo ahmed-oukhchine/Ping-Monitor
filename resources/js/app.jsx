@@ -13,6 +13,7 @@ import Reports from './pages/Reports';
 import Login from './pages/Login';
 import Sidebar from './components/Sidebar';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ToastProvider } from './contexts/ToastContext';
 
 axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 axios.defaults.headers.common['Accept'] = 'application/json';
@@ -184,7 +185,9 @@ function App() {
     return (
         <BrowserRouter>
             <AuthProvider>
-                <AppContent />
+                <ToastProvider>
+                    <AppContent />
+                </ToastProvider>
             </AuthProvider>
         </BrowserRouter>
     );

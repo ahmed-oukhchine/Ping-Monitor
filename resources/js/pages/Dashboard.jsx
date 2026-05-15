@@ -9,6 +9,7 @@ import DeleteModal from '../components/DeleteModal';
 import GroupManagerModal from '../components/GroupManagerModal';
 import TargetDetailModal from '../components/TargetDetailModal';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 
 const LS_AUTO     = 'argusnet_auto';
 const LS_INTERVAL = 'argusnet_interval';
@@ -38,6 +39,9 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
     const [deleteTarget, setDeleteTarget]     = useState(null);
     const [lastUpdated, setLastUpdated]       = useState(null);
     const [tick, setTick]                     = useState(0);
+    const [search, setSearch]                 = useState('');
+    const [showSearch, setShowSearch]         = useState(false);
+    const { toast } = useToast();
 
     const timerRef      = useRef(null);
     const cdownRef      = useRef(null);
@@ -196,31 +200,46 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
     };
 
     const addTarget = async (data) => {
-        await axios.post('/targets', data);
-        setShowAdd(false);
-        fetchTargets();
+        try {
+            await axios.post('/targets', data);
+            toast('Target added successfully');
+            setShowAdd(false);
+            fetchTargets();
+        } catch { toast('Failed to add target', 'error'); }
     };
 
     const updateTarget = async (id, data) => {
-        await axios.put(`/targets/${id}`, data);
-        setEditTarget(null);
-        fetchTargets();
+        try {
+            await axios.put(`/targets/${id}`, data);
+            toast('Target updated successfully');
+            setEditTarget(null);
+            fetchTargets();
+        } catch { toast('Failed to update target', 'error'); }
     };
 
     const confirmDelete = async (target) => {
-        await axios.delete(`/targets/${target.id}`);
-        setTargets(ts => ts.filter(t => t.id !== target.id));
-        setDeleteTarget(null);
+        try {
+            await axios.delete(`/targets/${target.id}`);
+            toast('Target deleted');
+            setTargets(ts => ts.filter(t => t.id !== target.id));
+            setDeleteTarget(null);
+        } catch { toast('Failed to delete target', 'error'); }
     };
 
     const pauseTarget = async (target) => {
-        await axios.post(`/targets/${target.id}/pause`);
-        setTargets(ts => ts.map(t => t.id === target.id ? { ...t, is_paused: true } : t));
+        try {
+            await axios.post(`/targets/${target.id}/pause`);
+            setTargets(ts => ts.map(t => t.id === target.id ? { ...t, is_paused: true } : t));
+            toast('Maintenance mode enabled');
+        } catch { toast('Failed to pause target', 'error'); }
     };
 
     const resumeTarget = async (target) => {
-        await axios.post(`/targets/${target.id}/resume`);
-        setTargets(ts => ts.map(t => t.id === target.id ? { ...t, is_paused: false } : t));
+        try {
+            await axios.post(`/targets/${target.id}/resume`);
+            setTargets(ts => ts.map(t => t.id === target.id ? { ...t, is_paused: false } : t));
+            toast('Monitoring resumed');
+        } catch { toast('Failed to resume target', 'error'); }
     };
 
     const saveGroup = async ({ id, name, color }) => {
@@ -240,9 +259,17 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
         fetchTargets();
     };
 
-    const filteredTargets = selectedGroup
+    const filteredTargets = (selectedGroup
         ? targets.filter(t => t.groups?.some(g => g.id === selectedGroup))
-        : targets;
+        : targets
+    ).filter(t => {
+        if (!search) return true;
+        const q = search.toLowerCase();
+        return t.name.toLowerCase().includes(q)
+            || t.ip_address.toLowerCase().includes(q)
+            || (t.location || '').toLowerCase().includes(q)
+            || (t.notes || '').toLowerCase().includes(q);
+    });
 
     const offlineTargets = targets.filter(t => !t.is_paused && t.last_status === false);
 
@@ -297,6 +324,14 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                                 <i className="fas fa-plus text-[10px]"></i> Add Target
                             </button>
                         )}
+                        <button onClick={() => setShowSearch(o => !o)}
+                            className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold border rounded-lg transition-all ${
+                                showSearch
+                                    ? 'bg-primary/15 text-primary border-primary/30'
+                                    : 'border-base-300 text-base-content/50 hover:border-base-content/30 hover:text-base-content/70'
+                            }`}>
+                            <i className="fas fa-search text-[10px]"></i>
+                        </button>
                         <button onClick={() => pingAll()} disabled={pingAllLoading}
                             className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold bg-primary text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 shadow-[0_0_14px_color-mix(in_oklch,var(--color-primary)_35%,transparent)]">
                             <i className={`fas ${pingAllLoading ? 'fa-spinner fa-spin' : 'fa-broadcast-tower'} text-[10px]`}></i>
@@ -454,6 +489,24 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                     )}
                 </div>
 
+
+                {showSearch && (
+                    <div className="anim-fade-up mb-4">
+                        <div className="relative">
+                            <i className="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-base-content/25 pointer-events-none"></i>
+                            <input type="text" placeholder="Search by name, IP, or location…" value={search}
+                                onChange={e => setSearch(e.target.value)}
+                                className="w-full pl-9 pr-9 py-2.5 text-sm bg-base-200 border border-base-300 rounded-xl outline-none text-base-content placeholder:text-base-content/25"
+                                autoFocus />
+                            {search && (
+                                <button onClick={() => setSearch('')}
+                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-base-content/25 hover:text-base-content/50 transition-colors">
+                                    <i className="fas fa-times"></i>
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">

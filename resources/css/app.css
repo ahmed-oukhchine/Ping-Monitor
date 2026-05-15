@@ -60,6 +60,55 @@ html, body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI'
     mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, transparent 25%, black 100%);
 }
 
+/* ── Theme transition (smooth) ── */
+html { transition: background-color 0.25s ease, color 0.25s ease; }
+[data-theme] * { transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.15s ease; }
+
+/* ── Toast notifications ── */
+@keyframes toast-in {
+    from { opacity: 0; transform: translateX(calc(100% + 24px)); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes toast-out {
+    from { opacity: 1; transform: translateX(0); }
+    to   { opacity: 0; transform: translateX(calc(100% + 24px)); }
+}
+.toast-enter { animation: toast-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.toast-exit  { animation: toast-out 0.25s cubic-bezier(0.4, 0, 1, 1) forwards; }
+
+/* ── Sparkline inline chart ── */
+.sparkline path { transition: d 0.3s ease; }
+
+/* ── Offline pulse (more dramatic) ── */
+@keyframes offline-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklch, var(--color-error) 40%, transparent); }
+    50%      { box-shadow: 0 0 0 6px color-mix(in oklch, var(--color-error) 0%, transparent); }
+}
+.offline-pulse { animation: offline-pulse 1.8s ease-in-out infinite; }
+
+/* ── Empty state illustration float ── */
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-8px); }
+}
+.empty-float { animation: float 4s ease-in-out infinite; }
+
+/* ── Responsive target card ── */
+.target-card {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.target-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px color-mix(in oklch, var(--color-base-content) 8%, transparent);
+}
+@media (min-width: 768px) {
+    .target-card { display: none; }
+    .target-table { display: table; }
+}
+@media (max-width: 767px) {
+    .target-table-wrapper { display: none; }
+}
+
 /* ── Input focus glow ── */
 input.outline-none:focus,
 select.outline-none:focus {

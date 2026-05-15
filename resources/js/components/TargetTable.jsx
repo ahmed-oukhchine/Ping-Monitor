@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import Sparkline from './Sparkline';
 
 function timeAgo(dateStr) {
     if (!dateStr) return null;
@@ -10,6 +12,26 @@ function timeAgo(dateStr) {
     return `${Math.floor(diff / 86400)}d ago`;
 }
 
+function SparklineData({ target }) {
+    const [data, setData] = useState(null);
+    useEffect(() => {
+        let cancelled = false;
+        axios.get(`/api/history`, { params: { target_id: target.id, per_page: 15 } })
+            .then(res => {
+                if (!cancelled) {
+                    const items = res.data?.data || [];
+                    setData(items.map(p => p.response_time).filter(v => v != null).reverse());
+                }
+            })
+            .catch(() => {});
+        return () => { cancelled = true; };
+    }, [target.id]);
+    if (!data || data.length < 2) return null;
+    const avg = data.reduce((s, v) => s + v, 0) / data.length;
+    const color = avg < 50 ? 'var(--color-success)' : avg < 150 ? 'var(--color-warning)' : 'var(--color-error)';
+    return <Sparkline data={data} width={40} height={16} color={color} />;
+}
+
 export default function TargetTable({ targets, loading, pinging, onPing, onEdit, onDelete, onChart, onDetail, onPause, onResume, isAdmin, paused = false }) {
     const [, forceRender] = useState(0);
     useEffect(() => { if (paused) return; const id = setInterval(() => forceRender(t => t + 1), 1000); return () => clearInterval(id); }, [paused]);
@@ -17,7 +39,7 @@ export default function TargetTable({ targets, loading, pinging, onPing, onEdit,
         return (
             <div className="bg-base-200 border border-base-300 rounded-xl overflow-hidden">
                 <div className="overflow-x-auto">
-                    <table className="w-full">
+                    <table className="w-full target-table">
                         <thead>
                             <tr className="border-b border-base-300/80 bg-base-300/25">
                                 {['Device', 'Location', 'IP Address', 'Status', 'Latency', 'Avg Latency', 'Uptime', 'Loss %', 'Last Check', 'Actions'].map(h => (
@@ -53,45 +75,69 @@ export default function TargetTable({ targets, loading, pinging, onPing, onEdit,
     }
 
     return (
-        <div className="bg-base-200 border border-base-300 rounded-xl overflow-hidden">
-            <div className="overflow-x-auto">
-                <table className="table-anim w-full">
-                    <thead>
-                        <tr className="border-b border-base-300/80 bg-base-300/25">
-                            {['Device', 'Location', 'IP Address', 'Status', 'Latency', 'Avg Latency', 'Uptime', 'Loss %', 'Last Check', 'Actions'].map(h => (
-                                <th key={h} className="text-left py-3 px-4 text-[10px] font-semibold text-base-content/35 uppercase tracking-widest whitespace-nowrap">
-                                    {h}
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {targets.length === 0 ? (
-                            <tr>
-                                <td colSpan={10} className="text-center py-24 text-base-content/30">
-                                    <i className="fas fa-satellite-dish text-4xl block mb-4 opacity-10"></i>
-                                    <p className="text-sm font-medium">No targets yet — add one above</p>
-                                </td>
+        <>
+            <div className="bg-base-200 border border-base-300 rounded-xl overflow-hidden target-table-wrapper">
+                <div className="overflow-x-auto">
+                    <table className="table-anim w-full target-table">
+                        <thead>
+                            <tr className="border-b border-base-300/80 bg-base-300/25">
+                                {['Device', 'Location', 'IP Address', 'Status', 'Latency', 'Avg Latency', 'Trend', 'Uptime', 'Loss %', 'Last Check', 'Actions'].map(h => (
+                                    <th key={h} className="text-left py-3 px-4 text-[10px] font-semibold text-base-content/35 uppercase tracking-widest whitespace-nowrap">
+                                        {h}
+                                    </th>
+                                ))}
                             </tr>
-                        ) : targets.map(t => (
-                            <TargetRow
-                                key={t.id}
-                                target={t}
-                                isPinging={!!pinging[t.id]}
-                                isAdmin={isAdmin}
-                                onPing={() => onPing(t)}
-                                onEdit={() => onEdit(t)}
-                                onDelete={() => onDelete(t)}
-                                onChart={() => onChart(t)}
-                                onDetail={() => onDetail(t.id)}
-                                onPause={() => onPause(t)}
-                                onResume={() => onResume(t)}
-                            />
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {targets.length === 0 ? (
+                                <tr>
+                                    <td colSpan={11} className="text-center py-20 text-base-content/30">
+                                        <div className="empty-float mb-4">
+                                            <svg width="64" height="64" viewBox="0 0 64 64" fill="none" className="mx-auto opacity-15">
+                                                <rect x="12" y="20" width="40" height="30" rx="4" stroke="currentColor" strokeWidth="2" fill="none"/>
+                                                <circle cx="32" cy="35" r="6" stroke="currentColor" strokeWidth="2" fill="none"/>
+                                                <path d="M32 29v6l4 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                                                <path d="M8 8l48 48" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity="0.3"/>
+                                            </svg>
+                                        </div>
+                                        <p className="text-sm font-medium">No targets found</p>
+                                        <p className="text-xs mt-1 opacity-60">Add one above or adjust your filters</p>
+                                    </td>
+                                </tr>
+                            ) : targets.map(t => (
+                                <TargetRow
+                                    key={t.id}
+                                    target={t}
+                                    isPinging={!!pinging[t.id]}
+                                    isAdmin={isAdmin}
+                                    onPing={() => onPing(t)}
+                                    onEdit={() => onEdit(t)}
+                                    onDelete={() => onDelete(t)}
+                                    onChart={() => onChart(t)}
+                                    onDetail={() => onDetail(t.id)}
+                                    onPause={() => onPause(t)}
+                                    onResume={() => onResume(t)}
+                                />
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:hidden">
+                {targets.length === 0 ? (
+                    <div className="col-span-full text-center py-16 text-base-content/30 bg-base-200 border border-base-300 rounded-xl">
+                        <i className="fas fa-satellite-dish text-3xl block mb-3 opacity-10"></i>
+                        <p className="text-sm font-medium">No targets found</p>
+                    </div>
+                ) : targets.map(t => (
+                    <TargetCard key={t.id} target={t} isPinging={!!pinging[t.id]} isAdmin={isAdmin}
+                        onPing={() => onPing(t)} onDetail={() => onDetail(t.id)}
+                        onEdit={() => onEdit(t)} onDelete={() => onDelete(t)}
+                        onChart={() => onChart(t)} onPause={() => onPause(t)} onResume={() => onResume(t)} />
+                ))}
+            </div>
+        </>
     );
 }
 
@@ -176,6 +222,10 @@ function TargetRow({ target: t, isPinging, isAdmin, onPing, onEdit, onDelete, on
                 </span>
             </td>
 
+            <td className="py-3.5 px-4">
+                <SparklineData target={t} />
+            </td>
+
             <td className="py-3.5 px-4 min-w-36">
                 {t.uptime_percent != null
                     ? <UptimePct pct={t.uptime_percent} />
@@ -244,8 +294,11 @@ function StatusBadge({ status, isPaused }) {
         </span>
     );
     if (status === false) return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-error/10 text-error border border-error/20 whitespace-nowrap">
-            <span className="inline-flex rounded-full h-1.5 w-1.5 bg-error flex-shrink-0"></span>
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-error/10 text-error border border-error/20 whitespace-nowrap offline-pulse">
+            <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-error"></span>
+            </span>
             Offline
         </span>
     );
@@ -281,6 +334,53 @@ function GroupBadge({ group }) {
         >
             {group.name}
         </span>
+    );
+}
+
+function TargetCard({ target: t, isPinging, isAdmin, onPing, onDetail, onEdit, onDelete, onChart, onPause, onResume }) {
+    const loss = t.total_pings > 0 ? Math.round(t.failed_pings / t.total_pings * 100) : null;
+    const statusColor = t.is_paused ? 'text-warning' : t.last_status === true ? 'text-success' : t.last_status === false ? 'text-error' : 'text-base-content/30';
+    const statusLabel = t.is_paused ? 'Maintenance' : t.last_status === true ? 'Online' : t.last_status === false ? 'Offline' : 'Unknown';
+    return (
+        <div onClick={onDetail} className="target-card cursor-pointer bg-base-200 border border-base-300 rounded-xl p-4">
+            <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 border ${
+                        t.is_paused ? 'bg-warning/8 border-warning/20 text-warning' :
+                        t.last_status === true ? 'bg-success/8 border-success/20 text-success' :
+                        t.last_status === false ? 'bg-error/8 border-error/20 text-error offline-pulse' :
+                        'bg-base-300/60 border-base-300 text-base-content/30'
+                    }`}>
+                        <i className="fas fa-server text-[11px]"></i>
+                    </div>
+                    <div className="min-w-0">
+                        <span className="block font-semibold text-sm text-base-content leading-tight truncate">{t.name}</span>
+                        <code className="text-[10px] text-primary/70 font-mono">{t.ip_address}</code>
+                    </div>
+                </div>
+                <span className={`text-[10px] font-bold ${statusColor} flex items-center gap-1 flex-shrink-0`}>
+                    <span className={`w-1.5 h-1.5 rounded-full inline-block ${t.last_status === false ? 'animate-ping' : ''}`}
+                        style={{ backgroundColor: 'currentColor' }}></span>
+                    {statusLabel}
+                </span>
+            </div>
+            <div className="flex items-center gap-4 text-[11px] text-base-content/40 mb-3">
+                {t.location && <span><i className="fas fa-map-marker-alt text-[9px] mr-1"></i>{t.location}</span>}
+                {t.last_response_time != null && <span className="tabular-nums">{t.last_response_time} ms</span>}
+                {t.uptime_percent != null && <span className={`tabular-nums font-semibold ${t.uptime_percent >= 99 ? 'text-success' : t.uptime_percent >= 90 ? 'text-warning' : 'text-error'}`}>{t.uptime_percent}% uptime</span>}
+                {loss != null && <span className={`tabular-nums ${loss === 0 ? 'text-success' : 'text-error'}`}>{loss}% loss</span>}
+            </div>
+            <div className="flex items-center gap-1 border-t border-base-300/50 pt-2" onClick={e => e.stopPropagation()}>
+                <ActionBtn onClick={onPing} disabled={isPinging} title="Ping" cls="text-primary hover:bg-primary/15" icon="fa-satellite-dish" />
+                <ActionBtn onClick={onChart} title="Chart" cls="text-warning/70 hover:bg-warning/12 hover:text-warning" icon="fa-chart-line" />
+                {isAdmin && (t.is_paused
+                    ? <ActionBtn onClick={onResume} title="Resume" cls="text-success hover:bg-success/12" icon="fa-play" />
+                    : <ActionBtn onClick={onPause} title="Maintenance" cls="text-base-content/35 hover:bg-warning/12 hover:text-warning" icon="fa-pause" />
+                )}
+                {isAdmin && <ActionBtn onClick={onEdit} title="Edit" cls="text-base-content/35 hover:bg-base-300 hover:text-base-content" icon="fa-pen" />}
+                {isAdmin && <ActionBtn onClick={onDelete} title="Delete" cls="text-base-content/35 hover:bg-error/12 hover:text-error" icon="fa-trash" />}
+            </div>
+        </div>
     );
 }
 
