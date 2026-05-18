@@ -1,75 +1,75 @@
 import React from 'react';
 
-function MiniRing({ pct, color, size = 36 }) {
-    const r = 14;
-    const circ = 2 * Math.PI * r;
-    const dash = circ * (Math.min(pct, 100) / 100);
-    return (
-        <svg width={size} height={size} viewBox="0 0 32 32" className="stat-ring flex-shrink-0">
-            <circle cx="16" cy="16" r={r} className="stat-ring-bg" />
-            <circle cx="16" cy="16" r={r} fill="none" stroke={color} strokeWidth="3" strokeLinecap="round"
-                strokeDasharray={`${dash} ${circ}`}
-                style={{ transition: 'stroke-dasharray 1s ease' }} />
-        </svg>
-    );
-}
-
 export default function StatsBar({ stats }) {
-    const uptime = stats.fleetUptime != null ? parseFloat(stats.fleetUptime) : null;
+    const uptimeSub = stats.fleetUptime != null ? `${stats.fleetUptime}% fleet uptime` : null;
+    const offlineAlert = stats.offline > 0;
 
     const cards = [
         {
-            label: 'Total Targets', value: stats.total ?? 0, ring: null,
-            icon: 'fa-server', grad: 'grad-blue',
+            label: 'Total Targets',
+            value: stats.total ?? 0,
+            valueCls: 'text-base-content',
             sub: stats.paused > 0 ? `${stats.paused} in maintenance` : 'All monitored',
-            subCls: stats.paused > 0 ? 'text-warning/70' : 'text-success/60',
+            subCls: stats.paused > 0 ? 'text-warning/70' : 'text-base-content/30',
+            subIcon: stats.paused > 0 ? 'fa-pause' : null,
+            icon: 'fa-server', iconBg: 'bg-primary/10', iconColor: 'text-primary', border: 'border-t-primary/60',
         },
         {
-            label: 'Online', value: stats.online ?? 0,
-            ring: <MiniRing pct={stats.total > 0 ? (stats.online / Math.max(1, stats.total - stats.paused)) * 100 : 0} color="var(--color-success)" />,
-            icon: 'fa-check-circle', grad: 'grad-green',
-            sub: uptime != null ? `${uptime}% fleet uptime` : 'No data',
-            subCls: uptime != null && uptime >= 99 ? 'text-success/60' : uptime != null && uptime >= 90 ? 'text-warning/60' : 'text-error/60',
+            label: 'Online',
+            value: stats.online ?? 0,
+            valueCls: 'text-success',
+            sub: uptimeSub,
+            subCls: 'text-base-content/30',
+            subIcon: null,
+            icon: 'fa-check-circle', iconBg: 'bg-success/10', iconColor: 'text-success', border: 'border-t-success/60',
         },
         {
-            label: 'Offline', value: stats.offline ?? 0,
-            ring: stats.offline > 0 ? <MiniRing pct={stats.total > 0 ? (stats.offline / Math.max(1, stats.total - stats.paused)) * 100 : 0} color="var(--color-error)" /> : null,
-            icon: 'fa-times-circle', grad: 'grad-red',
-            sub: stats.offline > 0 ? 'Requires attention' : 'All clear',
-            subCls: stats.offline > 0 ? 'text-error/60' : 'text-base-content/25',
+            label: 'Offline',
+            value: stats.offline ?? 0,
+            valueCls: offlineAlert ? 'text-error' : 'text-base-content/40',
+            sub: offlineAlert ? 'Requires attention' : 'All clear',
+            subCls: offlineAlert ? 'text-error/60' : 'text-base-content/25',
+            subIcon: offlineAlert ? 'fa-exclamation-circle' : null,
+            icon: 'fa-times-circle',
+            iconBg: offlineAlert ? 'bg-error/10' : 'bg-base-300/60',
+            iconColor: offlineAlert ? 'text-error' : 'text-base-content/25',
+            border: offlineAlert ? 'border-t-error/60' : 'border-t-base-300',
         },
         {
-            label: 'Avg Latency', value: stats.avgLatency != null ? `${stats.avgLatency} ms` : '—',
-            ring: null,
-            icon: 'fa-tachometer-alt', grad: 'grad-amber',
+            label: 'Avg Latency',
+            value: stats.avgLatency != null ? `${stats.avgLatency} ms` : '—',
+            valueCls: stats.avgLatency == null ? 'text-base-content/30'
+                : stats.avgLatency < 50  ? 'text-success'
+                : stats.avgLatency < 150 ? 'text-warning'
+                : 'text-error',
             sub: stats.avgLatency == null ? 'No data yet'
-                : stats.avgLatency < 50 ? 'Fast' : stats.avgLatency < 150 ? 'Moderate' : 'Slow',
+                : stats.avgLatency < 50  ? 'Fast'
+                : stats.avgLatency < 150 ? 'Moderate'
+                : 'Slow — check targets',
             subCls: stats.avgLatency == null ? 'text-base-content/25'
-                : stats.avgLatency < 50 ? 'text-success/60' : stats.avgLatency < 150 ? 'text-warning/60' : 'text-error/60',
+                : stats.avgLatency < 50  ? 'text-success/60'
+                : stats.avgLatency < 150 ? 'text-warning/60'
+                : 'text-error/60',
+            subIcon: null,
+            icon: 'fa-tachometer-alt', iconBg: 'bg-warning/10', iconColor: 'text-warning', border: 'border-t-warning/60',
         },
     ];
 
     return (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+        <div className="grid grid-cols-4 gap-3 mb-4">
             {cards.map((c, i) => (
-                <div key={c.label}
-                    className={`stat-card-new anim-fade-up anim-delay-${i + 1} bg-base-200 border border-base-300 rounded-xl p-4 flex items-center gap-3`}>
-                    <div className={`stat-icon-wrap ${c.grad}`}>
-                        <i className={`fas ${c.icon} text-base ${c.label === 'Total Targets' ? 'text-blue-400' : c.label === 'Online' ? 'text-green-400' : c.label === 'Offline' ? 'text-red-400' : 'text-amber-400'}`}></i>
+                <div key={c.label} className={`stat-card anim-fade-up anim-delay-${i + 1} bg-base-200 border border-base-300 border-t-2 ${c.border} rounded-xl p-4 flex items-center gap-3`}>
+                    <div className={`w-10 h-10 rounded-xl ${c.iconBg} flex items-center justify-center flex-shrink-0`}>
+                        <i className={`fas ${c.icon} ${c.iconColor} text-lg`}></i>
                     </div>
                     <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                            <div className="card-value text-2xl tabular-nums mono leading-none"
-                                style={{ color: c.label === 'Offline' && stats.offline > 0 ? 'var(--color-error)' : c.label === 'Online' ? 'var(--color-success)' : c.label === 'Avg Latency' && stats.avgLatency != null ? stats.avgLatency < 50 ? 'var(--color-success)' : stats.avgLatency < 150 ? 'var(--color-warning)' : 'var(--color-error)' : '' }}>
-                                {c.value}
-                            </div>
-                            {c.ring}
-                        </div>
-                        <div className="text-xs text-base-content/45 mt-0.5 font-medium leading-tight">
-                            <span className="section-title inline">{c.label}</span>
-                        </div>
+                        <div className={`text-2xl font-bold tabular-nums mono leading-none ${c.valueCls}`}>{c.value}</div>
+                        <div className="text-xs text-base-content/45 mt-0.5 font-medium leading-tight">{c.label}</div>
                         {c.sub && (
-                            <div className={`text-[10px] mt-0.5 font-medium leading-tight ${c.subCls}`}>{c.sub}</div>
+                            <div className={`text-[10px] mt-0.5 font-medium flex items-center gap-1 leading-tight ${c.subCls}`}>
+                                {c.subIcon && <i className={`fas ${c.subIcon} text-[8px]`}></i>}
+                                {c.sub}
+                            </div>
                         )}
                     </div>
                 </div>

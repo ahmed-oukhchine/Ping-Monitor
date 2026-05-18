@@ -21,14 +21,14 @@ export default function Sidebar({ open, onToggle, onLogout, onCycleTheme, themeP
     ];
 
     const linkClass = (active) =>
-        `sidebar-link relative flex items-center rounded-xl text-sm font-medium transition-all duration-200 ${
+        `flex items-center rounded-xl text-sm font-medium transition-all duration-150 ${
             active
-                ? 'sidebar-active text-primary'
-                : 'text-base-content/50 hover:bg-base-300/60 hover:text-base-content'
+                ? 'bg-primary/15 text-primary shadow-sm'
+                : 'text-base-content/55 hover:bg-base-300/70 hover:text-base-content'
         } ${open ? 'gap-3 px-3 py-2.5' : 'gap-0 px-0 py-3 justify-center'}`;
 
     return (
-        <aside className={`fixed top-0 left-0 h-screen sidebar-grad border-r border-base-300 flex flex-col z-50 shadow-xl shadow-black/15 transition-all duration-300 ${
+        <aside className={`fixed top-0 left-0 h-screen bg-base-200 border-r border-base-300 flex flex-col z-50 shadow-xl shadow-black/15 transition-all duration-300 ${
             open ? 'w-56' : 'w-16'
         }`}>
             <button onClick={onToggle} className="px-4 py-5 border-b border-base-300 flex-shrink-0 flex items-center justify-center w-full hover:bg-base-300/30 transition-colors cursor-pointer">
@@ -60,11 +60,11 @@ export default function Sidebar({ open, onToggle, onLogout, onCycleTheme, themeP
                             key={item.to}
                             to={item.to}
                             style={{ textDecoration: 'none' }}
-                            className={`group ${linkClass(active)} ${active ? 'active-link' : ''}`}
+                            className={linkClass(active)}
                             title={!open ? item.label : undefined}
                         >
                             <div className="relative flex items-center justify-center flex-shrink-0 w-4">
-                                <i className={`fas ${item.icon} text-xs text-center ${active ? 'text-primary' : 'text-base-content/35 group-hover:text-base-content/60'}`}></i>
+                                <i className={`fas ${item.icon} text-xs text-center ${active ? 'text-primary' : 'text-base-content/35'}`}></i>
                                 {item.badge != null && !open && (
                                     <span className="absolute -top-2 -right-3 min-w-[14px] h-[14px] rounded-full bg-error text-white text-[7px] font-bold flex items-center justify-center px-0.5 leading-none">
                                         {item.badge > 9 ? '9+' : item.badge}

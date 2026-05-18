@@ -11,7 +11,7 @@ export default function DeleteModal({ target, onConfirm, onClose }) {
 
     return (
         <div className="backdrop-enter fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
-            <div className="modal-enter modal-glass w-full max-w-sm" onClick={e => e.stopPropagation()}>
+            <div className="modal-enter bg-base-200 border border-base-300 rounded-2xl shadow-2xl w-full max-w-sm" onClick={e => e.stopPropagation()}>
 
                 <div className="flex items-center justify-between px-6 py-4 border-b border-base-300">
                     <div className="flex items-center gap-3">
@@ -46,7 +46,7 @@ export default function DeleteModal({ target, onConfirm, onClose }) {
                         Cancel
                     </button>
                     <button type="button" onClick={handleConfirm} disabled={loading}
-                        className="btn-grad-danger flex items-center gap-2 px-4 py-1.5 text-xs font-semibold text-white rounded-lg disabled:opacity-50">
+                        className="flex items-center gap-2 px-4 py-1.5 text-xs font-semibold bg-error text-white rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity">
                         {loading
                             ? <><span className="loading loading-spinner loading-xs"></span>Deleting…</>
                             : <><i className="fas fa-trash text-[10px]"></i>Delete</>}

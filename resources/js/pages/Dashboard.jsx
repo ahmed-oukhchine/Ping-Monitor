@@ -333,7 +333,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                             <i className="fas fa-search text-[10px]"></i>
                         </button>
                         <button onClick={() => pingAll()} disabled={pingAllLoading}
-                            className="btn-grad flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-white rounded-lg disabled:opacity-50">
+                            className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold bg-primary text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 shadow-[0_0_14px_color-mix(in_oklch,var(--color-primary)_35%,transparent)]">
                             <i className={`fas ${pingAllLoading ? 'fa-spinner fa-spin' : 'fa-broadcast-tower'} text-[10px]`}></i>
                             {pingAllLoading ? 'Checking…' : 'Check All'}
                         </button>
@@ -422,7 +422,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                     <button onClick={toggleAutoRefresh}
                         className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
                             autoRefresh
-                                ? 'btn-grad text-white'
+                                ? 'bg-primary text-white shadow-[0_0_10px_color-mix(in_oklch,var(--color-primary)_30%,transparent)]'
                                 : 'bg-base-300 text-base-content/55 hover:bg-base-300/80'
                         }`}>
                         {autoRefresh ? 'Live' : 'Off'}
