@@ -40,6 +40,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
     const [lastUpdated, setLastUpdated]       = useState(null);
     const [tick, setTick]                     = useState(0);
     const [search, setSearch]                 = useState('');
+    const [showSearch, setShowSearch]         = useState(false);
     const { toast } = useToast();
 
     const timerRef      = useRef(null);
@@ -303,8 +304,8 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
             <div className="min-h-screen bg-base-100">
                 <div className="max-w-screen-xl mx-auto px-6 py-6">
 
-                <div className="flex items-center gap-4 mb-5">
-                    <div className="flex items-center gap-3 flex-shrink-0">
+                <div className="flex items-center justify-between mb-5">
+                    <div className="flex items-center gap-3">
                         <div className="w-1 h-7 rounded-full bg-primary flex-shrink-0"></div>
                         <div>
                             <h1 className="text-base font-bold text-base-content leading-tight">Monitoring Dashboard</h1>
@@ -316,26 +317,21 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                             </p>
                         </div>
                     </div>
-                    <div className="flex-1 relative">
-                        <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-xs text-base-content/25 pointer-events-none"></i>
-                        <input type="text" placeholder="Search by name, IP, or location…" value={search}
-                            onChange={e => setSearch(e.target.value)}
-                            className="w-full pl-9 pr-8 py-2 text-sm bg-base-200 border border-base-300 rounded-xl outline-none text-base-content placeholder:text-base-content/25 transition-all focus:border-primary/50 focus:bg-base-100"
-                        />
-                        {search && (
-                            <button onClick={() => setSearch('')}
-                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-base-content/25 hover:text-base-content/50 transition-colors">
-                                <i className="fas fa-times"></i>
-                            </button>
-                        )}
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-2">
                         {isAdmin && (
                             <button onClick={() => setShowAdd(true)}
                                 className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold border border-primary/40 text-primary rounded-lg hover:bg-primary/10 transition-colors">
                                 <i className="fas fa-plus text-[10px]"></i> Add Target
                             </button>
                         )}
+                        <button onClick={() => setShowSearch(o => !o)}
+                            className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold border rounded-lg transition-all ${
+                                showSearch
+                                    ? 'bg-primary/15 text-primary border-primary/30'
+                                    : 'border-base-300 text-base-content/50 hover:border-base-content/30 hover:text-base-content/70'
+                            }`}>
+                            <i className="fas fa-search text-[10px]"></i>
+                        </button>
                         <button onClick={() => pingAll()} disabled={pingAllLoading}
                             className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold bg-primary text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 shadow-[0_0_14px_color-mix(in_oklch,var(--color-primary)_35%,transparent)]">
                             <i className={`fas ${pingAllLoading ? 'fa-spinner fa-spin' : 'fa-broadcast-tower'} text-[10px]`}></i>
@@ -494,7 +490,23 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                 </div>
 
 
-
+                {showSearch && (
+                    <div className="anim-fade-up mb-4">
+                        <div className="relative">
+                            <i className="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-base-content/25 pointer-events-none"></i>
+                            <input type="text" placeholder="Search by name, IP, or location…" value={search}
+                                onChange={e => setSearch(e.target.value)}
+                                className="w-full pl-9 pr-9 py-2.5 text-sm bg-base-200 border border-base-300 rounded-xl outline-none text-base-content placeholder:text-base-content/25"
+                                autoFocus />
+                            {search && (
+                                <button onClick={() => setSearch('')}
+                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-base-content/25 hover:text-base-content/50 transition-colors">
+                                    <i className="fas fa-times"></i>
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
