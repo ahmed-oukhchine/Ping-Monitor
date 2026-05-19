@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use App\Models\MaintenanceSchedule;
 use App\Models\Target;
 use Illuminate\Http\Request;
