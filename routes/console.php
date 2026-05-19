@@ -12,6 +12,8 @@ Schedule::command(GenerateReports::class)->everyFiveMinutes();
 Schedule::command(SnmpPoll::class)->everyFiveMinutes()->withoutOverlapping();
 Schedule::command(SnmpDiscover::class)->weekly()->sundays()->at('03:00');
 
+Schedule::command(\App\Console\Commands\ApplyMaintenanceSchedules::class)->everyMinute();
+
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 

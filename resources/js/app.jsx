@@ -10,6 +10,8 @@ import Users from './pages/Users';
 import Settings from './pages/Settings';
 import AuditLog from './pages/AuditLog';
 import Reports from './pages/Reports';
+import Maintenance from './pages/Maintenance';
+import Topology from './pages/Topology';
 import Login from './pages/Login';
 import Sidebar from './components/Sidebar';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -32,6 +34,8 @@ function AppContent() {
     const [settingsMounted,   setSettingsMounted]   = useState(false);
     const [auditLogMounted,   setAuditLogMounted]   = useState(false);
     const [reportsMounted,    setReportsMounted]    = useState(false);
+    const [maintenanceMounted, setMaintenanceMounted] = useState(false);
+    const [topologyMounted, setTopologyMounted]       = useState(false);
     const [sidebarOpen, setSidebarOpen]             = useState(true);
 
     const [targets, setTargets]             = useState([]);
@@ -98,6 +102,8 @@ function AppContent() {
         if (pathname === '/settings')   setSettingsMounted(true);
         if (pathname === '/audit-log')  setAuditLogMounted(true);
         if (pathname === '/reports')    setReportsMounted(true);
+        if (pathname === '/maintenance') setMaintenanceMounted(true);
+        if (pathname === '/topology')    setTopologyMounted(true);
     }, [pathname]);
 
     if (authLoading) {
@@ -120,6 +126,8 @@ function AppContent() {
     const onSettings   = pathname === '/settings';
     const onAuditLog   = pathname === '/audit-log';
     const onReports    = pathname === '/reports';
+    const onMaintenance = pathname === '/maintenance';
+    const onTopology    = pathname === '/topology';
 
     return (
         <div className="flex min-h-screen bg-base-100">
@@ -176,6 +184,16 @@ function AppContent() {
                         <div className="page-slot" style={{ display: onReports ? 'block' : 'none' }}>
                             <Reports user={user} />
                         </div>
+                )}
+                {maintenanceMounted && (
+                    <div className="page-slot" style={{ display: onMaintenance ? 'block' : 'none' }}>
+                        <Maintenance />
+                    </div>
+                )}
+                {topologyMounted && (
+                    <div className="page-slot" style={{ display: onTopology ? 'block' : 'none' }}>
+                        <Topology />
+                    </div>
                 )}
             </div>
         </div>

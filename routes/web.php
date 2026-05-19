@@ -7,6 +7,8 @@ use App\Http\Controllers\PingController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SnmpController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\MaintenanceScheduleController;
+use App\Http\Controllers\TopologyController;
 use App\Http\Middleware\EnsureAdmin;
 use Illuminate\Support\Facades\Route;
 
@@ -57,6 +59,18 @@ Route::middleware('auth')->group(function () {
         Route::delete('/api/groups/{group}', [GroupController::class, 'destroy']);
 
         Route::post('/api/targets/import',    [PingController::class, 'importCsv']);
+
+        Route::get('/api/maintenance-schedules',       [MaintenanceScheduleController::class, 'index']);
+        Route::get('/api/maintenance-targets',          [MaintenanceScheduleController::class, 'targets']);
+        Route::post('/api/maintenance-schedules',       [MaintenanceScheduleController::class, 'store']);
+        Route::put('/api/maintenance-schedules/{maintenanceSchedule}', [MaintenanceScheduleController::class, 'update']);
+        Route::delete('/api/maintenance-schedules/{maintenanceSchedule}', [MaintenanceScheduleController::class, 'destroy']);
+        Route::post('/api/maintenance-schedules/{maintenanceSchedule}/toggle', [MaintenanceScheduleController::class, 'toggle']);
+
+        Route::get('/api/topology', [TopologyController::class, 'index']);
+        Route::post('/api/topology', [TopologyController::class, 'store']);
+        Route::post('/api/topology/positions', [TopologyController::class, 'savePositions']);
+        Route::delete('/api/topology/{networkTopology}', [TopologyController::class, 'destroy']);
     });
 });
 

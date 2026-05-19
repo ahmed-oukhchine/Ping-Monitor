@@ -14,9 +14,11 @@ export default function Sidebar({ open, onToggle, onLogout, onCycleTheme, themeP
     const navItems = [
         { to: '/',           label: t('sidebar.dashboard'),  icon: 'fa-chart-pie',          show: true,  badge: null },
         { to: '/monitoring', label: t('sidebar.monitoring'), icon: 'fa-tachometer-alt',     show: true,  badge: offlineCount > 0 ? offlineCount : null },
+        { to: '/topology',   label: t('sidebar.topology'),   icon: 'fa-project-diagram',     show: true,  badge: null },
         { to: '/history',    label: t('sidebar.history'),    icon: 'fa-history',            show: true,  badge: null },
         { to: '/incidents',  label: t('sidebar.incidents'),  icon: 'fa-exclamation-circle', show: true,  badge: null },
         { to: '/reports',    label: t('sidebar.reports'),    icon: 'fa-file-alt',           show: true,  badge: null },
+        { to: '/maintenance', label: t('sidebar.maintenance'), icon: 'fa-calendar-alt',      show: true,  badge: null },
         { to: '/users',      label: t('sidebar.users'),      icon: 'fa-users',              show: isAdmin, badge: null },
         { to: '/audit-log',  label: t('sidebar.auditLog'),   icon: 'fa-clipboard-list',     show: isAdmin, badge: null },
         { to: '/settings',   label: t('sidebar.settings'),   icon: 'fa-cog',                show: true,  badge: null },
