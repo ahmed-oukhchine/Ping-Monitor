@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
+import { useLang } from '../contexts/LanguageContext';
 
-const sections = [
-    { id: 'account',        label: 'Account',        icon: 'fa-user-circle' },
-    { id: 'password',       label: 'Change Password', icon: 'fa-lock' },
+const sections = (t) => [
+    { id: 'account',        label: t('settings.account'),        icon: 'fa-user-circle' },
+    { id: 'password',       label: t('settings.changePassword'), icon: 'fa-lock' },
+    { id: 'language',       label: t('settings.language'),       icon: 'fa-language' },
 ];
 
 export default function Settings() {
     const { user, setUser } = useAuth();
+    const { lang, setLang, t } = useLang();
     const [active, setActive] = useState('account');
 
     const [name, setName] = useState(user?.name || '');
@@ -32,7 +35,7 @@ export default function Settings() {
     };
 
     const saveProfile = async () => {
-        if (!name.trim() || !email.trim()) { setProfileError('Name and email are required.'); return; }
+        if (!name.trim() || !email.trim()) { setProfileError(t('settings.nameEmailRequired')); return; }
         setProfileSaving(true); setProfileError(''); setProfileSuccess(false);
         try {
             const { data } = await axios.put('/api/profile', { name, email });
@@ -41,13 +44,13 @@ export default function Settings() {
         } catch (err) {
             const errs = err.response?.data?.errors;
             if (errs?.email) setProfileError(errs.email[0]);
-            else setProfileError(err.response?.data?.message || 'Failed to update profile.');
+            else setProfileError(err.response?.data?.message || t('settings.failedToUpdateProfile'));
         } finally { setProfileSaving(false); }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (newPw !== confirmPw) { setError('New passwords do not match.'); return; }
+        if (newPw !== confirmPw) { setError(t('settings.passwordsDoNotMatch')); return; }
         setSaving(true); setError(''); setSuccess(false);
         try {
             await axios.put('/api/profile/password', {
@@ -61,7 +64,7 @@ export default function Settings() {
             if (errs?.current_password) {
                 setError(errs.current_password[0]);
             } else {
-                setError(err.response?.data?.message || 'Failed to update password.');
+                setError(err.response?.data?.message || t('settings.failedToUpdatePassword'));
             }
         } finally { setSaving(false); }
     };
@@ -73,15 +76,15 @@ export default function Settings() {
                 <div className="anim-fade-up flex items-center gap-3 mb-6">
                     <div className="w-1 h-7 rounded-full bg-primary flex-shrink-0"></div>
                     <div>
-                        <h1 className="text-base font-bold text-base-content leading-tight">Settings</h1>
-                        <p className="text-xs text-base-content/40 mt-0.5">Manage your account</p>
+                        <h1 className="text-base font-bold text-base-content leading-tight">{t('settings.title')}</h1>
+                        <p className="text-xs text-base-content/40 mt-0.5">{t('settings.subtitle')}</p>
                     </div>
                 </div>
 
                 <div className="flex gap-6">
 
                     <div className="anim-fade-up anim-delay-1 w-56 flex-shrink-0 space-y-0.5">
-                        {sections.map(s => {
+                        {sections(t).map(s => {
                             const act = active === s.id;
                             return (
                                 <button key={s.id} onClick={() => { setActive(s.id); reset(); }}
@@ -103,31 +106,31 @@ export default function Settings() {
                             <div className="anim-fade-up bg-base-200 border border-base-300 rounded-xl p-5">
                                 <div className="flex items-center gap-3 mb-4">
                                     <div className="w-0.5 h-4 rounded-full bg-primary/50 flex-shrink-0"></div>
-                                    <h2 className="text-sm font-semibold text-base-content">Account</h2>
+                                    <h2 className="text-sm font-semibold text-base-content">{t('settings.account')}</h2>
                                 </div>
 
                                 {profileSuccess && (
                                     <div className="msg-enter flex items-center gap-2 px-3 py-2.5 rounded-lg bg-success/10 border border-success/25 text-xs text-success mb-4">
                                         <i className="fas fa-check-circle text-[10px]"></i>
-                                        Profile updated successfully.
+                                        {t('settings.profileUpdated')}
                                     </div>
                                 )}
 
                                 <div className="space-y-3">
                                     <div>
-                                        <label className="block text-xs font-medium text-base-content/60 mb-1">Name</label>
+                                        <label className="block text-xs font-medium text-base-content/60 mb-1">{t('settings.name')}</label>
                                         <input type="text" value={name}
                                             onChange={e => setName(e.target.value)}
                                             className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors" />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-medium text-base-content/60 mb-1">Email</label>
+                                        <label className="block text-xs font-medium text-base-content/60 mb-1">{t('settings.email')}</label>
                                         <input type="email" value={email}
                                             onChange={e => setEmail(e.target.value)}
                                             className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors" />
                                     </div>
                                     <div className="flex items-center justify-between py-2">
-                                        <span className="text-xs text-base-content/50">Role</span>
+                                        <span className="text-xs text-base-content/50">{t('settings.role')}</span>
                                         <span className={`text-[11px] px-2 py-0.5 rounded-md font-semibold border ${
                                             user?.role === 'admin'
                                                 ? 'bg-primary/15 text-primary border-primary/25'
@@ -142,12 +145,46 @@ export default function Settings() {
                                     )}
                                     <div className="flex items-center gap-2 pt-1">
                                         <button onClick={saveProfile} disabled={profileSaving}
-                                            className="flex items-center gap-2 px-4 py-2 text-xs font-semibold bg-primary text-white rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity shadow-[0_0_14px_color-mix(in_oklch,var(--color-primary)_35%,transparent)]">
+                                            className="btn-prime flex items-center gap-2 px-4 py-2 text-xs font-semibold bg-primary text-white rounded-lg hover:brightness-110 disabled:opacity-50 transition-all shadow-[0_0_14px_color-mix(in_oklch,var(--color-primary)_35%,transparent)]">
                                             <i className={`fas ${profileSaving ? 'fa-spinner fa-spin' : 'fa-save'} text-xs`}></i>
-                                            {profileSaving ? 'Saving…' : 'Save'}
+                                            {profileSaving ? t('settings.saving') : t('settings.save')}
                                         </button>
                                     </div>
                                 </div>
+                            </div>
+                        )}
+
+                        {active === 'language' && (
+                            <div className="anim-fade-up bg-base-200 border border-base-300 rounded-xl p-5">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <div className="w-0.5 h-4 rounded-full bg-primary/50 flex-shrink-0"></div>
+                                    <h2 className="text-sm font-semibold text-base-content">Language / Langue</h2>
+                                </div>
+                                <p className="text-xs text-base-content/50 mb-4">Choose your preferred language for the interface.</p>
+                                <div className="flex items-center gap-3 bg-base-100 border border-base-300 rounded-xl p-1 w-fit">
+                                    {[
+                                        { code: 'en', label: 'English', flag: '🇬🇧' },
+                                        { code: 'fr', label: 'Français', flag: '🇫🇷' },
+                                    ].map(opt => {
+                                        const active = lang === opt.code;
+                                        return (
+                                            <button key={opt.code} onClick={() => setLang(opt.code)}
+                                                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                                                    active
+                                                        ? 'bg-primary text-white shadow-md shadow-primary/30'
+                                                        : 'text-base-content/55 hover:text-base-content hover:bg-base-300/50'
+                                                }`}>
+                                                <span className="text-base">{opt.flag}</span>
+                                                {opt.label}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                <p className="text-xs text-base-content/30 mt-3">
+                                    {lang === 'en'
+                                        ? 'Some pages may still show English content until fully translated.'
+                                        : 'Certaines pages peuvent encore afficher du contenu en anglais jusqu\'à la traduction complète.'}
+                                </p>
                             </div>
                         )}
 
@@ -155,23 +192,23 @@ export default function Settings() {
                             <div className="anim-fade-up bg-base-200 border border-base-300 rounded-xl p-5">
                                 <div className="flex items-center gap-2 mb-4">
                                     <div className="w-0.5 h-4 rounded-full bg-primary/50 flex-shrink-0"></div>
-                                    <h2 className="text-sm font-semibold text-base-content">Change Password</h2>
+                                    <h2 className="text-sm font-semibold text-base-content">{t('settings.changePassword')}</h2>
                                 </div>
 
                                 {success && (
                                     <div className="msg-enter flex items-center gap-2 px-3 py-2.5 rounded-lg bg-success/10 border border-success/25 text-xs text-success mb-4">
                                         <i className="fas fa-check-circle text-[10px]"></i>
-                                        Password updated successfully.
+                                        {t('settings.passwordUpdated')}
                                     </div>
                                 )}
 
                                 <form onSubmit={handleSubmit} className="space-y-3">
                                     <div>
-                                        <label className="block text-xs font-medium text-base-content/60 mb-1">Current Password</label>
+                                        <label className="block text-xs font-medium text-base-content/60 mb-1">{t('settings.currentPassword')}</label>
                                         <div className="relative">
                                             <input type={showCurrent ? 'text' : 'password'} value={currentPw}
                                                 onChange={e => setCurrentPw(e.target.value)}
-                                                placeholder="Enter current password" required
+                                                placeholder={t('settings.enterCurrentPassword')} required
                                                 className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 pr-9 text-sm text-base-content outline-none focus:border-primary/60 transition-colors" />
                                             <button type="button" onClick={() => setShowCurrent(p => !p)}
                                                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-base-content/30 hover:text-base-content/60 transition-colors">
@@ -180,11 +217,11 @@ export default function Settings() {
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-medium text-base-content/60 mb-1">New Password</label>
+                                        <label className="block text-xs font-medium text-base-content/60 mb-1">{t('settings.newPassword')}</label>
                                         <div className="relative">
                                             <input type={showNew ? 'text' : 'password'} value={newPw}
                                                 onChange={e => setNewPw(e.target.value)}
-                                                placeholder="Min. 6 characters" required minLength={6}
+                                                placeholder={t('settings.minChars')} required minLength={6}
                                                 className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 pr-9 text-sm text-base-content outline-none focus:border-primary/60 transition-colors" />
                                             <button type="button" onClick={() => setShowNew(p => !p)}
                                                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-base-content/30 hover:text-base-content/60 transition-colors">
@@ -194,7 +231,7 @@ export default function Settings() {
                                     </div>
                                     <div>
                                         <label className="block text-xs font-medium text-base-content/60 mb-1">
-                                            Confirm New Password
+                                            {t('settings.confirmPassword')}
                                             {confirmPw && (
                                                 newPw === confirmPw
                                                     ? <i className="fas fa-check text-success text-[9px] ml-1.5"></i>
@@ -203,7 +240,7 @@ export default function Settings() {
                                         </label>
                                         <input type={showNew ? 'text' : 'password'} value={confirmPw}
                                             onChange={e => setConfirmPw(e.target.value)}
-                                            placeholder="Repeat new password" required
+                                            placeholder={t('settings.repeatPassword')} required
                                             className={`w-full bg-base-100 border rounded-lg px-3 py-2 text-sm text-base-content outline-none transition-colors ${
                                                 confirmPw
                                                     ? newPw === confirmPw ? 'border-success/50 focus:border-success/70' : 'border-error/50 focus:border-error/70'
@@ -218,13 +255,13 @@ export default function Settings() {
                                     )}
                                     <div className="flex items-center gap-2 pt-1">
                                         <button type="submit" disabled={saving}
-                                            className="flex items-center gap-2 px-4 py-2 text-xs font-semibold bg-primary text-white rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity shadow-[0_0_14px_color-mix(in_oklch,var(--color-primary)_35%,transparent)]">
+                                            className="btn-prime flex items-center gap-2 px-4 py-2 text-xs font-semibold bg-primary text-white rounded-lg hover:brightness-110 disabled:opacity-50 transition-all shadow-[0_0_14px_color-mix(in_oklch,var(--color-primary)_35%,transparent)]">
                                             <i className={`fas ${saving ? 'fa-spinner fa-spin' : 'fa-lock'} text-xs`}></i>
-                                            {saving ? 'Saving…' : 'Update Password'}
+                                            {saving ? t('settings.saving') : t('settings.updatePassword')}
                                         </button>
                                         <button type="button" onClick={reset}
                                             className="px-4 py-2 text-sm font-medium text-base-content/50 hover:text-base-content transition-colors">
-                                            Clear
+                                            {t('settings.clear')}
                                         </button>
                                     </div>
                                 </form>

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useLang } from '../contexts/LanguageContext';
 
 export default function History() {
+    const { t } = useLang();
     const [data, setData]         = useState(null);
     const [loading, setLoading]   = useState(true);
     const [targetId, setTargetId] = useState('');
@@ -53,43 +55,43 @@ export default function History() {
                 <div className="anim-fade-up flex items-center gap-3 mb-4">
                     <div className="w-1 h-7 rounded-full bg-primary flex-shrink-0"></div>
                     <div className="flex-1 min-w-0">
-                        <h1 className="text-base font-bold text-base-content leading-tight">Ping History</h1>
+                        <h1 className="text-base font-bold text-base-content leading-tight">{t('history.title')}</h1>
                         {data ? (
                             <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-0.5">
-                                <span className="text-xs text-base-content/40">{data.meta.total.toLocaleString()} records</span>
+                                <span className="text-xs text-base-content/40">{t('history.nRecords', { n: data.meta.total })}</span>
                                 {data.meta.total > 0 && (
                                     <>
                                         <span className="text-base-content/20">·</span>
-                                        <span className="text-xs text-success font-semibold">{data.meta.success_count.toLocaleString()} ok</span>
+                                        <span className="text-xs text-success font-semibold">{t('history.nOk', { n: data.meta.success_count })}</span>
                                         <span className="text-base-content/20">·</span>
-                                        <span className="text-xs text-error font-semibold">{data.meta.fail_count.toLocaleString()} failed</span>
+                                        <span className="text-xs text-error font-semibold">{t('history.nFailed', { n: data.meta.fail_count })}</span>
                                         <span className="text-base-content/20">·</span>
                                         <span className="text-xs text-base-content/40">
-                                            {((data.meta.success_count / data.meta.total) * 100).toFixed(1)}% success rate
+                                            {t('history.successRate', { pct: ((data.meta.success_count / data.meta.total) * 100).toFixed(1) })}
                                         </span>
                                     </>
                                 )}
                             </div>
                         ) : (
-                            <p className="text-xs text-base-content/40 mt-0.5">Loading…</p>
+                            <p className="text-xs text-base-content/40 mt-0.5">{t('history.loading')}</p>
                         )}
                     </div>
-                    <button onClick={exportCsv} title="Export current view to CSV"
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-base-content/55 hover:text-base-content border border-base-300 hover:border-base-content/25 rounded-lg bg-base-200 hover:bg-base-300/50 transition-all flex-shrink-0">
+                    <button onClick={exportCsv} title={t('history.exportCsv')}
+                        className="btn-prime flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-primary/40 text-primary rounded-lg bg-base-200 hover:bg-primary/10 transition-all flex-shrink-0">
                         <i className="fas fa-download text-[10px]"></i>
-                        Export CSV
+                        {t('history.exportCsv')}
                     </button>
                 </div>
 
                 <div className="anim-fade-up anim-delay-1 bg-base-200 border border-base-300 rounded-xl px-4 py-3 mb-4 flex items-center flex-wrap gap-x-4 gap-y-2.5">
 
                     <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-semibold text-base-content/35 uppercase tracking-wider whitespace-nowrap">Target</span>
+                        <span className="text-[10px] font-semibold text-base-content/35 uppercase tracking-wider whitespace-nowrap">{t('history.target')}</span>
                         <select
                             className="bg-base-100 border border-base-300 rounded-lg px-2.5 py-1.5 text-xs text-base-content outline-none focus:border-primary/50 transition-colors"
                             value={targetId}
                             onChange={e => { setTargetId(e.target.value); resetPage(); }}>
-                            <option value="">All</option>
+                            <option value="">{t('history.all')}</option>
                             {data?.targets?.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                         </select>
                     </div>
@@ -97,12 +99,12 @@ export default function History() {
                     <div className="w-px h-5 bg-base-300 flex-shrink-0 hidden sm:block"></div>
 
                     <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-semibold text-base-content/35 uppercase tracking-wider whitespace-nowrap">Status</span>
+                        <span className="text-[10px] font-semibold text-base-content/35 uppercase tracking-wider whitespace-nowrap">{t('history.status')}</span>
                         <div className="flex items-center bg-base-100 border border-base-300 rounded-lg p-0.5 gap-0.5">
                             {[
-                                { value: '',        label: 'All'     },
-                                { value: 'online',  label: 'Online'  },
-                                { value: 'offline', label: 'Offline' },
+                                { value: '',        label: t('history.all')     },
+                                { value: 'online',  label: t('history.online')  },
+                                { value: 'offline', label: t('history.offline') },
                             ].map(opt => (
                                 <button key={opt.value} type="button"
                                     onClick={() => { setStatus(opt.value); resetPage(); }}
@@ -122,29 +124,29 @@ export default function History() {
                     <div className="w-px h-5 bg-base-300 flex-shrink-0 hidden sm:block"></div>
 
                     <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-semibold text-base-content/35 uppercase tracking-wider whitespace-nowrap">Latency</span>
+                        <span className="text-[10px] font-semibold text-base-content/35 uppercase tracking-wider whitespace-nowrap">{t('history.latency')}</span>
                         <select
                             className="bg-base-100 border border-base-300 rounded-lg px-2.5 py-1.5 text-xs text-base-content outline-none focus:border-primary/50 transition-colors"
                             value={latency}
                             onChange={e => { setLatency(e.target.value); resetPage(); }}>
-                            <option value="">Any</option>
-                            <option value="fast">Fast (&lt;50 ms)</option>
-                            <option value="medium">Medium (50–150 ms)</option>
-                            <option value="slow">Slow (&gt;150 ms)</option>
+                            <option value="">{t('history.any')}</option>
+                            <option value="fast">{t('history.fast')}</option>
+                            <option value="medium">{t('history.medium')}</option>
+                            <option value="slow">{t('history.slow')}</option>
                         </select>
                     </div>
 
                     <div className="w-px h-5 bg-base-300 flex-shrink-0 hidden sm:block"></div>
 
                     <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-semibold text-base-content/35 uppercase tracking-wider whitespace-nowrap">From</span>
+                        <span className="text-[10px] font-semibold text-base-content/35 uppercase tracking-wider whitespace-nowrap">{t('history.from')}</span>
                         <input type="date"
                             value={dateFrom}
                             max={dateTo || undefined}
                             onChange={e => { setDateFrom(e.target.value); resetPage(); }}
                             className="bg-base-100 border border-base-300 rounded-lg px-2.5 py-1.5 text-xs text-base-content outline-none focus:border-primary/50 transition-colors"
                         />
-                        <span className="text-[10px] font-semibold text-base-content/35 uppercase tracking-wider whitespace-nowrap">To</span>
+                        <span className="text-[10px] font-semibold text-base-content/35 uppercase tracking-wider whitespace-nowrap">{t('history.to')}</span>
                         <input type="date"
                             value={dateTo}
                             min={dateFrom || undefined}
@@ -157,7 +159,7 @@ export default function History() {
                         <button onClick={clearFilters}
                             className="ml-auto flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-base-content/50 hover:text-error hover:bg-error/10 transition-all">
                             <i className="fas fa-times text-[10px]"></i>
-                            Clear
+                            {t('history.clear')}
                             <span className="min-w-[16px] h-4 rounded-full bg-primary text-white text-[9px] font-bold flex items-center justify-center px-1">
                                 {activeCount}
                             </span>
@@ -176,7 +178,7 @@ export default function History() {
                                 <table className="table-anim w-full text-sm">
                                     <thead>
                                         <tr className="border-b border-base-300 bg-base-300/40">
-                                            {['Time', 'Target', 'IP Address', 'Status', 'Latency', 'Error'].map(h => (
+                                            {[t('history.time'), t('history.target'), t('history.ipAddress'), t('history.status'), t('history.latency'), t('history.error')].map(h => (
                                                 <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-base-content/50 uppercase tracking-wider">
                                                     {h}
                                                 </th>
@@ -188,11 +190,11 @@ export default function History() {
                                             <tr>
                                                 <td colSpan={6} className="text-center py-14 text-base-content/30">
                                                     <i className="fas fa-filter text-3xl block mb-3 opacity-20"></i>
-                                                    <p className="text-sm">No records match your filters</p>
+                                                    <p className="text-sm">{t('history.noRecordsMatch')}</p>
                                                     {activeCount > 0 && (
                                                         <button onClick={clearFilters}
                                                             className="mt-3 text-xs text-primary hover:underline">
-                                                            Clear all filters
+                                                            {t('history.clearAllFilters')}
                                                         </button>
                                                     )}
                                                 </td>
@@ -211,12 +213,12 @@ export default function History() {
                                                                 <span className="ping-slow absolute inline-flex h-full w-full rounded-full bg-success opacity-60"></span>
                                                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
                                                             </span>
-                                                            <span className="text-success text-xs font-semibold">Online</span>
+                                                            <span className="text-success text-xs font-semibold">{t('history.online')}</span>
                                                         </div>
                                                     ) : (
                                                         <div className="flex items-center gap-1.5">
                                                             <span className="inline-flex rounded-full h-2 w-2 bg-error"></span>
-                                                            <span className="text-error text-xs font-semibold">Offline</span>
+                                                            <span className="text-error text-xs font-semibold">{t('history.offline')}</span>
                                                         </div>
                                                     )}
                                                 </td>
@@ -241,10 +243,10 @@ export default function History() {
                             {data?.meta?.last_page > 1 && (
                                 <div className="flex justify-between items-center px-4 py-3 border-t border-base-300">
                                     <span className="text-xs text-base-content/40">
-                                        {((page - 1) * data.meta.per_page + 1).toLocaleString()}–{Math.min(page * data.meta.per_page, data.meta.total).toLocaleString()} of {data.meta.total.toLocaleString()}
+                                        {t('history.pagination', { from: ((page - 1) * data.meta.per_page + 1).toLocaleString(), to: Math.min(page * data.meta.per_page, data.meta.total).toLocaleString(), total: data.meta.total.toLocaleString() })}
                                     </span>
                                     <div className="flex items-center gap-0.5">
-                                        <button disabled={page <= 1} onClick={() => setPage(1)} title="First page"
+                                        <button disabled={page <= 1} onClick={() => setPage(1)} title={t('history.firstPage')}
                                             className="px-2 py-1 rounded-md text-xs text-base-content/50 hover:bg-base-300 disabled:opacity-30 transition-colors">
                                             <i className="fas fa-angle-double-left"></i>
                                         </button>
@@ -252,12 +254,12 @@ export default function History() {
                                             className="px-2 py-1 rounded-md text-xs text-base-content/50 hover:bg-base-300 disabled:opacity-30 transition-colors">
                                             <i className="fas fa-chevron-left"></i>
                                         </button>
-                                        <span className="px-3 text-xs font-semibold text-base-content/55">{page} / {data.meta.last_page}</span>
+                                        <span className="px-3 py-1 text-xs font-semibold bg-primary/10 text-primary rounded-lg border border-primary/25">{page} / {data.meta.last_page}</span>
                                         <button disabled={page >= data.meta.last_page} onClick={() => setPage(p => p + 1)}
                                             className="px-2 py-1 rounded-md text-xs text-base-content/50 hover:bg-base-300 disabled:opacity-30 transition-colors">
                                             <i className="fas fa-chevron-right"></i>
                                         </button>
-                                        <button disabled={page >= data.meta.last_page} onClick={() => setPage(data.meta.last_page)} title="Last page"
+                                        <button disabled={page >= data.meta.last_page} onClick={() => setPage(data.meta.last_page)} title={t('history.lastPage')}
                                             className="px-2 py-1 rounded-md text-xs text-base-content/50 hover:bg-base-300 disabled:opacity-30 transition-colors">
                                             <i className="fas fa-angle-double-right"></i>
                                         </button>

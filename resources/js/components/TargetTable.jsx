@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Sparkline from './Sparkline';
+import { useLang } from '../contexts/LanguageContext';
 
-function timeAgo(dateStr) {
+function timeAgo(dateStr, t) {
     if (!dateStr) return null;
     const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
-    if (diff < 5)    return 'just now';
-    if (diff < 60)   return `${diff}s ago`;
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    if (diff < 86400)return `${Math.floor(diff / 3600)}h ago`;
-    return `${Math.floor(diff / 86400)}d ago`;
+    if (diff < 5)    return t('table.justNow');
+    if (diff < 60)   return t('table.secsAgo', { n: diff });
+    if (diff < 3600) return t('table.minsAgo', { n: Math.floor(diff / 60) });
+    if (diff < 86400)return t('table.hoursAgo', { n: Math.floor(diff / 3600) });
+    return t('table.daysAgo', { n: Math.floor(diff / 86400) });
 }
 
 function SparklineData({ target }) {
@@ -33,6 +34,7 @@ function SparklineData({ target }) {
 }
 
 export default function TargetTable({ targets, loading, pinging, onPing, onEdit, onDelete, onChart, onDetail, onPause, onResume, isAdmin, paused = false, selectedIds = new Set(), onSelect }) {
+    const { t } = useLang();
     const [, forceRender] = useState(0);
     const allSelected = targets.length > 0 && targets.every(t => selectedIds.has(t.id));
     useEffect(() => { if (paused) return; const id = setInterval(() => forceRender(t => t + 1), 1000); return () => clearInterval(id); }, [paused]);
@@ -49,6 +51,8 @@ export default function TargetTable({ targets, loading, pinging, onPing, onEdit,
         onSelect(next);
     };
 
+    const headerLabels = ['', t('table.device'), t('table.location'), t('table.ipAddress'), t('table.status'), t('table.latency'), t('table.avgLatency'), t('table.trend'), t('table.uptime'), t('table.loss'), t('table.lastCheck'), t('table.actions')];
+
     if (loading) {
         return (
             <div className="bg-base-200 border border-base-300 rounded-xl overflow-hidden">
@@ -56,7 +60,7 @@ export default function TargetTable({ targets, loading, pinging, onPing, onEdit,
                     <table className="w-full target-table">
                         <thead>
                             <tr className="border-b border-base-300/80 bg-base-300/25">
-                                {['', 'Device', 'Location', 'IP Address', 'Status', 'Latency', 'Avg Latency', 'Uptime', 'Loss %', 'Last Check', 'Actions'].map(h => (
+                                {headerLabels.map(h => (
                                     <th key={h} className="text-left py-3 px-4 text-[10px] font-semibold text-base-content/35 uppercase tracking-widest whitespace-nowrap">{h}</th>
                                 ))}
                             </tr>
@@ -100,7 +104,7 @@ export default function TargetTable({ targets, loading, pinging, onPing, onEdit,
                                     <input type="checkbox" checked={allSelected} onChange={toggleAll}
                                         className="checkbox checkbox-xs rounded border-base-content/30 checked:border-primary checked:bg-primary" />
                                 </th>
-                                {['Device', 'Location', 'IP Address', 'Status', 'Latency', 'Avg Latency', 'Trend', 'Uptime', 'Loss %', 'Last Check', 'Actions'].map(h => (
+                                {headerLabels.filter((_, i) => i !== 0).map(h => (
                                     <th key={h} className="text-left py-3 px-4 text-[10px] font-semibold text-base-content/35 uppercase tracking-widest whitespace-nowrap">
                                         {h}
                                     </th>
@@ -119,8 +123,8 @@ export default function TargetTable({ targets, loading, pinging, onPing, onEdit,
                                                 <path d="M8 8l48 48" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity="0.3"/>
                                             </svg>
                                         </div>
-                                        <p className="text-sm font-medium">No targets found</p>
-                                        <p className="text-xs mt-1 opacity-60">Add one above or adjust your filters</p>
+                                        <p className="text-sm font-medium">{t('table.noTargets')}</p>
+                                        <p className="text-xs mt-1 opacity-60">{t('table.noTargetsHint')}</p>
                                     </td>
                                 </tr>
                             ) : targets.map(t => (
@@ -149,7 +153,7 @@ export default function TargetTable({ targets, loading, pinging, onPing, onEdit,
                 {targets.length === 0 ? (
                     <div className="col-span-full text-center py-16 text-base-content/30 bg-base-200 border border-base-300 rounded-xl">
                         <i className="fas fa-satellite-dish text-3xl block mb-3 opacity-10"></i>
-                        <p className="text-sm font-medium">No targets found</p>
+                        <p className="text-sm font-medium">{t('table.noTargets')}</p>
                     </div>
                 ) : targets.map(t => (
                     <TargetCard key={t.id} target={t} isPinging={!!pinging[t.id]} isAdmin={isAdmin}
@@ -164,6 +168,7 @@ export default function TargetTable({ targets, loading, pinging, onPing, onEdit,
 }
 
 function TargetRow({ target: t, isPinging, isAdmin, onPing, onEdit, onDelete, onChart, onDetail, onPause, onResume, selected, onToggleSelect }) {
+    const { t: tr } = useLang();
     const loss = t.total_pings > 0 ? Math.round(t.failed_pings / t.total_pings * 100) : null;
 
     const latClass = (ms) => {
@@ -223,7 +228,7 @@ function TargetRow({ target: t, isPinging, isAdmin, onPing, onEdit, onDelete, on
                 {isPinging
                     ? <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-primary/15 text-primary border border-primary/30 whitespace-nowrap shadow-[0_0_10px_color-mix(in_oklch,var(--color-primary)_25%,transparent)]">
                         <i className="fas fa-spinner fa-spin text-[10px]"></i>
-                        Checking…
+                        {tr('table.checking')}
                       </span>
                     : <StatusBadge status={t.last_status} isPaused={t.is_paused} />
                 }
@@ -235,10 +240,10 @@ function TargetRow({ target: t, isPinging, isAdmin, onPing, onEdit, onDelete, on
                         {t.last_response_time != null ? `${t.last_response_time} ms` : <span className="text-base-content/25 font-normal">—</span>}
                     </span>
                     {t.threshold_status === 'critical' && (
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md leading-none bg-error/15 text-error border border-error/30">CRIT</span>
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md leading-none bg-error/15 text-error border border-error/30">{tr('table.crit')}</span>
                     )}
                     {t.threshold_status === 'warn' && (
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md leading-none bg-warning/15 text-warning border border-warning/30">WARN</span>
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md leading-none bg-warning/15 text-warning border border-warning/30">{tr('table.warn')}</span>
                     )}
                 </div>
             </td>
@@ -267,34 +272,34 @@ function TargetRow({ target: t, isPinging, isAdmin, onPing, onEdit, onDelete, on
 
             <td className="py-3.5 px-4">
                 <span className="mono text-xs text-base-content/35 tabular-nums">
-                    {t.last_ping_at ? timeAgo(t.last_ping_at) : <span className="text-base-content/20">Never</span>}
+                    {t.last_ping_at ? timeAgo(t.last_ping_at, tr) : <span className="text-base-content/20">{tr('table.never')}</span>}
                 </span>
             </td>
 
             <td className="py-3.5 px-4" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                     <ActionBtn onClick={onPing} disabled={isPinging}
-                        title={isPinging ? 'Pinging…' : 'Ping now'}
+                        title={isPinging ? tr('table.pinging') : tr('table.pingNow')}
                         cls="text-primary hover:bg-primary/15"
                         icon="fa-satellite-dish" />
-                    <ActionBtn onClick={onChart} title="Latency chart"
+                    <ActionBtn onClick={onChart} title={tr('table.latencyChart')}
                         cls="text-warning/70 hover:bg-warning/12 hover:text-warning"
                         icon="fa-chart-line" />
                     {isAdmin && (t.is_paused
-                        ? <ActionBtn onClick={onResume} title="Resume monitoring"
+                        ? <ActionBtn onClick={onResume} title={tr('table.resumeMonitoring')}
                             cls="text-success hover:bg-success/12"
                             icon="fa-play" />
-                        : <ActionBtn onClick={onPause} title="Set maintenance"
+                        : <ActionBtn onClick={onPause} title={tr('table.setMaintenance')}
                             cls="text-base-content/35 hover:bg-warning/12 hover:text-warning"
                             icon="fa-pause" />
                     )}
                     {isAdmin && (
-                        <ActionBtn onClick={onEdit} title="Edit target"
+                        <ActionBtn onClick={onEdit} title={tr('table.editTarget')}
                             cls="text-base-content/35 hover:bg-base-300 hover:text-base-content"
                             icon="fa-pen" />
                     )}
                     {isAdmin && (
-                        <ActionBtn onClick={onDelete} title="Delete target"
+                        <ActionBtn onClick={onDelete} title={tr('table.deleteTarget')}
                             cls="text-base-content/35 hover:bg-error/12 hover:text-error"
                             icon="fa-trash" />
                     )}
@@ -305,10 +310,11 @@ function TargetRow({ target: t, isPinging, isAdmin, onPing, onEdit, onDelete, on
 }
 
 function StatusBadge({ status, isPaused }) {
+    const { t } = useLang();
     if (isPaused) return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-warning/10 text-warning/90 border border-warning/20 whitespace-nowrap">
             <i className="fas fa-pause text-[8px]"></i>
-            Maintenance
+            {t('table.maintenance')}
         </span>
     );
     if (status === true) return (
@@ -317,7 +323,7 @@ function StatusBadge({ status, isPaused }) {
                 <span className="ping-slow absolute inline-flex h-full w-full rounded-full bg-success opacity-60"></span>
                 <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-success"></span>
             </span>
-            Online
+            {t('table.online')}
         </span>
     );
     if (status === false) return (
@@ -326,13 +332,13 @@ function StatusBadge({ status, isPaused }) {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-error"></span>
             </span>
-            Offline
+            {t('table.offline')}
         </span>
     );
     return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-base-300/60 text-base-content/35 border border-base-300 whitespace-nowrap">
             <span className="inline-flex rounded-full h-1.5 w-1.5 bg-base-content/20 flex-shrink-0"></span>
-            Unknown
+            {t('table.unknown')}
         </span>
     );
 }
@@ -365,9 +371,10 @@ function GroupBadge({ group }) {
 }
 
 function TargetCard({ target: t, isPinging, isAdmin, onPing, onDetail, onEdit, onDelete, onChart, onPause, onResume, selected, onToggleSelect }) {
+    const { t: tc } = useLang();
     const loss = t.total_pings > 0 ? Math.round(t.failed_pings / t.total_pings * 100) : null;
     const statusColor = t.is_paused ? 'text-warning' : t.last_status === true ? 'text-success' : t.last_status === false ? 'text-error' : 'text-base-content/30';
-    const statusLabel = t.is_paused ? 'Maintenance' : t.last_status === true ? 'Online' : t.last_status === false ? 'Offline' : 'Unknown';
+    const statusLabel = t.is_paused ? tc('table.maintenance') : t.last_status === true ? tc('table.online') : t.last_status === false ? tc('table.offline') : tc('table.unknown');
     return (
         <div onClick={e => { if (e.target.type !== 'checkbox') onDetail(); }} className={`target-card cursor-pointer bg-base-200 border border-base-300 rounded-xl p-4 ${selected ? 'ring-1 ring-primary/30' : ''}`}>
             <div className="flex items-start justify-between mb-3">
@@ -401,14 +408,14 @@ function TargetCard({ target: t, isPinging, isAdmin, onPing, onDetail, onEdit, o
                 {loss != null && <span className={`tabular-nums ${loss === 0 ? 'text-success' : 'text-error'}`}>{loss}% loss</span>}
             </div>
             <div className="flex items-center gap-1 border-t border-base-300/50 pt-2" onClick={e => e.stopPropagation()}>
-                <ActionBtn onClick={onPing} disabled={isPinging} title="Ping" cls="text-primary hover:bg-primary/15" icon="fa-satellite-dish" />
-                <ActionBtn onClick={onChart} title="Chart" cls="text-warning/70 hover:bg-warning/12 hover:text-warning" icon="fa-chart-line" />
+                <ActionBtn onClick={onPing} disabled={isPinging} title={tc('table.ping')} cls="text-primary hover:bg-primary/15" icon="fa-satellite-dish" />
+                <ActionBtn onClick={onChart} title={tc('table.chart')} cls="text-warning/70 hover:bg-warning/12 hover:text-warning" icon="fa-chart-line" />
                 {isAdmin && (t.is_paused
-                    ? <ActionBtn onClick={onResume} title="Resume" cls="text-success hover:bg-success/12" icon="fa-play" />
-                    : <ActionBtn onClick={onPause} title="Maintenance" cls="text-base-content/35 hover:bg-warning/12 hover:text-warning" icon="fa-pause" />
+                    ? <ActionBtn onClick={onResume} title={tc('table.resume')} cls="text-success hover:bg-success/12" icon="fa-play" />
+                    : <ActionBtn onClick={onPause} title={tc('table.maintenance')} cls="text-base-content/35 hover:bg-warning/12 hover:text-warning" icon="fa-pause" />
                 )}
-                {isAdmin && <ActionBtn onClick={onEdit} title="Edit" cls="text-base-content/35 hover:bg-base-300 hover:text-base-content" icon="fa-pen" />}
-                {isAdmin && <ActionBtn onClick={onDelete} title="Delete" cls="text-base-content/35 hover:bg-error/12 hover:text-error" icon="fa-trash" />}
+                {isAdmin && <ActionBtn onClick={onEdit} title={tc('table.edit')} cls="text-base-content/35 hover:bg-base-300 hover:text-base-content" icon="fa-pen" />}
+                {isAdmin && <ActionBtn onClick={onDelete} title={tc('table.delete')} cls="text-base-content/35 hover:bg-error/12 hover:text-error" icon="fa-trash" />}
             </div>
         </div>
     );

@@ -10,6 +10,7 @@ import GroupManagerModal from '../components/GroupManagerModal';
 import TargetDetailModal from '../components/TargetDetailModal';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
+import { useLang } from '../contexts/LanguageContext';
 import ImportModal from '../components/ImportModal';
 
 const LS_AUTO     = 'argusnet_auto';
@@ -42,6 +43,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
     const [lastUpdated, setLastUpdated]       = useState(null);
     const [tick, setTick]                     = useState(0);
     const [search, setSearch]                 = useState('');
+    const { t } = useLang();
     const { toast } = useToast();
     const prevStatsRef  = useRef(null);
     const [selectedIds, setSelectedIds] = useState(new Set());
@@ -55,23 +57,23 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
 
     const bulkPause = () => {
         Promise.all([...selectedIds].map(id => axios.post(`/targets/${id}/pause`)))
-            .then(() => { toast(`Paused ${selectedIds.size} target(s)`, 'success'); fetchTargets(); })
-            .catch(() => toast('Failed to pause targets', 'error'));
+            .then(() => { toast(t('dashboard.pausedN', { n: selectedIds.size }), 'success'); fetchTargets(); })
+            .catch(() => toast(t('dashboard.failedToPause'), 'error'));
         clearSelection();
     };
 
     const bulkResume = () => {
         Promise.all([...selectedIds].map(id => axios.post(`/targets/${id}/resume`)))
-            .then(() => { toast(`Resumed ${selectedIds.size} target(s)`, 'success'); fetchTargets(); })
-            .catch(() => toast('Failed to resume targets', 'error'));
+            .then(() => { toast(t('dashboard.resumedN', { n: selectedIds.size }), 'success'); fetchTargets(); })
+            .catch(() => toast(t('dashboard.failedToResume'), 'error'));
         clearSelection();
     };
 
     const bulkDelete = () => {
-        if (!window.confirm(`Delete ${selectedIds.size} target(s)? This cannot be undone.`)) return;
+        if (!window.confirm(t('dashboard.confirmDelete', { n: selectedIds.size }))) return;
         Promise.all([...selectedIds].map(id => axios.delete(`/targets/${id}`)))
-            .then(() => { toast(`Deleted ${selectedIds.size} target(s)`, 'success'); fetchTargets(); })
-            .catch(() => toast('Failed to delete targets', 'error'));
+            .then(() => { toast(t('dashboard.deletedN', { n: selectedIds.size }), 'success'); fetchTargets(); })
+            .catch(() => toast(t('dashboard.failedToDelete'), 'error'));
         clearSelection();
     };
 
@@ -234,44 +236,44 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
     const addTarget = async (data) => {
         try {
             await axios.post('/targets', data);
-            toast('Target added successfully');
+            toast(t('dashboard.targetAdded'));
             setShowAdd(false);
             fetchTargets();
-        } catch { toast('Failed to add target', 'error'); }
+        } catch { toast(t('dashboard.failedToAdd'), 'error'); }
     };
 
     const updateTarget = async (id, data) => {
         try {
             await axios.put(`/targets/${id}`, data);
-            toast('Target updated successfully');
+            toast(t('dashboard.targetUpdated'));
             setEditTarget(null);
             fetchTargets();
-        } catch { toast('Failed to update target', 'error'); }
+        } catch { toast(t('dashboard.failedToUpdate'), 'error'); }
     };
 
     const confirmDelete = async (target) => {
         try {
             await axios.delete(`/targets/${target.id}`);
-            toast('Target deleted');
+            toast(t('dashboard.targetDeleted'));
             setTargets(ts => ts.filter(t => t.id !== target.id));
             setDeleteTarget(null);
-        } catch { toast('Failed to delete target', 'error'); }
+        } catch { toast(t('dashboard.failedToDelete'), 'error'); }
     };
 
     const pauseTarget = async (target) => {
         try {
             await axios.post(`/targets/${target.id}/pause`);
             setTargets(ts => ts.map(t => t.id === target.id ? { ...t, is_paused: true } : t));
-            toast('Maintenance mode enabled');
-        } catch { toast('Failed to pause target', 'error'); }
+            toast(t('dashboard.maintenanceEnabled'));
+        } catch { toast(t('dashboard.failedToPause'), 'error'); }
     };
 
     const resumeTarget = async (target) => {
         try {
             await axios.post(`/targets/${target.id}/resume`);
             setTargets(ts => ts.map(t => t.id === target.id ? { ...t, is_paused: false } : t));
-            toast('Monitoring resumed');
-        } catch { toast('Failed to resume target', 'error'); }
+            toast(t('dashboard.monitoringResumed'));
+        } catch { toast(t('dashboard.failedToResume'), 'error'); }
     };
 
     const saveGroup = async ({ id, name, color }) => {
@@ -328,10 +330,10 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
     const fmtLastUpdated = () => {
         if (!lastUpdated) return null;
         const secs = Math.floor((Date.now() - lastUpdated) / 1000);
-        if (secs < 5)    return 'just now';
-        if (secs < 60)  return `${secs}s ago`;
-        if (secs < 3600) return `${Math.floor(secs / 60)}m ago`;
-        return `${Math.floor(secs / 3600)}h ago`;
+        if (secs < 5)    return t('dashboard.justNow');
+        if (secs < 60)  return t('dashboard.secsAgo', { n: secs });
+        if (secs < 3600) return t('dashboard.minsAgo', { n: Math.floor(secs / 60) });
+        return t('dashboard.hoursAgo', { n: Math.floor(secs / 3600) });
     };
 
     return (
@@ -342,20 +344,20 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                     <div className="flex items-center gap-3 flex-shrink-0">
                         <div className="w-1 h-7 rounded-full bg-primary flex-shrink-0"></div>
                         <div>
-                            <h1 className="text-base font-bold text-base-content leading-tight">Monitoring Dashboard</h1>
+                            <h1 className="text-base font-bold text-base-content leading-tight">{t('dashboard.title')}</h1>
                             <p className="text-xs text-base-content/40 mt-0.5">
                                 {selectedGroup
-                                    ? <>{filteredTargets.length} of {targets.length} device{targets.length !== 1 ? 's' : ''} — <span className="font-medium" style={{ color: groups.find(g => g.id === selectedGroup)?.color }}>{activeGroupName}</span></>
-                                    : <>{targets.length} device{targets.length !== 1 ? 's' : ''} monitored</>
+                                    ? <>{t('dashboard.xOfYDevices', { x: filteredTargets.length, y: targets.length })} — <span className="font-medium" style={{ color: groups.find(g => g.id === selectedGroup)?.color }}>{activeGroupName}</span></>
+                                    : <>{t('dashboard.devicesMonitored', { n: targets.length })}</>
                                 }
                             </p>
                         </div>
                     </div>
-                    <div className="flex-1 relative">
-                        <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-xs text-base-content/25 pointer-events-none"></i>
-                        <input type="text" placeholder="Search by name, IP, or location…" value={search}
+                    <div className="search-wrap flex-1 relative">
+                        <i className="search-icon fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-xs text-base-content/25 pointer-events-none"></i>
+                        <input type="text" placeholder={t('dashboard.searchPlaceholder')} value={search}
                             onChange={e => setSearch(e.target.value)}
-                            className="w-full pl-9 pr-8 py-2 text-sm bg-base-200 border border-base-300 rounded-xl outline-none text-base-content placeholder:text-base-content/25 transition-all focus:border-primary/50 focus:bg-base-100"
+                            className="w-full pl-9 pr-8 py-2 text-sm bg-base-200 border border-base-300 rounded-xl outline-none text-base-content placeholder:text-base-content/25 transition-all focus:border-primary/50 focus:bg-base-100 focus:shadow-[0_0_0_3px_color-mix(in_oklch,var(--color-primary)_10%,transparent)]"
                         />
                         {search && (
                             <button onClick={() => setSearch('')}
@@ -368,19 +370,19 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                         {isAdmin && (
                             <>
                                 <button onClick={() => setShowAdd(true)}
-                                    className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold border border-primary/40 text-primary rounded-lg hover:bg-primary/10 transition-colors">
-                                    <i className="fas fa-plus text-[10px]"></i> Add Target
+                                    className="btn-prime flex items-center gap-2 px-3 py-1.5 text-xs font-semibold border border-primary/40 text-primary rounded-lg hover:border-primary/60 transition-colors">
+                                    <i className="fas fa-plus text-[10px]"></i> {t('dashboard.addTarget')}
                                 </button>
                                 <button onClick={() => setShowImport(true)}
                                     className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold border border-accent/40 text-accent rounded-lg hover:bg-accent/10 transition-colors">
-                                    <i className="fas fa-file-import text-[10px]"></i> Import
+                                    <i className="fas fa-file-import text-[10px]"></i> {t('dashboard.import')}
                                 </button>
                             </>
                         )}
                         <button onClick={() => pingAll()} disabled={pingAllLoading}
-                            className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold bg-primary text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 shadow-[0_0_14px_color-mix(in_oklch,var(--color-primary)_35%,transparent)]">
+                            className="btn-prime flex items-center gap-2 px-3 py-1.5 text-xs font-semibold bg-primary text-white rounded-lg hover:brightness-110 transition-all disabled:opacity-50 shadow-[0_0_14px_color-mix(in_oklch,var(--color-primary)_35%,transparent)]">
                             <i className={`fas ${pingAllLoading ? 'fa-spinner fa-spin' : 'fa-broadcast-tower'} text-[10px]`}></i>
-                            {pingAllLoading ? 'Checking…' : 'Check All'}
+                            {pingAllLoading ? t('dashboard.checking') : t('dashboard.checkAll')}
                         </button>
                     </div>
                 </div>
@@ -388,22 +390,22 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
 
                 {selectedIds.size > 0 && (
                     <div className="flex items-center gap-2 px-4 py-2.5 mb-3 bg-primary/8 border border-primary/25 rounded-xl">
-                        <span className="text-xs font-semibold text-primary/80 tabular-nums">{selectedIds.size} selected</span>
+                        <span className="text-xs font-semibold text-primary/80 tabular-nums">{t('dashboard.nSelected', { n: selectedIds.size })}</span>
                         <div className="w-px h-4 bg-primary/20"></div>
                         <button onClick={bulkPing} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold text-primary border border-primary/30 hover:bg-primary/10 transition-all">
-                            <i className="fas fa-play text-[8px]"></i> Ping
+                            <i className="fas fa-play text-[8px]"></i> {t('dashboard.ping')}
                         </button>
                         <button onClick={bulkPause} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold text-warning border border-warning/30 hover:bg-warning/10 transition-all">
-                            <i className="fas fa-pause text-[8px]"></i> Pause
+                            <i className="fas fa-pause text-[8px]"></i> {t('dashboard.pause')}
                         </button>
                         <button onClick={bulkResume} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold text-success border border-success/30 hover:bg-success/10 transition-all">
-                            <i className="fas fa-play text-[8px]"></i> Resume
+                            <i className="fas fa-play text-[8px]"></i> {t('dashboard.resume')}
                         </button>
                         <button onClick={bulkDelete} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold text-error border border-error/30 hover:bg-error/10 transition-all">
-                            <i className="fas fa-trash text-[8px]"></i> Delete
+                            <i className="fas fa-trash text-[8px]"></i> {t('dashboard.delete')}
                         </button>
                         <button onClick={clearSelection} className="ml-auto flex items-center gap-1 text-[10px] text-base-content/30 hover:text-base-content/50 transition-colors">
-                            <i className="fas fa-times text-[8px]"></i> Clear
+                            <i className="fas fa-times text-[8px]"></i> {t('dashboard.clear')}
                         </button>
                     </div>
                 )}
@@ -415,7 +417,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-error"></span>
                         </span>
                         <span className="text-xs font-bold text-error flex-shrink-0">
-                            {offlineTargets.length} device{offlineTargets.length !== 1 ? 's' : ''} offline
+                            {t('dashboard.nOffline', { n: offlineTargets.length })}
                         </span>
                         <div className="w-px h-3.5 bg-error/20 flex-shrink-0"></div>
                         <div className="flex flex-wrap gap-1.5">
@@ -428,7 +430,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                         <button onClick={() => pingOffline()} disabled={pingAllLoading}
                             className="ml-auto flex-shrink-0 flex items-center gap-1.5 text-[11px] font-semibold text-error/70 hover:text-error hover:bg-error/10 px-2.5 py-1 rounded-lg transition-all">
                             {pingAllLoading ? <i className="fas fa-spinner fa-spin text-[9px]"></i> : <i className="fas fa-play text-[9px]"></i>}
-                            Check now
+                            {t('dashboard.checkNow')}
                         </button>
                     </div>
                 )}
@@ -447,13 +449,13 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                             </div>
                         </div>
                         <div className="flex items-center gap-3 flex-shrink-0 text-[11px]">
-                            {stats.online  > 0 && <span className="flex items-center gap-1.5 text-success/80"><span className="w-1.5 h-1.5 rounded-full bg-success inline-block"></span>{stats.online} online</span>}
-                            {stats.paused  > 0 && <span className="flex items-center gap-1.5 text-warning/80"><span className="w-1.5 h-1.5 rounded-full bg-warning inline-block"></span>{stats.paused} maintenance</span>}
-                            {stats.offline > 0 && <span className="flex items-center gap-1.5 text-error/80"><span className="w-1.5 h-1.5 rounded-full bg-error inline-block"></span>{stats.offline} offline</span>}
-                            {stats.unknown > 0 && <span className="flex items-center gap-1.5 text-base-content/40"><span className="w-1.5 h-1.5 rounded-full bg-base-content/20 inline-block"></span>{stats.unknown} unknown</span>}
+                            {stats.online  > 0 && <span className="flex items-center gap-1.5 text-success/80"><span className="w-1.5 h-1.5 rounded-full bg-success inline-block"></span>{stats.online} {t('dashboard.online')}</span>}
+                            {stats.paused  > 0 && <span className="flex items-center gap-1.5 text-warning/80"><span className="w-1.5 h-1.5 rounded-full bg-warning inline-block"></span>{stats.paused} {t('dashboard.maintenance')}</span>}
+                            {stats.offline > 0 && <span className="flex items-center gap-1.5 text-error/80"><span className="w-1.5 h-1.5 rounded-full bg-error inline-block"></span>{stats.offline} {t('dashboard.offline')}</span>}
+                            {stats.unknown > 0 && <span className="flex items-center gap-1.5 text-base-content/40"><span className="w-1.5 h-1.5 rounded-full bg-base-content/20 inline-block"></span>{stats.unknown} {t('dashboard.unknown')}</span>}
                             <div className="w-px h-3.5 bg-base-300 flex-shrink-0"></div>
                             <span className={`font-bold mono ${stats.offline > 0 ? 'text-error' : stats.fleetUptime >= 99 ? 'text-success' : 'text-warning'}`}>
-                                {stats.fleetUptime ?? '—'}% uptime
+                                {stats.fleetUptime ?? '—'}% {t('dashboard.uptime')}
                             </span>
                         </div>
                     </div>
@@ -464,15 +466,15 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                         ? 'bg-primary/5 border-primary/20'
                         : 'bg-base-200 border-base-300'
                 }`}>
-                    {autoRefresh ? (
-                        <span className="relative flex h-2 w-2 flex-shrink-0">
-                            <span className="ping-slow absolute inline-flex h-full w-full rounded-full bg-primary opacity-60"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                        </span>
-                    ) : (
-                        <i className="fas fa-clock text-base-content/30 text-xs flex-shrink-0"></i>
-                    )}
-                    <span className={`text-xs font-medium ${autoRefresh ? 'text-primary/80' : 'text-base-content/45'}`}>Auto-refresh</span>
+                    <span className="relative flex h-2 w-2 flex-shrink-0">
+                        {autoRefresh ? (
+                            <><span className="ping-slow absolute inline-flex h-full w-full rounded-full bg-primary opacity-60"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span></>
+                        ) : (
+                            <span className="inline-flex rounded-full h-2 w-2 bg-base-content/20"></span>
+                        )}
+                    </span>
+                    <span className={`text-xs font-medium ${autoRefresh ? 'text-primary/80' : 'text-base-content/45'}`}>{t('dashboard.autoRefresh')}</span>
                     <select
                         className={`border rounded-lg px-2 py-1 text-xs outline-none transition-colors ${
                             autoRefresh
@@ -480,28 +482,30 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                                 : 'bg-base-100 border-base-300 text-base-content'
                         }`}
                         value={interval_} onChange={e => changeInterval(Number(e.target.value))}>
-                        <option value={30}>30 sec</option>
-                        <option value={60}>1 min</option>
-                        <option value={300}>5 min</option>
-                        <option value={600}>10 min</option>
+                        <option value={30}>{t('dashboard.sec', { n: 30 })}</option>
+                        <option value={60}>{t('dashboard.min', { n: 1 })}</option>
+                        <option value={300}>{t('dashboard.min', { n: 5 })}</option>
+                        <option value={600}>{t('dashboard.min', { n: 10 })}</option>
                     </select>
-                    <button onClick={toggleAutoRefresh}
-                        className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
+                    <button onClick={toggleAutoRefresh} role="switch" aria-checked={autoRefresh}
+                        className={`relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full border transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
                             autoRefresh
-                                ? 'bg-primary text-white shadow-[0_0_10px_color-mix(in_oklch,var(--color-primary)_30%,transparent)]'
-                                : 'bg-base-300 text-base-content/55 hover:bg-base-300/80'
+                                ? 'bg-primary border-primary/40'
+                                : 'bg-base-300 border-base-300'
                         }`}>
-                        {autoRefresh ? 'Live' : 'Off'}
+                        <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                            autoRefresh ? 'translate-x-[18px]' : 'translate-x-[3px]'
+                        }`} />
                     </button>
                     <div className="ml-auto flex items-center gap-3">
                         {lastUpdated && (
                             <span className="text-[11px] text-base-content/30 tabular-nums">
-                                Updated <strong className="text-base-content/45">{fmtLastUpdated()}</strong>
+                                {t('dashboard.updated')} <strong className="text-base-content/45">{fmtLastUpdated()}</strong>
                             </span>
                         )}
                         {autoRefresh && countdown > 0 && (
                             <span className="text-xs text-primary/50 tabular-nums">
-                                Next in <strong className="text-primary/70">{countdown}s</strong>
+                                {t('dashboard.nextIn')} <strong className="text-primary/70">{countdown}s</strong>
                             </span>
                         )}
                     </div>
@@ -509,7 +513,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
 
 
                 <div className="anim-fade-up anim-delay-4 flex items-center flex-wrap gap-1.5 mb-4">
-                    <span className="text-[10px] font-semibold text-base-content/30 uppercase tracking-wider mr-1">Groups</span>
+                    <span className="text-[10px] font-semibold text-base-content/30 uppercase tracking-wider mr-1">{t('dashboard.groups')}</span>
                     <button
                         onClick={() => setSelectedGroup(null)}
                         className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${
@@ -518,7 +522,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                                 : 'text-base-content/50 border-base-300 hover:bg-base-300/50 hover:text-base-content'
                         }`}
                     >
-                        All
+                        {t('dashboard.all')}
                         <span className="text-[10px] opacity-60">({targets.length})</span>
                     </button>
                     {groups.map(g => {
@@ -527,7 +531,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                         return (
                             <button key={g.id}
                                 onClick={() => setSelectedGroup(active ? null : g.id)}
-                                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-all"
+                                className="group-badge flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-all"
                                 style={active ? {
                                     backgroundColor: `${g.color}20`,
                                     color: g.color,
@@ -550,7 +554,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                             className="ml-auto flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border border-dashed border-base-300 text-base-content/40 hover:border-primary/40 hover:text-primary hover:bg-primary/5 transition-all"
                         >
                             <i className="fas fa-tags text-[9px]"></i>
-                            Manage Groups
+                            {t('dashboard.manageGroups')}
                         </button>
                     )}
                 </div>
@@ -561,16 +565,16 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                 <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                         <div className="w-0.5 h-3.5 rounded-full bg-primary/50 flex-shrink-0"></div>
-                        <span className="text-xs font-semibold text-base-content/40 uppercase tracking-wider">Active Monitors</span>
+                        <span className="text-xs font-semibold text-base-content/40 uppercase tracking-wider">{t('dashboard.activeMonitors')}</span>
                         <span className="text-[10px] font-medium text-base-content/25 tabular-nums">
-                            {filteredTargets.length} device{filteredTargets.length !== 1 ? 's' : ''}
-                            {selectedGroup ? '' : stats.paused > 0 ? ` · ${stats.paused} in maintenance` : ''}
+                            {t('dashboard.nDevices', { n: filteredTargets.length })}
+                            {selectedGroup ? '' : stats.paused > 0 ? ` · ${t('dashboard.nInMaintenance', { n: stats.paused })}` : ''}
                         </span>
                     </div>
                     {stats.offline > 0 && (
                         <span className="text-[10px] font-semibold text-error/70 flex items-center gap-1">
                             <i className="fas fa-exclamation-circle text-[9px]"></i>
-                            {stats.offline} alert{stats.offline !== 1 ? 's' : ''}
+                            {t('dashboard.nAlerts', { n: stats.offline })}
                         </span>
                     )}
                 </div>
@@ -625,12 +629,12 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-error"></span>
                             </span>
-                            <span className="text-xs font-bold tabular-nums text-error flex-1">{offlineTargets.length} device{offlineTargets.length !== 1 ? 's' : ''} offline</span>
+                            <span className="text-xs font-bold tabular-nums text-error flex-1">{t('dashboard.nOffline', { n: offlineTargets.length })}</span>
                             <button onClick={e => { e.stopPropagation(); pingOffline(); }}
                                 disabled={pingAllLoading}
                                 className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold bg-error/20 text-error rounded-lg hover:bg-error/30 transition-colors disabled:opacity-50">
                                 <i className={`fas ${pingAllLoading ? 'fa-spinner fa-spin' : 'fa-play'} text-[8px]`}></i>
-                                Check
+                                {t('dashboard.check')}
                             </button>
                         </div>
 

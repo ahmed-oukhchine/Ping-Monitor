@@ -255,6 +255,27 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .modal-enter    { animation: modal-in    0.22s cubic-bezier(0.22, 1, 0.36, 1); }
 .backdrop-enter { animation: backdrop-in 0.18s ease-out; }
 
+/* ── Sidebar active link: left accent glow ── */
+.nav-active {
+    position: relative;
+    isolation: isolate;
+}
+.nav-active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    translate: 0 -50%;
+    width: 3px;
+    height: 20px;
+    border-radius: 0 3px 3px 0;
+    background: var(--color-primary);
+    box-shadow: 0 0 10px color-mix(in oklch, var(--color-primary) 50%, transparent);
+}
+.nav-active .nav-icon {
+    color: var(--color-primary);
+}
+
 /* Sidebar slide in from left */
 @keyframes sidebar-in {
     from { opacity: 0; transform: translateX(-20px); }
@@ -293,14 +314,31 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .table-anim tbody tr:nth-child(12)  { animation-delay: 0.38s; }
 .table-anim tbody tr:nth-child(n+13){ animation-delay: 0.40s; }
 
-/* Stat card hover lift + glow */
+/* Stat card hover lift + glassmorphism glow */
 .stat-card {
-    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease, border-color 0.25s ease;
     cursor: default;
+    position: relative;
+    overflow: hidden;
+}
+.stat-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), color-mix(in oklch, var(--color-primary) 6%, transparent), transparent 60%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+}
+.stat-card:hover::before {
+    opacity: 1;
 }
 .stat-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 28px color-mix(in oklch, var(--color-base-content) 8%, transparent);
+    transform: translateY(-3px) scale(1.01);
+    box-shadow:
+        0 8px 28px color-mix(in oklch, var(--color-base-content) 8%, transparent),
+        0 0 0 1px color-mix(in oklch, var(--color-primary) 15%, transparent);
 }
 
 /* Button press */
@@ -348,6 +386,47 @@ button:not(:disabled):active {
     transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .user-avatar:hover { transform: scale(1.15); }
+
+/* ── Animated primary button (slide-fill on hover) ── */
+.btn-prime {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+}
+.btn-prime::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: color-mix(in oklch, var(--color-primary) 15%, transparent);
+    border-radius: inherit;
+    width: 0;
+    transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.btn-prime:hover::before {
+    width: 100%;
+}
+.btn-prime:active {
+    transform: scale(0.96);
+    transition: transform 0.08s ease !important;
+}
+
+/* ── Search input focus glow + icon animation ── */
+.search-wrap .search-icon {
+    transition: color 0.2s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.search-wrap:focus-within .search-icon {
+    color: var(--color-primary);
+    transform: scale(1.1);
+}
+
+/* ── Group badge hover pop ── */
+.group-badge {
+    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s ease;
+}
+.group-badge:hover {
+    transform: translateY(-1px) scale(1.04);
+    box-shadow: 0 2px 8px color-mix(in oklch, currentColor 20%, transparent);
+}
 
 /* ─────────────────────────────────────────────────────
    TARGET TABLE

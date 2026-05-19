@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useLang } from '../contexts/LanguageContext';
 
 function fmtDuration(sec) {
     if (sec == null) return '—';
@@ -12,6 +13,7 @@ function fmtDuration(sec) {
 }
 
 export default function Incidents() {
+    const { t } = useLang();
     const [data, setData]         = useState(null);
     const [loading, setLoading]   = useState(true);
     const [targetId, setTargetId] = useState('');
@@ -44,11 +46,11 @@ export default function Incidents() {
                 <div className="anim-fade-up flex items-center gap-3 mb-4">
                     <div className="w-1 h-7 rounded-full bg-primary flex-shrink-0"></div>
                     <div className="flex-1 min-w-0">
-                        <h1 className="text-base font-bold text-base-content leading-tight">Downtime Incidents</h1>
+                        <h1 className="text-base font-bold text-base-content leading-tight">{t('incidents.title')}</h1>
                         {data ? (
                             <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-0.5">
                                 <span className="text-xs text-base-content/40">
-                                    {data.meta.total} incident{data.meta.total !== 1 ? 's' : ''} total
+                                    {t('incidents.nTotal', { n: data.meta.total })}
                                 </span>
                                 {data.meta.ongoing > 0 && (
                                     <>
@@ -58,19 +60,19 @@ export default function Incidents() {
                                                 <span className="ping-slow absolute inline-flex h-full w-full rounded-full bg-error opacity-75"></span>
                                                 <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-error"></span>
                                             </span>
-                                            {data.meta.ongoing} ongoing
+                                            {t('incidents.nOngoing', { n: data.meta.ongoing })}
                                         </span>
                                     </>
                                 )}
                                 {data.meta.ongoing === 0 && data.meta.total > 0 && (
                                     <>
                                         <span className="text-base-content/20">·</span>
-                                        <span className="text-xs text-success font-semibold">All resolved</span>
+                                        <span className="text-xs text-success font-semibold">{t('incidents.allResolved')}</span>
                                     </>
                                 )}
                             </div>
                         ) : (
-                            <p className="text-xs text-base-content/40 mt-0.5">Loading…</p>
+                            <p className="text-xs text-base-content/40 mt-0.5">{t('incidents.loading')}</p>
                         )}
                     </div>
                 </div>
@@ -78,12 +80,12 @@ export default function Incidents() {
                 <div className="anim-fade-up anim-delay-1 bg-base-200 border border-base-300 rounded-xl px-4 py-3 mb-4 flex items-center flex-wrap gap-x-4 gap-y-2.5">
 
                     <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-semibold text-base-content/35 uppercase tracking-wider whitespace-nowrap">Target</span>
+                        <span className="text-[10px] font-semibold text-base-content/35 uppercase tracking-wider whitespace-nowrap">{t('incidents.target')}</span>
                         <select
                             className="bg-base-100 border border-base-300 rounded-lg px-2.5 py-1.5 text-xs text-base-content outline-none focus:border-primary/50 transition-colors"
                             value={targetId}
                             onChange={e => { setTargetId(e.target.value); resetPage(); }}>
-                            <option value="">All</option>
+                            <option value="">{t('incidents.all')}</option>
                             {data?.targets?.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                         </select>
                     </div>
@@ -91,12 +93,12 @@ export default function Incidents() {
                     <div className="w-px h-5 bg-base-300 flex-shrink-0 hidden sm:block"></div>
 
                     <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-semibold text-base-content/35 uppercase tracking-wider whitespace-nowrap">From</span>
+                        <span className="text-[10px] font-semibold text-base-content/35 uppercase tracking-wider whitespace-nowrap">{t('incidents.from')}</span>
                         <input type="date" value={dateFrom} max={dateTo || undefined}
                             onChange={e => { setDateFrom(e.target.value); resetPage(); }}
                             className="bg-base-100 border border-base-300 rounded-lg px-2.5 py-1.5 text-xs text-base-content outline-none focus:border-primary/50 transition-colors"
                         />
-                        <span className="text-[10px] font-semibold text-base-content/35 uppercase tracking-wider whitespace-nowrap">To</span>
+                        <span className="text-[10px] font-semibold text-base-content/35 uppercase tracking-wider whitespace-nowrap">{t('incidents.to')}</span>
                         <input type="date" value={dateTo} min={dateFrom || undefined}
                             onChange={e => { setDateTo(e.target.value); resetPage(); }}
                             className="bg-base-100 border border-base-300 rounded-lg px-2.5 py-1.5 text-xs text-base-content outline-none focus:border-primary/50 transition-colors"
@@ -107,7 +109,7 @@ export default function Incidents() {
                         <button onClick={clearFilters}
                             className="ml-auto flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-base-content/50 hover:text-error hover:bg-error/10 transition-all">
                             <i className="fas fa-times text-[10px]"></i>
-                            Clear
+                            {t('incidents.clear')}
                             <span className="min-w-[16px] h-4 rounded-full bg-primary text-white text-[9px] font-bold flex items-center justify-center px-1">
                                 {activeCount}
                             </span>
@@ -126,7 +128,7 @@ export default function Incidents() {
                                 <table className="table-anim w-full text-sm">
                                     <thead>
                                         <tr className="border-b border-base-300 bg-base-300/40">
-                                            {['Status', 'Target', 'Started', 'Ended', 'Duration', 'Failed Pings'].map(h => (
+                                            {[t('incidents.status'), t('incidents.target'), t('incidents.started'), t('incidents.ended'), t('incidents.duration'), t('incidents.failedPings')].map(h => (
                                                 <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-base-content/50 uppercase tracking-wider whitespace-nowrap">
                                                     {h}
                                                 </th>
@@ -138,11 +140,11 @@ export default function Incidents() {
                                             <tr>
                                                 <td colSpan={6} className="text-center py-14">
                                                     <i className="fas fa-shield-alt text-3xl block mb-3 text-base-content/10"></i>
-                                                    <p className="text-sm text-base-content/30">No incidents found</p>
+                                                    <p className="text-sm text-base-content/30">{t('incidents.noIncidents')}</p>
                                                     {activeCount > 0 ? (
-                                                        <button onClick={clearFilters} className="mt-3 text-xs text-primary hover:underline">Clear all filters</button>
+                                                        <button onClick={clearFilters} className="mt-3 text-xs text-primary hover:underline">{t('incidents.clearAllFilters')}</button>
                                                     ) : (
-                                                        <p className="text-xs text-base-content/20 mt-1">All devices have been online</p>
+                                                        <p className="text-xs text-base-content/20 mt-1">{t('incidents.allOnline')}</p>
                                                     )}
                                                 </td>
                                             </tr>
@@ -162,12 +164,12 @@ export default function Incidents() {
                                                                     <span className="ping-slow absolute inline-flex h-full w-full rounded-full bg-error opacity-60"></span>
                                                                     <span className="relative inline-flex rounded-full h-2 w-2 bg-error"></span>
                                                                 </span>
-                                                                <span className="text-error text-xs font-semibold">Ongoing</span>
+                                                                 <span className="text-error text-xs font-semibold">{t('incidents.ongoing')}</span>
                                                             </div>
                                                         ) : (
                                                             <div className="flex items-center gap-1.5">
                                                                 <span className="inline-flex rounded-full h-2 w-2 bg-success flex-shrink-0"></span>
-                                                                <span className="text-success text-xs font-semibold">Resolved</span>
+                                                                <span className="text-success text-xs font-semibold">{t('incidents.resolved')}</span>
                                                             </div>
                                                         )}
                                                     </td>
@@ -181,7 +183,7 @@ export default function Incidents() {
                                                     <td className="px-4 py-3 mono text-xs tabular-nums whitespace-nowrap">
                                                         {inc.ended_at
                                                             ? <span className="text-base-content/40">{new Date(inc.ended_at).toLocaleString()}</span>
-                                                            : <span className="text-error/60 font-medium italic text-[11px]">Not recovered</span>
+                                                            : <span className="text-error/60 font-medium italic text-[11px]">{t('incidents.notRecovered')}</span>
                                                         }
                                                     </td>
                                                     <td className="px-4 py-3 mono text-xs font-semibold tabular-nums">
@@ -220,7 +222,7 @@ export default function Incidents() {
                                             className="px-2 py-1 rounded-md text-xs text-base-content/50 hover:bg-base-300 disabled:opacity-30 transition-colors">
                                             <i className="fas fa-chevron-left"></i>
                                         </button>
-                                        <span className="px-3 text-xs font-semibold text-base-content/55">{page} / {data.meta.last_page}</span>
+                                        <span className="px-3 py-1 text-xs font-semibold bg-primary/10 text-primary rounded-lg border border-primary/25">{page} / {data.meta.last_page}</span>
                                         <button disabled={page >= data.meta.last_page} onClick={() => setPage(p => p + 1)}
                                             className="px-2 py-1 rounded-md text-xs text-base-content/50 hover:bg-base-300 disabled:opacity-30 transition-colors">
                                             <i className="fas fa-chevron-right"></i>

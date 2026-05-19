@@ -1,29 +1,31 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useLang } from '../contexts/LanguageContext';
 
 const themeIcons = { light: 'fa-sun', dark: 'fa-moon', system: 'fa-desktop' };
 
 export default function Sidebar({ open, onToggle, onLogout, onCycleTheme, themePref, offlineCount = 0 }) {
     const { pathname } = useLocation();
     const { user } = useAuth();
+    const { t } = useLang();
     const isAdmin = user?.role === 'admin';
 
     const navItems = [
-        { to: '/',           label: 'Dashboard',  icon: 'fa-chart-pie',          show: true,  badge: null },
-        { to: '/monitoring', label: 'Monitoring', icon: 'fa-tachometer-alt',     show: true,  badge: offlineCount > 0 ? offlineCount : null },
-        { to: '/history',    label: 'History',    icon: 'fa-history',            show: true,  badge: null },
-        { to: '/incidents',  label: 'Incidents',  icon: 'fa-exclamation-circle', show: true,  badge: null },
-        { to: '/reports',    label: 'Reports',    icon: 'fa-file-alt',           show: true,  badge: null },
-        { to: '/users',      label: 'Users',      icon: 'fa-users',              show: isAdmin, badge: null },
-        { to: '/audit-log',  label: 'Audit Log',  icon: 'fa-clipboard-list',     show: isAdmin, badge: null },
-        { to: '/settings',   label: 'Settings',   icon: 'fa-cog',                show: true,  badge: null },
+        { to: '/',           label: t('sidebar.dashboard'),  icon: 'fa-chart-pie',          show: true,  badge: null },
+        { to: '/monitoring', label: t('sidebar.monitoring'), icon: 'fa-tachometer-alt',     show: true,  badge: offlineCount > 0 ? offlineCount : null },
+        { to: '/history',    label: t('sidebar.history'),    icon: 'fa-history',            show: true,  badge: null },
+        { to: '/incidents',  label: t('sidebar.incidents'),  icon: 'fa-exclamation-circle', show: true,  badge: null },
+        { to: '/reports',    label: t('sidebar.reports'),    icon: 'fa-file-alt',           show: true,  badge: null },
+        { to: '/users',      label: t('sidebar.users'),      icon: 'fa-users',              show: isAdmin, badge: null },
+        { to: '/audit-log',  label: t('sidebar.auditLog'),   icon: 'fa-clipboard-list',     show: isAdmin, badge: null },
+        { to: '/settings',   label: t('sidebar.settings'),   icon: 'fa-cog',                show: true,  badge: null },
     ];
 
     const linkClass = (active) =>
         `flex items-center rounded-xl text-sm font-medium transition-all duration-150 ${
             active
-                ? 'bg-primary/15 text-primary shadow-sm'
+                ? 'nav-active bg-primary/10 text-primary shadow-sm'
                 : 'text-base-content/55 hover:bg-base-300/70 hover:text-base-content'
         } ${open ? 'gap-3 px-3 py-2.5' : 'gap-0 px-0 py-3 justify-center'}`;
 
@@ -46,7 +48,7 @@ export default function Sidebar({ open, onToggle, onLogout, onCycleTheme, themeP
                 {open && (
                     <div className="leading-none text-left ml-3">
                         <div className="text-sm font-bold text-base-content tracking-wide">ArgusNet</div>
-                        <div className="text-[10px] text-base-content/40 mt-0.5">Network Monitor</div>
+                        <div className="text-[10px] text-base-content/40 mt-0.5">{t('sidebar.networkMonitor')}</div>
                     </div>
                 )}
             </div>
@@ -64,7 +66,7 @@ export default function Sidebar({ open, onToggle, onLogout, onCycleTheme, themeP
                             title={!open ? item.label : undefined}
                         >
                             <div className="relative flex items-center justify-center flex-shrink-0 w-4">
-                                <i className={`fas ${item.icon} text-xs text-center ${active ? 'text-primary' : 'text-base-content/35'}`}></i>
+                                <i className={`nav-icon fas ${item.icon} text-xs text-center ${active ? 'text-primary' : 'text-base-content/35'}`}></i>
                                 {item.badge != null && !open && (
                                     <span className="absolute -top-2 -right-3 min-w-[14px] h-[14px] rounded-full bg-error text-white text-[7px] font-bold flex items-center justify-center px-0.5 leading-none">
                                         {item.badge > 9 ? '9+' : item.badge}
@@ -97,7 +99,7 @@ export default function Sidebar({ open, onToggle, onLogout, onCycleTheme, themeP
                                         : 'text-base-content/45 hover:text-base-content'
                                 }`}>
                                 <i className={`fas ${themeIcons[mode]} text-[10px]`}></i>
-                                <span className="text-[10px]">{mode.charAt(0).toUpperCase() + mode.slice(1)}</span>
+                                <span className="text-[10px]">{t(`sidebar.${mode}`)}</span>
                             </button>
                         ))}
                     </div>
@@ -117,7 +119,7 @@ export default function Sidebar({ open, onToggle, onLogout, onCycleTheme, themeP
                     <button onClick={onLogout}
                         className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-base-content/50 hover:bg-error/10 hover:text-error transition-all">
                         <i className="fas fa-sign-out-alt text-xs w-4 text-center flex-shrink-0"></i>
-                        Sign out
+                        {t('sidebar.signOut')}
                     </button>
                 </div>
             )}

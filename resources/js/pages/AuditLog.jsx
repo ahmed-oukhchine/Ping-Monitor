@@ -1,19 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { useLang } from '../contexts/LanguageContext';
 
-const actionMeta = {
-    created:               { label: 'Created',         color: 'success', icon: 'fa-plus-circle' },
-    updated:               { label: 'Updated',         color: 'warning', icon: 'fa-pen' },
-    deleted:               { label: 'Deleted',         color: 'error',   icon: 'fa-trash-alt' },
-    pinged:                { label: 'Pinged',          color: 'info',    icon: 'fa-bolt' },
-    ping_all:              { label: 'Bulk Ping',       color: 'info',    icon: 'fa-broadcast-tower' },
-    paused:                { label: 'Paused',          color: 'warning', icon: 'fa-pause-circle' },
-    resumed:               { label: 'Resumed',         color: 'success', icon: 'fa-play-circle' },
-    login:                 { label: 'Login',           color: 'info',    icon: 'fa-sign-in-alt' },
-    logout:                { label: 'Logout',          color: 'default', icon: 'fa-sign-out-alt' },
-    password_changed:      { label: 'Password Changed',  color: 'warning', icon: 'fa-key' },
-    password_changed_by_admin: { label: 'Admin Reset Password', color: 'warning', icon: 'fa-user-shield' },
-};
+function useActionMeta() {
+    const { t } = useLang();
+    return {
+        created:               { label: t('audit.created'),         color: 'success', icon: 'fa-plus-circle' },
+        updated:               { label: t('audit.updated'),         color: 'warning', icon: 'fa-pen' },
+        deleted:               { label: t('audit.deleted'),         color: 'error',   icon: 'fa-trash-alt' },
+        pinged:                { label: t('audit.pinged'),          color: 'info',    icon: 'fa-bolt' },
+        ping_all:              { label: t('audit.bulkPing'),       color: 'info',    icon: 'fa-broadcast-tower' },
+        paused:                { label: t('audit.paused'),          color: 'warning', icon: 'fa-pause-circle' },
+        resumed:               { label: t('audit.resumed'),         color: 'success', icon: 'fa-play-circle' },
+        login:                 { label: t('audit.login'),           color: 'info',    icon: 'fa-sign-in-alt' },
+        logout:                { label: t('audit.logout'),          color: 'default', icon: 'fa-sign-out-alt' },
+        password_changed:      { label: t('audit.passwordChanged'),  color: 'warning', icon: 'fa-key' },
+        password_changed_by_admin: { label: t('audit.adminResetPassword'), color: 'warning', icon: 'fa-user-shield' },
+    };
+}
 
 const avatarColors = ['#22c55e','#3b82f6','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6','#f97316'];
 
@@ -24,15 +28,15 @@ function nameColor(name) {
     return avatarColors[Math.abs(hash) % avatarColors.length];
 }
 
-function formatTime(iso) {
+function formatTime(iso, t) {
     if (!iso) return '';
     const d = new Date(iso);
     const now = new Date();
     const diff = (now - d) / 1000;
-    if (diff < 60) return 'Just now';
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-    if (diff < 172800) return 'Yesterday';
+    if (diff < 60) return t('audit.justNow');
+    if (diff < 3600) return t('audit.minsAgo', { n: Math.floor(diff / 60) });
+    if (diff < 86400) return t('audit.hoursAgo', { n: Math.floor(diff / 3600) });
+    if (diff < 172800) return t('audit.yesterday');
     const day = String(d.getDate()).padStart(2, '0');
     const month = String(d.getMonth() + 1).padStart(2, '0');
     return `${day}/${month}`;
@@ -49,7 +53,7 @@ function formatFullTime(iso) {
     return `${day}/${month}/${year} ${hours}:${mins}`;
 }
 
-function dateLabel(iso) {
+function dateLabel(iso, t) {
     if (!iso) return '';
     const d = new Date(iso);
     const now = new Date();
@@ -57,8 +61,8 @@ function dateLabel(iso) {
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
     const dDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    if (dDate.getTime() === today.getTime()) return 'Today';
-    if (dDate.getTime() === yesterday.getTime()) return 'Yesterday';
+    if (dDate.getTime() === today.getTime()) return t('audit.today');
+    if (dDate.getTime() === yesterday.getTime()) return t('audit.yesterday');
     const day = String(d.getDate()).padStart(2, '0');
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const year = d.getFullYear();
@@ -66,6 +70,8 @@ function dateLabel(iso) {
 }
 
 export default function AuditLog({ active = false }) {
+    const { t } = useLang();
+    const actionMeta = useActionMeta();
     const [logs, setLogs]               = useState([]);
     const [page, setPage]               = useState(1);
     const [lastPage, setLastPage]       = useState(1);
@@ -149,9 +155,9 @@ export default function AuditLog({ active = false }) {
     };
 
     const statsConfig = [
-        { label: 'Total Events', value: total.toLocaleString(), icon: 'fa-clipboard-list' },
-        { label: 'Today',        value: todayCount,            icon: 'fa-calendar-day' },
-        { label: 'Active Users', value: users.length,          icon: 'fa-users' },
+        { label: t('audit.totalEvents'), value: total.toLocaleString(), icon: 'fa-clipboard-list' },
+        { label: t('audit.today'),       value: todayCount,            icon: 'fa-calendar-day' },
+        { label: t('audit.activeUsers'), value: users.length,          icon: 'fa-users' },
     ];
 
     return (
@@ -162,9 +168,9 @@ export default function AuditLog({ active = false }) {
                     <div className="flex items-center gap-3">
                         <div className="w-1 h-7 rounded-full bg-primary flex-shrink-0"></div>
                         <div>
-                            <h1 className="text-base font-bold text-base-content leading-tight">Audit Log</h1>
+                            <h1 className="text-base font-bold text-base-content leading-tight">{t('audit.title')}</h1>
                             <p className="text-xs text-base-content/40 mt-0.5">
-                                {total > 0 ? `${total.toLocaleString()} event${total !== 1 ? 's' : ''} recorded` : 'Track every change'}
+                                {total > 0 ? t('audit.eventsRecorded', { n: total }) : t('audit.trackEveryChange')}
                             </p>
                         </div>
                     </div>
@@ -194,14 +200,14 @@ export default function AuditLog({ active = false }) {
                     <i className="fas fa-filter text-xs text-base-content/30"></i>
                     <select value={filterAction} onChange={e => setFilterAction(e.target.value)}
                         className="bg-base-100 border border-base-300 rounded-lg px-2.5 py-1.5 text-xs text-base-content outline-none focus:border-primary/50">
-                        <option value="">All actions</option>
+                        <option value="">{t('audit.allActions')}</option>
                         {actions.map(a => (
                             <option key={a} value={a}>{a.replace(/_/g, ' ')}</option>
                         ))}
                     </select>
                     <select value={filterUser} onChange={e => setFilterUser(e.target.value)}
                         className="bg-base-100 border border-base-300 rounded-lg px-2.5 py-1.5 text-xs text-base-content outline-none focus:border-primary/50">
-                        <option value="">All users</option>
+                        <option value="">{t('audit.allUsers')}</option>
                         {users.map(u => (
                             <option key={u.id} value={u.id}>{u.name}</option>
                         ))}
@@ -212,20 +218,20 @@ export default function AuditLog({ active = false }) {
                     <input type="date" value={filterDateTo} onChange={e => setFilterDateTo(e.target.value)}
                         className="bg-base-100 border border-base-300 rounded-lg px-2.5 py-1.5 text-xs text-base-content outline-none focus:border-primary/50 [color-scheme:dark]" />
                     <button onClick={applyFilters}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-primary text-white rounded-lg hover:opacity-90 transition-opacity">
-                        <i className="fas fa-search text-[10px]"></i> Search
+                        className="btn-prime flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-primary text-white rounded-lg hover:brightness-110 transition-all">
+                        <i className="fas fa-search text-[10px]"></i> {t('audit.search')}
                     </button>
                     {activeFilters > 0 && (
                         <button onClick={clearFilters}
                             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-base-content/50 hover:text-error transition-colors">
-                            <i className="fas fa-times text-[10px]"></i> Clear ({activeFilters})
+                            <i className="fas fa-times text-[10px]"></i> {t('audit.clear')} ({activeFilters})
                         </button>
                     )}
                 </div>
 
                 {!loading && logs.length > 0 && (
                     <div className="anim-fade-up anim-delay-1 text-[11px] text-base-content/30 mb-3 tabular-nums">
-                        Showing <strong className="text-base-content/50">{from}–{to}</strong> of <strong className="text-base-content/50">{total.toLocaleString()}</strong>
+                        {t('audit.showing')} <strong className="text-base-content/50">{from}–{to}</strong> {t('audit.of')} <strong className="text-base-content/50">{total.toLocaleString()}</strong>
                     </div>
                 )}
 
@@ -240,14 +246,14 @@ export default function AuditLog({ active = false }) {
                         <div className="w-14 h-14 rounded-2xl bg-base-200 border border-base-300 flex items-center justify-center mx-auto mb-4">
                             <i className="fas fa-clipboard-list text-xl text-base-content/20"></i>
                         </div>
-                        <p className="text-sm font-medium text-base-content/40 mb-1">No audit logs found</p>
+                        <p className="text-sm font-medium text-base-content/40 mb-1">{t('audit.noLogsFound')}</p>
                         <p className="text-xs text-base-content/30">
-                            {activeFilters > 0 ? 'Try adjusting your filters' : 'Actions will appear here as they happen'}
+                            {activeFilters > 0 ? t('audit.adjustFilters') : t('audit.logsWillAppear')}
                         </p>
                         {activeFilters > 0 && (
                             <button onClick={clearFilters}
                                 className="mt-4 px-4 py-2 text-xs font-semibold bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors">
-                                Clear filters
+                                {t('audit.clearFilters')}
                             </button>
                         )}
                     </div>
@@ -259,8 +265,8 @@ export default function AuditLog({ active = false }) {
                                     const c = colorMap[meta.color] ?? colorMap.default;
                                     const expanded = expandedId === log.id;
 
-                                    const prevDate = idx > 0 ? dateLabel(logs[idx - 1].created_at) : null;
-                                    const currDate = dateLabel(log.created_at);
+                                const prevDate = idx > 0 ? dateLabel(logs[idx - 1].created_at, t) : null;
+                                const currDate = dateLabel(log.created_at, t);
                                     const showDateHeader = prevDate !== currDate;
 
                                     return (
@@ -287,7 +293,7 @@ export default function AuditLog({ active = false }) {
                                                                 {log.created_at?.slice(11, 19)}
                                                             </div>
                                                             <div className={`text-[10px] tabular-nums leading-tight mt-0.5 ${expanded ? 'text-base-content/40' : 'text-base-content/30'}`}>
-                                                                {formatTime(log.created_at)}
+                                                                {formatTime(log.created_at, t)}
                                                             </div>
                                                         </div>
 
@@ -329,30 +335,30 @@ export default function AuditLog({ active = false }) {
                                                             <div className="border-t border-base-300/20 px-4 py-3 space-y-3 text-xs">
                                                                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                                                                     <div className="bg-base-200/50 rounded-lg p-2.5">
-                                                                        <span className="text-base-content/30 block text-[10px] mb-0.5 font-medium">Timestamp</span>
+                                                                        <span className="text-base-content/30 block text-[10px] mb-0.5 font-medium">{t('audit.timestamp')}</span>
                                                                         <span className="text-base-content/70 text-[11px]">{formatFullTime(log.created_at)}</span>
                                                                     </div>
                                                                     <div className="bg-base-200/50 rounded-lg p-2.5">
-                                                                        <span className="text-base-content/30 block text-[10px] mb-0.5 font-medium">User</span>
+                                                                        <span className="text-base-content/30 block text-[10px] mb-0.5 font-medium">{t('audit.user')}</span>
                                                                         <span className="text-base-content/70 text-[11px]">{log.user?.name ?? 'System'}</span>
                                                                         <span className="text-base-content/40 text-[10px] block mt-0.5">{log.user?.email ?? '—'}</span>
                                                                     </div>
                                                                     <div className="bg-base-200/50 rounded-lg p-2.5">
-                                                                        <span className="text-base-content/30 block text-[10px] mb-0.5 font-medium">Action</span>
+                                                                        <span className="text-base-content/30 block text-[10px] mb-0.5 font-medium">{t('audit.action')}</span>
                                                                         <span className={`text-[11px] font-semibold ${c.text} flex items-center gap-1.5`}>
                                                                             <i className={`fas ${meta.icon} text-[9px]`}></i>
                                                                             {meta.label}
                                                                         </span>
                                                                     </div>
                                                                     <div className="bg-base-200/50 rounded-lg p-2.5">
-                                                                        <span className="text-base-content/30 block text-[10px] mb-0.5 font-medium">Target</span>
+                                                                        <span className="text-base-content/30 block text-[10px] mb-0.5 font-medium">{t('audit.target')}</span>
                                                                         <span className="text-base-content/70 text-[11px] capitalize flex items-center gap-1.5">
                                                                             <i className="fas fa-tag text-[9px] text-base-content/30"></i>
                                                                             {log.target_type ?? '—'} {log.target_id ? `#${log.target_id}` : ''}
                                                                         </span>
                                                                     </div>
                                                                     <div className="bg-base-200/50 rounded-lg p-2.5">
-                                                                        <span className="text-base-content/30 block text-[10px] mb-0.5 font-medium">IP Address</span>
+                                                                        <span className="text-base-content/30 block text-[10px] mb-0.5 font-medium">{t('audit.ipAddress')}</span>
                                                                         <span className="text-base-content/70 text-[11px] font-mono">{log.ip_address ?? '—'}</span>
                                                                     </div>
                                                                 </div>
@@ -411,7 +417,7 @@ export default function AuditLog({ active = false }) {
                                         <button key={p} onClick={() => fetchLogs(p)}
                                             className={`min-w-[30px] h-[30px] text-xs font-medium rounded-lg border transition-all ${
                                                 p === page
-                                                    ? 'bg-primary text-white border-primary shadow-[0_0_10px_color-mix(in_oklch,var(--color-primary)_30%,transparent)]'
+                                                    ? 'btn-prime bg-primary text-white border-primary shadow-[0_0_10px_color-mix(in_oklch,var(--color-primary)_30%,transparent)]'
                                                     : 'border-base-300 text-base-content/50 hover:bg-base-300/50'
                                             }`}>
                                             {p}

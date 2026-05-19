@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useCallback } from 'react';
+import { useLang } from '../contexts/LanguageContext';
 
 function Trend({ value, trend }) {
     if (trend == null || trend === 0) return null;
@@ -11,8 +12,20 @@ function Trend({ value, trend }) {
     );
 }
 
+function useMouseGlow() {
+    const handleMouseMove = useCallback((e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+        e.currentTarget.style.setProperty('--mouse-x', `${x}%`);
+        e.currentTarget.style.setProperty('--mouse-y', `${y}%`);
+    }, []);
+    return handleMouseMove;
+}
+
 export default function StatsBar({ stats, prevStats }) {
-    const uptimeSub = stats.fleetUptime != null ? `${stats.fleetUptime}% fleet uptime` : null;
+    const { t } = useLang();
+    const uptimeSub = stats.fleetUptime != null ? t('stats.fleetUptime', { pct: stats.fleetUptime }) : null;
     const offlineAlert = stats.offline > 0;
 
     const diff = (key) => {
@@ -23,18 +36,20 @@ export default function StatsBar({ stats, prevStats }) {
         return Math.round((cur - prev) * 10) / 10;
     };
 
+    const handleMouse = useMouseGlow();
+
     const cards = [
         {
-            label: 'Total Targets',
+            label: t('stats.totalTargets'),
             value: stats.total ?? 0,
             valueCls: 'text-base-content',
-            sub: stats.paused > 0 ? `${stats.paused} in maintenance` : 'All monitored',
+            sub: stats.paused > 0 ? t('stats.inMaintenance', { n: stats.paused }) : t('stats.allMonitored'),
             subCls: stats.paused > 0 ? 'text-warning/70' : 'text-base-content/30',
             subIcon: stats.paused > 0 ? 'fa-pause' : null,
             icon: 'fa-server', iconBg: 'bg-primary/10', iconColor: 'text-primary', border: 'border-t-primary/60',
         },
         {
-            label: 'Online',
+            label: t('stats.online'),
             value: stats.online ?? 0,
             valueCls: 'text-success',
             sub: uptimeSub,
@@ -45,10 +60,10 @@ export default function StatsBar({ stats, prevStats }) {
             trendUp: false,
         },
         {
-            label: 'Offline',
+            label: t('stats.offline'),
             value: stats.offline ?? 0,
             valueCls: offlineAlert ? 'text-error' : 'text-base-content/40',
-            sub: offlineAlert ? 'Requires attention' : 'All clear',
+            sub: offlineAlert ? t('stats.requiresAttention') : t('stats.allClear'),
             subCls: offlineAlert ? 'text-error/60' : 'text-base-content/25',
             subIcon: offlineAlert ? 'fa-exclamation-circle' : null,
             icon: 'fa-times-circle',
@@ -59,16 +74,16 @@ export default function StatsBar({ stats, prevStats }) {
             trendUp: true,
         },
         {
-            label: 'Avg Latency',
+            label: t('stats.avgLatency'),
             value: stats.avgLatency != null ? `${stats.avgLatency} ms` : '—',
             valueCls: stats.avgLatency == null ? 'text-base-content/30'
                 : stats.avgLatency < 50  ? 'text-success'
                 : stats.avgLatency < 150 ? 'text-warning'
                 : 'text-error',
-            sub: stats.avgLatency == null ? 'No data yet'
-                : stats.avgLatency < 50  ? 'Fast'
-                : stats.avgLatency < 150 ? 'Moderate'
-                : 'Slow',
+            sub: stats.avgLatency == null ? t('stats.noDataYet')
+                : stats.avgLatency < 50  ? t('stats.fast')
+                : stats.avgLatency < 150 ? t('stats.moderate')
+                : t('stats.slow'),
             subCls: stats.avgLatency == null ? 'text-base-content/25'
                 : stats.avgLatency < 50  ? 'text-success/60'
                 : stats.avgLatency < 150 ? 'text-warning/60'
@@ -83,7 +98,7 @@ export default function StatsBar({ stats, prevStats }) {
     return (
         <div className="grid grid-cols-4 gap-3 mb-4">
             {cards.map((c, i) => (
-                <div key={c.label} className={`stat-card anim-fade-up anim-delay-${i + 1} bg-base-200 border border-base-300 border-t-2 ${c.border} rounded-xl p-4 flex items-center gap-3`}>
+                <div key={c.label} onMouseMove={handleMouse} className={`stat-card anim-fade-up anim-delay-${i + 1} bg-base-200 border border-base-300 border-t-2 ${c.border} rounded-xl p-4 flex items-center gap-3`}>
                     <div className={`w-10 h-10 rounded-xl ${c.iconBg} flex items-center justify-center flex-shrink-0`}>
                         <i className={`fas ${c.icon} ${c.iconColor} text-lg`}></i>
                     </div>

@@ -1,0 +1,37 @@
+import React, { createContext, useContext, useState, useCallback } from 'react';
+import translations from '../i18n/translations';
+
+const LangContext = createContext();
+
+function getInitial() {
+    try { return localStorage.getItem('argusnet_lang') || 'en'; } catch { return 'en'; }
+}
+
+export function LanguageProvider({ children }) {
+    const [lang, setLangState] = useState(getInitial);
+
+    const setLang = useCallback((l) => {
+        setLangState(l);
+        try { localStorage.setItem('argusnet_lang', l); } catch {}
+    }, []);
+
+    const t = useCallback((key, params = {}) => {
+        const entry = translations[key];
+        if (!entry) return key;
+        let val = entry[lang] || entry.en || key;
+        if (params) {
+            Object.entries(params).forEach(([k, v]) => { val = val.replace(`{${k}}`, v); });
+        }
+        return val;
+    }, [lang]);
+
+    return (
+        <LangContext.Provider value={{ lang, setLang, t }}>
+            {children}
+        </LangContext.Provider>
+    );
+}
+
+export function useLang() {
+    return useContext(LangContext);
+}

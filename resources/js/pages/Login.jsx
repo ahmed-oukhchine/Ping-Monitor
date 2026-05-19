@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
+import { useLang } from '../contexts/LanguageContext';
 
 export default function Login() {
+    const { t } = useLang();
     const { setUser }             = useAuth();
     const [email, setEmail]       = useState('');
     const [password, setPassword] = useState('');
@@ -19,7 +21,7 @@ export default function Login() {
             setUser(data);
             window.location.href = '/';
         } catch (err) {
-            setError(err.response?.data?.message || 'Invalid credentials. Please try again.');
+            setError(err.response?.data?.message || t('login.invalidCredentials'));
         } finally {
             setLoading(false);
         }
@@ -47,9 +49,9 @@ export default function Login() {
 
                     <div className="flex items-center gap-2.5 mb-1">
                         <div className="w-1 h-6 rounded-full bg-primary flex-shrink-0"></div>
-                        <h2 className="text-lg font-bold text-base-content " >Sign in</h2>
+                        <h2 className="text-lg font-bold text-base-content">{t('login.signIn')}</h2>
                     </div>
-                    <p className="text-xs text-base-content/40 mb-6 pl-3.5">Enter your credentials to continue</p>
+                    <p className="text-xs text-base-content/40 mb-6 pl-3.5">{t('login.enterCredentials')}</p>
 
                     {error && (
                         <div className="mb-4 flex items-center gap-2 px-3 py-2.5 bg-error/10 border border-error/25 rounded-xl text-error text-xs">
@@ -60,26 +62,26 @@ export default function Login() {
 
                     <form onSubmit={submit} className="space-y-4">
                         <div>
-                            <label className="text-xs font-semibold text-base-content/55 block mb-1.5">Email</label>
+                            <label className="text-xs font-semibold text-base-content/55 block mb-1.5">{t('login.email')}</label>
                             <input
                                 type="email"
                                 value={email}
                                 onChange={e => setEmail(e.target.value)}
                                 required autoFocus
-                                placeholder="you@example.com"
+                                placeholder={t('login.emailPlaceholder')}
                                 className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2.5 text-sm text-base-content outline-none focus:border-primary/60 transition-colors"
                             />
                         </div>
 
                         <div>
-                            <label className="text-xs font-semibold text-base-content/55 block mb-1.5">Password</label>
+                            <label className="text-xs font-semibold text-base-content/55 block mb-1.5">{t('login.password')}</label>
                             <div className="relative">
                                 <input
                                     type={showPw ? 'text' : 'password'}
                                     value={password}
                                     onChange={e => setPassword(e.target.value)}
                                     required
-                                    placeholder="••••••••"
+                                    placeholder={t('login.passwordPlaceholder')}
                                     className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2.5 pr-10 text-sm text-base-content outline-none focus:border-primary/60 transition-colors"
                                 />
                                 <button
@@ -95,11 +97,11 @@ export default function Login() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold bg-primary text-white rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity shadow-[0_0_18px_color-mix(in_oklch,var(--color-primary)_35%,transparent)] mt-2"
+                            className="btn-prime w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold bg-primary text-white rounded-lg hover:brightness-110 disabled:opacity-50 transition-all shadow-[0_0_18px_color-mix(in_oklch,var(--color-primary)_35%,transparent)] mt-2"
                         >
                             {loading
-                                ? <><span className="loading loading-spinner loading-xs"></span>Signing in…</>
-                                : <><i className="fas fa-sign-in-alt text-xs"></i>Sign in</>
+                                ? <><span className="loading loading-spinner loading-xs"></span>{t('login.signingIn')}</>
+                                : <><i className="fas fa-sign-in-alt text-xs"></i>{t('login.signIn')}</>
                             }
                         </button>
                     </form>
