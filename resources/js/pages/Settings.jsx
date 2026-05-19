@@ -73,13 +73,7 @@ export default function Settings() {
         <div className="min-h-screen bg-base-100">
             <div className="max-w-4xl mx-auto px-6 py-6">
 
-                <div className="anim-fade-up flex items-center gap-3 mb-6">
-                    <div className="w-1 h-7 rounded-full bg-primary flex-shrink-0"></div>
-                    <div>
-                        <h1 className="text-base font-bold text-base-content leading-tight">{t('settings.title')}</h1>
-                        <p className="text-xs text-base-content/40 mt-0.5">{t('settings.subtitle')}</p>
-                    </div>
-                </div>
+                <h1 className="text-sm font-bold text-base-content mb-4">{t('settings.title')}</h1>
 
                 <div className="flex gap-6">
 

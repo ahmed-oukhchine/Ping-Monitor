@@ -145,19 +145,13 @@ export default function Topology() {
 
   return (
     <div className="h-[calc(100vh-2rem)] flex flex-col">
-      <div className="flex items-center justify-between px-6 py-3 flex-shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-1 h-7 rounded-full bg-primary flex-shrink-0"></div>
-          <div>
-            <h1 className="text-base font-bold text-base-content leading-tight">{t('topology.title')}</h1>
-            <p className="text-xs text-base-content/40 mt-0.5">{t('topology.subtitle')}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 text-[11px] text-base-content/40">
-          <i className="fas fa-arrows-alt text-xs"></i>
+      <div className="flex items-center justify-between px-6 py-2 flex-shrink-0">
+        <h1 className="text-sm font-bold text-base-content">{t('topology.title')}</h1>
+        <div className="flex items-center gap-2 text-[10px] text-base-content/40">
+          <i className="fas fa-arrows-alt text-[10px]"></i>
           <span>{t('topology.dragHint')}</span>
-          <span className="text-base-content/20 mx-1">|</span>
-          <i className="fas fa-link text-xs"></i>
+          <span className="text-base-content/20 mx-0.5">|</span>
+          <i className="fas fa-link text-[10px]"></i>
           <span>{t('topology.connectHint')}</span>
         </div>
       </div>

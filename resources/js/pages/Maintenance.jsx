@@ -98,17 +98,11 @@ export default function Maintenance() {
         <div className="min-h-screen bg-base-100">
             <div className="max-w-4xl mx-auto px-6 py-6">
 
-                <div className="anim-fade-up flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                        <div className="w-1 h-7 rounded-full bg-primary flex-shrink-0"></div>
-                        <div>
-                            <h1 className="text-base font-bold text-base-content leading-tight">{t('maintenance.title')}</h1>
-                            <p className="text-xs text-base-content/40 mt-0.5">{t('maintenance.subtitle')}</p>
-                        </div>
-                    </div>
+                <div className="flex items-center justify-between mb-3">
+                    <h1 className="text-sm font-bold text-base-content">{t('maintenance.title')}</h1>
                     <button onClick={openCreate}
-                        className="btn-prime flex items-center gap-2 px-3 py-1.5 text-xs font-semibold bg-primary text-white rounded-lg hover:brightness-110 transition-all shadow-[0_0_14px_color-mix(in_oklch,var(--color-primary)_35%,transparent)]">
-                        <i className="fas fa-plus text-[10px]"></i> {t('maintenance.newSchedule')}
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 text-[10px] font-semibold bg-primary text-white rounded-lg hover:brightness-110 transition-all">
+                        <i className="fas fa-plus text-[8px]"></i> {t('maintenance.newSchedule')}
                     </button>
                 </div>
 

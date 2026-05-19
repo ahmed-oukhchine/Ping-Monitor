@@ -52,35 +52,37 @@ export default function History() {
         <div className="min-h-screen bg-base-100">
             <div className="max-w-screen-lg mx-auto px-6 py-6">
 
-                <div className="anim-fade-up flex items-center gap-3 mb-4">
-                    <div className="w-1 h-7 rounded-full bg-primary flex-shrink-0"></div>
-                    <div className="flex-1 min-w-0">
-                        <h1 className="text-base font-bold text-base-content leading-tight">{t('history.title')}</h1>
-                        {data ? (
-                            <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-0.5">
-                                <span className="text-xs text-base-content/40">{t('history.nRecords', { n: data.meta.total })}</span>
+                <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                        <h1 className="text-sm font-bold text-base-content">{t('history.title')}</h1>
+                        {data && (
+                            <div className="flex items-center gap-2 text-[11px] text-base-content/40 ml-2 pl-2 border-l border-base-300">
+                                <span>{data.meta.total.toLocaleString()} records</span>
                                 {data.meta.total > 0 && (
                                     <>
-                                        <span className="text-base-content/20">·</span>
-                                        <span className="text-xs text-success font-semibold">{t('history.nOk', { n: data.meta.success_count })}</span>
-                                        <span className="text-base-content/20">·</span>
-                                        <span className="text-xs text-error font-semibold">{t('history.nFailed', { n: data.meta.fail_count })}</span>
-                                        <span className="text-base-content/20">·</span>
-                                        <span className="text-xs text-base-content/40">
-                                            {t('history.successRate', { pct: ((data.meta.success_count / data.meta.total) * 100).toFixed(1) })}
-                                        </span>
+                                        <span className="text-success font-semibold">{data.meta.success_count} ok</span>
+                                        <span className="text-error font-semibold">{data.meta.fail_count} failed</span>
+                                        <span>{((data.meta.success_count / data.meta.total) * 100).toFixed(1)}%</span>
                                     </>
                                 )}
                             </div>
-                        ) : (
-                            <p className="text-xs text-base-content/40 mt-0.5">{t('history.loading')}</p>
                         )}
                     </div>
-                    <button onClick={exportCsv} title={t('history.exportCsv')}
-                        className="btn-prime flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-primary/40 text-primary rounded-lg bg-base-200 hover:bg-primary/10 transition-all flex-shrink-0">
-                        <i className="fas fa-download text-[10px]"></i>
-                        {t('history.exportCsv')}
-                    </button>
+                    <div className="flex items-center gap-2">
+                        {activeCount > 0 && (
+                            <button onClick={clearFilters}
+                                className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-base-content/50 hover:text-error hover:bg-error/10 transition-all">
+                                <i className="fas fa-times text-[8px]"></i>
+                                {t('history.clear')}
+                                <span className="min-w-[14px] h-3.5 rounded-full bg-primary text-white text-[8px] font-bold flex items-center justify-center px-1">{activeCount}</span>
+                            </button>
+                        )}
+                        <button onClick={exportCsv} title={t('history.exportCsv')}
+                            className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold border border-primary/30 text-primary hover:bg-primary/10 transition-all">
+                            <i className="fas fa-download text-[8px]"></i>
+                            {t('history.exportCsv')}
+                        </button>
+                    </div>
                 </div>
 
                 <div className="anim-fade-up anim-delay-1 bg-base-200 border border-base-300 rounded-xl px-4 py-3 mb-4 flex items-center flex-wrap gap-x-4 gap-y-2.5">

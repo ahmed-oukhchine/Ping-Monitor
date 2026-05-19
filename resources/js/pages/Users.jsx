@@ -80,22 +80,14 @@ export default function Users() {
         <div className="min-h-screen bg-base-100">
             <div className="max-w-3xl mx-auto px-6 py-6">
 
-                <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                        <div className="w-1 h-7 rounded-full bg-primary flex-shrink-0"></div>
-                        <div>
-                            <h1 className="text-base font-bold text-base-content leading-tight">Team Members</h1>
-                            <p className="text-xs text-base-content/40 mt-0.5">
-                                {loading ? 'Loading…' : `${users.length} account${users.length !== 1 ? 's' : ''}`}
-                            </p>
-                        </div>
-                    </div>
+                <div className="flex items-center justify-between mb-3">
+                    <h1 className="text-sm font-bold text-base-content">Team Members</h1>
                     {!showForm && (
                         <button
                             onClick={() => setShowForm(true)}
-                            className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold border border-primary/40 text-primary rounded-lg hover:bg-primary/10 transition-colors"
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 text-[10px] font-semibold border border-primary/40 text-primary rounded-lg hover:bg-primary/10 transition-colors"
                         >
-                            <i className="fas fa-plus text-[10px]"></i>
+                            <i className="fas fa-plus text-[8px]"></i>
                             New User
                         </button>
                     )}

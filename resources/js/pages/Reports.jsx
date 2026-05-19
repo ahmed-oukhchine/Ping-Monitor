@@ -79,26 +79,23 @@ export default function Reports({ user }) {
         <div className="min-h-screen bg-base-100">
             <div className="max-w-screen-xl mx-auto px-6 py-6 space-y-4">
 
-                <div className="anim-fade-up flex items-center gap-3">
-                    <div className="w-1 h-7 rounded-full bg-primary flex-shrink-0"></div>
-                    <div className="flex-1 min-w-0">
-                        <h1 className="text-base font-bold text-base-content leading-tight">{t('reports.title')}</h1>
-                        {summary ? (
-                            <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-0.5">
-                                <span className="text-xs text-base-content/40">{t('reports.nTargets', { n: summary.total_targets })}</span>
-                                <span className="text-base-content/20">·</span>
-                                <span className="text-xs text-base-content/40">{t('reports.nChecks', { n: summary.total_pings })}</span>
+                <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                        <h1 className="text-sm font-bold text-base-content">{t('reports.title')}</h1>
+                        {summary && (
+                            <div className="flex items-center gap-2 text-[11px] text-base-content/40 ml-2 pl-2 border-l border-base-300">
+                                <span>{t('reports.nTargets', { n: summary.total_targets })}</span>
+                                <span>·</span>
+                                <span>{t('reports.nChecks', { n: summary.total_pings })}</span>
                                 {summary.fleet_uptime != null && (
                                     <>
-                                        <span className="text-base-content/20">·</span>
-                                        <span className="text-xs font-semibold" style={{ color: uptimeColor(summary.fleet_uptime) }}>
-                                            {t('reports.fleetUptime', { pct: summary.fleet_uptime })}
+                                        <span>·</span>
+                                        <span className="font-semibold" style={{ color: uptimeColor(summary.fleet_uptime) }}>
+                                            {summary.fleet_uptime}% uptime
                                         </span>
                                     </>
                                 )}
                             </div>
-                        ) : (
-                            <p className="text-xs text-base-content/40 mt-0.5">{t('reports.loading')}</p>
                         )}
                     </div>
                 </div>

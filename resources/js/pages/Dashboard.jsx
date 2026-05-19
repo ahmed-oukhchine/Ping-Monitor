@@ -340,19 +340,14 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
             <div className="min-h-screen bg-base-100">
                 <div className="max-w-screen-xl mx-auto px-6 py-6">
 
-                <div className="flex items-center gap-4 mb-5">
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                        <div className="w-1 h-7 rounded-full bg-primary flex-shrink-0"></div>
-                        <div>
-                            <h1 className="text-base font-bold text-base-content leading-tight">{t('dashboard.title')}</h1>
-                            <p className="text-xs text-base-content/40 mt-0.5">
-                                {selectedGroup
-                                    ? <>{t('dashboard.xOfYDevices', { x: filteredTargets.length, y: targets.length })} — <span className="font-medium" style={{ color: groups.find(g => g.id === selectedGroup)?.color }}>{activeGroupName}</span></>
-                                    : <>{t('dashboard.devicesMonitored', { n: targets.length })}</>
-                                }
-                            </p>
-                        </div>
-                    </div>
+                <div className="flex items-center gap-3 mb-3">
+                    <h1 className="text-sm font-bold text-base-content flex-shrink-0">{t('dashboard.title')}</h1>
+                    <span className="text-[11px] text-base-content/40 flex-shrink-0">
+                        {selectedGroup
+                            ? <>{filteredTargets.length}/{targets.length} — <span className="font-medium" style={{ color: groups.find(g => g.id === selectedGroup)?.color }}>{activeGroupName}</span></>
+                            : <>{t('dashboard.devicesMonitored', { n: targets.length })}</>
+                        }
+                    </span>
                     <div className="search-wrap flex-1 relative">
                         <i className="search-icon fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-xs text-base-content/25 pointer-events-none"></i>
                         <input type="text" placeholder={t('dashboard.searchPlaceholder')} value={search}

@@ -164,16 +164,11 @@ export default function AuditLog({ active = false }) {
         <div className="min-h-screen bg-base-100">
             <div className="max-w-5xl mx-auto px-6 py-6">
 
-                <div className="anim-fade-up flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                        <div className="w-1 h-7 rounded-full bg-primary flex-shrink-0"></div>
-                        <div>
-                            <h1 className="text-base font-bold text-base-content leading-tight">{t('audit.title')}</h1>
-                            <p className="text-xs text-base-content/40 mt-0.5">
-                                {total > 0 ? t('audit.eventsRecorded', { n: total }) : t('audit.trackEveryChange')}
-                            </p>
-                        </div>
-                    </div>
+                <div className="flex items-center justify-between mb-3">
+                    <h1 className="text-sm font-bold text-base-content">{t('audit.title')}</h1>
+                    {total > 0 && (
+                        <span className="text-[11px] text-base-content/40">{total.toLocaleString()} events</span>
+                    )}
                 </div>
 
                 <div className="anim-fade-up anim-delay-1 grid grid-cols-3 gap-3 mb-5">
