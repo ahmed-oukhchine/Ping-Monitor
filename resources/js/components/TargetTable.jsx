@@ -51,7 +51,7 @@ export default function TargetTable({ targets, loading, pinging, onPing, onEdit,
         onSelect(next);
     };
 
-    const headerLabels = ['', t('table.device'), t('table.location'), t('table.ipAddress'), t('table.status'), t('table.latency'), t('table.avgLatency'), t('table.trend'), t('table.uptime'), t('table.loss'), t('table.lastCheck'), t('table.actions')];
+    const headerLabels = ['', t('table.device'), t('table.location'), t('table.ipAddress'), t('table.status'), t('table.latency'), t('table.avgLatency'), t('table.trend'), t('table.uptime'), t('table.loss'), t('table.lastCheck')];
 
     if (loading) {
         return (
@@ -114,7 +114,7 @@ export default function TargetTable({ targets, loading, pinging, onPing, onEdit,
                         <tbody>
                             {targets.length === 0 ? (
                                 <tr>
-                                    <td colSpan={12} className="text-center py-20 text-base-content/30">
+                                    <td colSpan={11} className="text-center py-20 text-base-content/30">
                                         <div className="empty-float mb-4">
                                             <svg width="64" height="64" viewBox="0 0 64 64" fill="none" className="mx-auto opacity-15">
                                                 <rect x="12" y="20" width="40" height="30" rx="4" stroke="currentColor" strokeWidth="2" fill="none"/>
@@ -276,35 +276,6 @@ function TargetRow({ target: t, isPinging, isAdmin, onPing, onEdit, onDelete, on
                 </span>
             </td>
 
-            <td className="py-3.5 px-4" onClick={e => e.stopPropagation()}>
-                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                    <ActionBtn onClick={onPing} disabled={isPinging}
-                        title={isPinging ? tr('table.pinging') : tr('table.pingNow')}
-                        cls="text-primary hover:bg-primary/15"
-                        icon="fa-satellite-dish" />
-                    <ActionBtn onClick={onChart} title={tr('table.latencyChart')}
-                        cls="text-warning/70 hover:bg-warning/12 hover:text-warning"
-                        icon="fa-chart-line" />
-                    {isAdmin && (t.is_paused
-                        ? <ActionBtn onClick={onResume} title={tr('table.resumeMonitoring')}
-                            cls="text-success hover:bg-success/12"
-                            icon="fa-play" />
-                        : <ActionBtn onClick={onPause} title={tr('table.setMaintenance')}
-                            cls="text-base-content/35 hover:bg-warning/12 hover:text-warning"
-                            icon="fa-pause" />
-                    )}
-                    {isAdmin && (
-                        <ActionBtn onClick={onEdit} title={tr('table.editTarget')}
-                            cls="text-base-content/35 hover:bg-base-300 hover:text-base-content"
-                            icon="fa-pen" />
-                    )}
-                    {isAdmin && (
-                        <ActionBtn onClick={onDelete} title={tr('table.deleteTarget')}
-                            cls="text-base-content/35 hover:bg-error/12 hover:text-error"
-                            icon="fa-trash" />
-                    )}
-                </div>
-            </td>
         </tr>
     );
 }
