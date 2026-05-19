@@ -22,7 +22,7 @@ function readLS(key, fallback) {
     catch { return fallback; }
 }
 
-export default function Dashboard({ targets, setTargets, fetchTargets, loading }) {
+export default function Dashboard({ targets, setTargets, fetchTargets, loading, sidebarOpen = true }) {
     const { user } = useAuth();
     const isAdmin = user?.role === 'admin';
 
@@ -389,26 +389,28 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
 
 
                 {selectedIds.size > 0 && (
-                    <div className="flex items-center gap-2 px-4 py-2.5 mb-3 bg-primary/8 border border-primary/25 rounded-xl">
-                        <span className="text-xs font-semibold text-primary/80 tabular-nums">{t('dashboard.nSelected', { n: selectedIds.size })}</span>
-                        <div className="w-px h-4 bg-primary/20"></div>
-                        <button onClick={bulkPing} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold text-primary border border-primary/30 hover:bg-primary/10 transition-all">
+                    <div className="fixed top-3 z-50 flex items-center gap-2 px-4 py-2.5 backdrop-blur-xl bg-primary/15 border border-primary/30 rounded-xl shadow-lg shadow-primary/10"
+                        style={{ left: sidebarOpen ? 'calc(14rem + 12px)' : 'calc(4rem + 12px)', right: '12px' }}>
+                        <span className="text-xs font-semibold text-primary tabular-nums">{t('dashboard.nSelected', { n: selectedIds.size })}</span>
+                        <div className="w-px h-4 bg-primary/25"></div>
+                        <button onClick={bulkPing} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-primary/20 text-primary border border-primary/35 hover:bg-primary/30 transition-all">
                             <i className="fas fa-play text-[8px]"></i> {t('dashboard.ping')}
                         </button>
-                        <button onClick={bulkPause} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold text-warning border border-warning/30 hover:bg-warning/10 transition-all">
+                        <button onClick={bulkPause} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-primary/15 text-primary/70 border border-primary/25 hover:bg-primary/25 transition-all">
                             <i className="fas fa-pause text-[8px]"></i> {t('dashboard.pause')}
                         </button>
-                        <button onClick={bulkResume} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold text-success border border-success/30 hover:bg-success/10 transition-all">
+                        <button onClick={bulkResume} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-primary/15 text-primary/70 border border-primary/25 hover:bg-primary/25 transition-all">
                             <i className="fas fa-play text-[8px]"></i> {t('dashboard.resume')}
                         </button>
-                        <button onClick={bulkDelete} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold text-error border border-error/30 hover:bg-error/10 transition-all">
+                        <button onClick={bulkDelete} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-primary/15 text-error/80 border border-error/30 hover:bg-error/15 transition-all">
                             <i className="fas fa-trash text-[8px]"></i> {t('dashboard.delete')}
                         </button>
-                        <button onClick={clearSelection} className="ml-auto flex items-center gap-1 text-[10px] text-base-content/30 hover:text-base-content/50 transition-colors">
+                        <button onClick={clearSelection} className="ml-auto flex items-center gap-1 text-[10px] text-primary/40 hover:text-primary/70 transition-colors">
                             <i className="fas fa-times text-[8px]"></i> {t('dashboard.clear')}
                         </button>
                     </div>
                 )}
+                {selectedIds.size > 0 && <div className="h-14"></div>}
                 <div ref={sentinelRef} className="h-px"></div>
                 {offlineTargets.length > 0 && (
                     <div className="banner-enter flex items-center gap-3 px-4 py-3 mb-4 bg-error/8 border border-error/25 rounded-xl">

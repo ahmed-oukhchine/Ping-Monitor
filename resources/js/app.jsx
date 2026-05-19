@@ -152,6 +152,7 @@ function AppContent() {
                             setTargets={setTargets}
                             fetchTargets={fetchTargets}
                             loading={targetsLoading}
+                            sidebarOpen={sidebarOpen}
                         />
                     </div>
                 )}
