@@ -8,6 +8,7 @@ use App\Models\Group;
 use App\Models\PingHistory;
 use App\Models\Target;
 use App\Services\PingService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 
@@ -161,6 +162,54 @@ class PingController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
+    public function exportPdf(Request $request)
+    {
+        $targetId = $request->input('target_id');
+        $status   = $request->input('status');
+        $dateFrom = $request->input('date_from');
+        $dateTo   = $request->input('date_to');
+        $latency  = $request->input('latency');
+
+        $applyFilters = function ($q) use ($targetId, $status, $dateFrom, $dateTo, $latency) {
+            return $q
+                ->when($targetId,             fn($q) => $q->where('target_id', $targetId))
+                ->when($status === 'online',  fn($q) => $q->where('is_success', true))
+                ->when($status === 'offline', fn($q) => $q->where('is_success', false))
+                ->when($dateFrom,             fn($q) => $q->whereDate('created_at', '>=', $dateFrom))
+                ->when($dateTo,               fn($q) => $q->whereDate('created_at', '<=', $dateTo))
+                ->when($latency === 'fast',   fn($q) => $q->where('response_time', '<', 50))
+                ->when($latency === 'medium', fn($q) => $q->whereBetween('response_time', [50, 150]))
+                ->when($latency === 'slow',   fn($q) => $q->where('response_time', '>', 150));
+        };
+
+        $records = $applyFilters(PingHistory::with('target:id,name,ip_address'))
+            ->orderBy('created_at', 'desc')
+            ->limit(2000)
+            ->get();
+
+        $total = $records->count();
+        $successCount = $records->where('is_success', true)->count();
+        $failCount = $total - $successCount;
+        $successRate = $total > 0 ? ($successCount / $total) * 100 : 0;
+
+        $targetName = $targetId ? Target::find($targetId)?->name : null;
+
+        $filters = [
+            'target'    => $targetName,
+            'status'    => $status,
+            'latency'   => $latency,
+            'date_from' => $dateFrom,
+            'date_to'   => $dateTo,
+        ];
+
+        $filename = 'ping-history-' . now()->format('Y-m-d') . '.pdf';
+
+        $pdf = Pdf::loadView('pdf.history', compact('records', 'total', 'successCount', 'failCount', 'successRate', 'filters'));
+        $pdf->setPaper('a4', 'landscape');
+
+        return $pdf->download($filename);
+    }
+
     public function apiIncidents(Request $request)
     {
         $targetId = $request->input('target_id');
@@ -267,6 +316,8 @@ class PingController extends Controller
             'alert_email'            => 'nullable|email|max:255',
             'alert_consecutive'      => 'nullable|integer|min:1|max:20',
             'alert_cooldown_minutes' => 'nullable|integer|min:1|max:10080',
+            'escalation_email'       => 'nullable|email|max:255',
+            'escalation_after_minutes' => 'nullable|integer|min:1|max:10080',
             'snmp_enabled'           => 'boolean',
             'snmp_community'         => 'nullable|string|max:100',
             'snmp_version'           => 'nullable|string|in:1,2c,3',
@@ -274,7 +325,7 @@ class PingController extends Controller
             'group_ids.*'            => 'integer|exists:groups,id',
         ]);
 
-        $data = $request->only('name', 'ip_address', 'location', 'notes', 'warn_ms', 'critical_ms', 'alert_email', 'alert_consecutive', 'alert_cooldown_minutes', 'snmp_enabled', 'snmp_community', 'snmp_version');
+        $data = $request->only('name', 'ip_address', 'location', 'notes', 'warn_ms', 'critical_ms', 'alert_email', 'alert_consecutive', 'alert_cooldown_minutes', 'escalation_email', 'escalation_after_minutes', 'snmp_enabled', 'snmp_community', 'snmp_version');
         $data['alert_consecutive'] ??= 3;
         $data['alert_cooldown_minutes'] ??= 60;
         $target = Target::create($data);
@@ -300,6 +351,8 @@ class PingController extends Controller
             'alert_email'            => 'nullable|email|max:255',
             'alert_consecutive'      => 'nullable|integer|min:1|max:20',
             'alert_cooldown_minutes' => 'nullable|integer|min:1|max:10080',
+            'escalation_email'       => 'nullable|email|max:255',
+            'escalation_after_minutes' => 'nullable|integer|min:1|max:10080',
             'snmp_enabled'           => 'boolean',
             'snmp_community'         => 'nullable|string|max:100',
             'snmp_version'           => 'nullable|string|in:1,2c,3',
@@ -308,7 +361,7 @@ class PingController extends Controller
         ]);
 
         $old = $target->toArray();
-        $data = $request->only('name', 'ip_address', 'location', 'notes', 'warn_ms', 'critical_ms', 'alert_email', 'alert_consecutive', 'alert_cooldown_minutes', 'snmp_enabled', 'snmp_community', 'snmp_version');
+        $data = $request->only('name', 'ip_address', 'location', 'notes', 'warn_ms', 'critical_ms', 'alert_email', 'alert_consecutive', 'alert_cooldown_minutes', 'escalation_email', 'escalation_after_minutes', 'snmp_enabled', 'snmp_community', 'snmp_version');
         $data['alert_consecutive'] ??= 3;
         $data['alert_cooldown_minutes'] ??= 60;
         $target->update($data);
@@ -389,6 +442,45 @@ class PingController extends Controller
         return response()->json(['is_paused' => false]);
     }
 
+    public function dependencies(Target $target)
+    {
+        return response()->json($target->dependencies()->get(['id', 'name', 'ip_address', 'last_status']));
+    }
+
+    public function addDependency(Request $request, Target $target)
+    {
+        $data = $request->validate([
+            'depends_on_target_id' => 'required|integer|exists:targets,id|different:target_id',
+        ]);
+        $data['target_id'] = $target->id;
+
+        $existing = \App\Models\TargetDependency::where([
+            'target_id' => $target->id, 'depends_on_target_id' => $data['depends_on_target_id'],
+        ])->exists();
+
+        if ($existing) {
+            return response()->json(['message' => 'Dependency already exists'], 409);
+        }
+
+        $dep = \App\Models\TargetDependency::create($data);
+        AuditLog::log('created', 'target_dependency', $dep->id, null, $dep->toArray());
+        return response()->json($dep, 201);
+    }
+
+    public function removeDependency(Target $target, Target $dependsOnTarget)
+    {
+        $deleted = \App\Models\TargetDependency::where([
+            'target_id' => $target->id, 'depends_on_target_id' => $dependsOnTarget->id,
+        ])->delete();
+
+        if ($deleted) {
+            AuditLog::log('deleted', 'target_dependency', null, null, [
+                'target_id' => $target->id, 'depends_on_target_id' => $dependsOnTarget->id,
+            ]);
+        }
+        return response()->json(['deleted' => (bool) $deleted]);
+    }
+
     private function maybeAlert(Target $target, bool $success): void
     {
         if ($success) {
@@ -397,6 +489,9 @@ class PingController extends Controller
             }
             return;
         }
+
+        $failedDeps = $target->dependencies()->whereHas('latestPing', fn($q) => $q->where('is_success', false))->count();
+        if ($failedDeps > 0) return;
 
         if (!$target->alert_email) return;
 
@@ -417,7 +512,12 @@ class PingController extends Controller
         }
 
         try {
-            Mail::to($target->alert_email)->queue(new TargetDownAlert($target));
+            if (!$target->alerted_at || $target->alerted_at->diffInMinutes(now()) >= ($target->escalation_after_minutes ?? 999999)) {
+                $email = $target->alerted_at && $target->escalation_email
+                    ? $target->escalation_email
+                    : $target->alert_email;
+                Mail::to($email)->queue(new TargetDownAlert($target));
+            }
             $target->update(['alerted_at' => now()]);
         } catch (\Exception $e) {
             \Log::error("ArgusNet alert failed for target {$target->id}: {$e->getMessage()}");

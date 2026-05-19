@@ -38,14 +38,14 @@ export default function History() {
 
     const activeCount = [targetId, status, dateFrom, dateTo, latency].filter(Boolean).length;
 
-    const exportCsv = () => {
+    const exportUrl = (path) => {
         const params = new URLSearchParams();
         if (targetId) params.set('target_id', targetId);
         if (status)   params.set('status', status);
         if (dateFrom) params.set('date_from', dateFrom);
         if (dateTo)   params.set('date_to', dateTo);
         if (latency)  params.set('latency', latency);
-        window.location.href = `/api/history/export?${params.toString()}`;
+        window.location.href = `${path}?${params.toString()}`;
     };
 
     return (
@@ -77,10 +77,15 @@ export default function History() {
                                 <span className="min-w-[14px] h-3.5 rounded-full bg-primary text-white text-[8px] font-bold flex items-center justify-center px-1">{activeCount}</span>
                             </button>
                         )}
-                        <button onClick={exportCsv} title={t('history.exportCsv')}
+                        <button onClick={() => exportUrl('/api/history/export')} title={t('history.exportCsv')}
                             className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold border border-primary/30 text-primary hover:bg-primary/10 transition-all">
-                            <i className="fas fa-download text-[8px]"></i>
-                            {t('history.exportCsv')}
+                            <i className="fas fa-file-csv text-[8px]"></i>
+                            CSV
+                        </button>
+                        <button onClick={() => exportUrl('/api/history/export-pdf')} title={t('history.exportPdf')}
+                            className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold border border-error/30 text-error hover:bg-error/10 transition-all">
+                            <i className="fas fa-file-pdf text-[8px]"></i>
+                            PDF
                         </button>
                     </div>
                 </div>

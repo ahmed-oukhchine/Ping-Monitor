@@ -13,6 +13,7 @@ export default function Sidebar({ open, onToggle, onLogout, onCycleTheme, themeP
 
     const navItems = [
         { to: '/',           label: t('sidebar.dashboard'),  icon: 'fa-chart-pie',          show: true,  badge: null },
+        { to: '/dashboards', label: t('sidebar.customDashboards'), icon: 'fa-th-large',    show: true,  badge: null },
         { to: '/monitoring', label: t('sidebar.monitoring'), icon: 'fa-tachometer-alt',     show: true,  badge: offlineCount > 0 ? offlineCount : null },
         { to: '/topology',   label: t('sidebar.topology'),   icon: 'fa-project-diagram',     show: true,  badge: null },
         { to: '/history',    label: t('sidebar.history'),    icon: 'fa-history',            show: true,  badge: null },

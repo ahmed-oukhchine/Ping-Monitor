@@ -78,6 +78,9 @@ class PingAll extends Command
             return;
         }
 
+        $failedDeps = $target->dependencies()->whereHas('latestPing', fn($q) => $q->where('is_success', false))->count();
+        if ($failedDeps > 0) return;
+
         if (!$target->alert_email) return;
 
         $threshold = max(1, (int) ($target->alert_consecutive ?? 3));
@@ -97,7 +100,12 @@ class PingAll extends Command
         }
 
         try {
-            Mail::to($target->alert_email)->queue(new \App\Mail\TargetDownAlert($target));
+            if (!$target->alerted_at || $target->alerted_at->diffInMinutes(now()) >= ($target->escalation_after_minutes ?? 999999)) {
+                $email = $target->alerted_at && $target->escalation_email
+                    ? $target->escalation_email
+                    : $target->alert_email;
+                Mail::to($email)->queue(new \App\Mail\TargetDownAlert($target));
+            }
             $target->update(['alerted_at' => now()]);
         } catch (\Exception $e) {
             \Log::error("ArgusNet alert failed for target {$target->id}: {$e->getMessage()}");

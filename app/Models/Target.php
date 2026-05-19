@@ -10,13 +10,15 @@ class Target extends Model
         'name', 'ip_address', 'location', 'notes',
         'warn_ms', 'critical_ms', 'is_paused',
         'alert_email', 'alert_consecutive', 'alert_cooldown_minutes', 'alerted_at',
+        'escalation_email', 'escalation_after_minutes',
         'snmp_enabled', 'snmp_community', 'snmp_version',
     ];
 
     protected $casts = [
-        'is_paused'    => 'boolean',
-        'snmp_enabled' => 'boolean',
-        'alerted_at'   => 'datetime',
+        'is_paused'                => 'boolean',
+        'snmp_enabled'             => 'boolean',
+        'alerted_at'               => 'datetime',
+        'escalation_after_minutes' => 'integer',
     ];
 
     public function pingHistories()
@@ -37,5 +39,15 @@ class Target extends Model
     public function networkInterfaces()
     {
         return $this->hasMany(NetworkInterface::class);
+    }
+
+    public function dependencies()
+    {
+        return $this->belongsToMany(Target::class, 'target_dependencies', 'target_id', 'depends_on_target_id');
+    }
+
+    public function dependedBy()
+    {
+        return $this->belongsToMany(Target::class, 'target_dependencies', 'depends_on_target_id', 'target_id');
     }
 }

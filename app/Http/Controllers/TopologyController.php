@@ -28,10 +28,10 @@ class TopologyController extends Controller
             'label'                 => 'nullable|string|max:100',
         ]);
 
-        $existing = NetworkTopology::where(function ($q) use ($data) {
-            $q->where(['source_target_id' => $data['source_target_id'], 'destination_target_id' => $data['destination_target_id']])
-              ->orWhere(['source_target_id' => $data['destination_target_id'], 'destination_target_id' => $data['source_target_id']]);
-        })->exists();
+        $existing = NetworkTopology::where([
+            'source_target_id'      => $data['source_target_id'],
+            'destination_target_id' => $data['destination_target_id'],
+        ])->exists();
 
         if ($existing) {
             return response()->json(['message' => 'Connection already exists'], 409);

@@ -396,7 +396,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
                                 <i className="fas fa-times text-[9px]"></i>
                             </button>
                         </div>
-                        <div className="grid grid-cols-2 gap-1.5">
+                        <div className={`grid gap-1.5 ${isAdmin ? 'grid-cols-2' : 'grid-cols-3'}`}>
                             <button onClick={bulkPing} className="flex items-center justify-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold bg-primary/20 text-primary border border-primary/35 hover:bg-primary/30 transition-all">
                                 <i className="fas fa-play text-[7px]"></i> {t('dashboard.ping')}
                             </button>
@@ -406,9 +406,11 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
                             <button onClick={bulkResume} className="flex items-center justify-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold bg-success/15 text-success border border-success/30 hover:bg-success/25 transition-all">
                                 <i className="fas fa-play text-[7px]"></i> {t('dashboard.resume')}
                             </button>
-                            <button onClick={bulkDelete} className="flex items-center justify-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold bg-error/15 text-error border border-error/30 hover:bg-error/25 transition-all">
-                                <i className="fas fa-trash text-[7px]"></i> {t('dashboard.delete')}
-                            </button>
+                            {isAdmin && (
+                                <button onClick={bulkDelete} className="flex items-center justify-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold bg-error/15 text-error border border-error/30 hover:bg-error/25 transition-all">
+                                    <i className="fas fa-trash text-[7px]"></i> {t('dashboard.delete')}
+                                </button>
+                            )}
                         </div>
                     </div>
                 )}

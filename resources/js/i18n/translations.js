@@ -1,6 +1,7 @@
 const translations = {
   /* ── Sidebar ── */
   'sidebar.dashboard': { en: 'Dashboard', fr: 'Tableau de bord' },
+  'sidebar.customDashboards': { en: 'Dashboards', fr: 'Tableaux de bord' },
   'sidebar.monitoring': { en: 'Monitoring', fr: 'Surveillance' },
   'sidebar.history': { en: 'History', fr: 'Historique' },
   'sidebar.incidents': { en: 'Incidents', fr: 'Incidents' },
@@ -239,6 +240,7 @@ const translations = {
   'history.loading': { en: 'Loading…', fr: 'Chargement…' },
   'history.firstPage': { en: 'First page', fr: 'Première page' },
   'history.lastPage': { en: 'Last page', fr: 'Dernière page' },
+  'history.exportPdf': { en: 'Export PDF', fr: 'Exporter PDF' },
 
   /* ── Incidents ── */
   'incidents.title': { en: 'Downtime Incidents', fr: 'Incidents' },
@@ -478,6 +480,15 @@ const translations = {
   'maintenance.saveError': { en: 'Failed to save schedule', fr: 'Échec de l\'enregistrement' },
   'maintenance.deleteError': { en: 'Failed to delete schedule', fr: 'Échec de la suppression' },
   'maintenance.toggleError': { en: 'Failed to toggle schedule', fr: 'Échec du changement d\'état' },
+
+  /* ── Custom Dashboard ── */
+  'dashboard.customTitle': { en: 'Dashboards', fr: 'Tableaux de bord' },
+  'dashboard.stats': { en: 'Stats', fr: 'Statistiques' },
+  'dashboard.health': { en: 'Health', fr: 'Santé' },
+  'dashboard.targets': { en: 'Targets', fr: 'Cibles' },
+  'dashboard.bandwidth': { en: 'Bandwidth', fr: 'Bande passante' },
+  'dashboard.incidents': { en: 'Incidents', fr: 'Incidents' },
+  'incidents.noIncidents': { en: 'No incidents', fr: 'Aucun incident' },
 
   /* ── Topology ── */
   'topology.title': { en: 'Network Topology', fr: 'Topologie réseau' },

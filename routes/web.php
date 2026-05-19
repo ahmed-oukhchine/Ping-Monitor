@@ -9,6 +9,7 @@ use App\Http\Controllers\SnmpController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\MaintenanceScheduleController;
 use App\Http\Controllers\TopologyController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Middleware\EnsureAdmin;
 use Illuminate\Support\Facades\Route;
 
@@ -20,12 +21,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/targets',                     [PingController::class, 'apiTargets']);
     Route::get('/api/history',                     [PingController::class, 'apiHistory']);
     Route::get('/api/history/export',              [PingController::class, 'exportCsv']);
+    Route::get('/api/history/export-pdf',           [PingController::class, 'exportPdf']);
     Route::get('/api/incidents',                   [PingController::class, 'apiIncidents']);
     Route::get('/api/targets/{target}/chart-data', [PingController::class, 'apiChartData']);
     Route::get('/api/groups',                      [GroupController::class, 'index']);
 
     Route::post('/targets/{target}/ping', [PingController::class, 'ping'])->name('targets.ping');
     Route::post('/ping-all',              [PingController::class, 'pingAll']);
+    Route::post('/targets/{target}/pause',  [PingController::class, 'pause']);
+    Route::post('/targets/{target}/resume', [PingController::class, 'resume']);
 
     Route::get('/api/report',              [ReportController::class, 'apiReport']);
     Route::get('/api/report/schedules',    [ReportController::class, 'schedules'])->middleware(EnsureAdmin::class);
@@ -42,6 +46,8 @@ Route::middleware('auth')->group(function () {
     Route::put('/api/profile/password', [UserController::class, 'updateOwnPassword']);
     Route::put('/api/profile', [UserController::class, 'updateOwnProfile']);
     Route::get('/api/targets/template', [PingController::class, 'downloadTemplate']);
+    Route::get('/api/topology', [TopologyController::class, 'index']);
+    Route::post('/api/topology/positions', [TopologyController::class, 'savePositions']);
 
     Route::middleware(EnsureAdmin::class)->group(function () {
         Route::get('/api/audit-logs',                    [AuditLogController::class, 'index']);
@@ -51,8 +57,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/targets',                   [PingController::class, 'store']);
         Route::put('/targets/{target}',           [PingController::class, 'update']);
         Route::delete('/targets/{target}',        [PingController::class, 'destroy']);
-        Route::post('/targets/{target}/pause',    [PingController::class, 'pause']);
-        Route::post('/targets/{target}/resume',   [PingController::class, 'resume']);
 
         Route::post('/api/groups',           [GroupController::class, 'store']);
         Route::put('/api/groups/{group}',    [GroupController::class, 'update']);
@@ -67,10 +71,16 @@ Route::middleware('auth')->group(function () {
         Route::delete('/api/maintenance-schedules/{maintenanceSchedule}', [MaintenanceScheduleController::class, 'destroy']);
         Route::post('/api/maintenance-schedules/{maintenanceSchedule}/toggle', [MaintenanceScheduleController::class, 'toggle']);
 
-        Route::get('/api/topology', [TopologyController::class, 'index']);
+        Route::get('/api/targets/{target}/dependencies', [PingController::class, 'dependencies']);
+        Route::post('/api/targets/{target}/dependencies', [PingController::class, 'addDependency']);
+        Route::delete('/api/targets/{target}/dependencies/{dependsOnTarget}', [PingController::class, 'removeDependency']);
+
         Route::post('/api/topology', [TopologyController::class, 'store']);
-        Route::post('/api/topology/positions', [TopologyController::class, 'savePositions']);
         Route::delete('/api/topology/{networkTopology}', [TopologyController::class, 'destroy']);
+        Route::get('/api/dashboards', [DashboardController::class, 'index']);
+        Route::post('/api/dashboards', [DashboardController::class, 'store']);
+        Route::put('/api/dashboards/{customDashboard}', [DashboardController::class, 'update']);
+        Route::delete('/api/dashboards/{customDashboard}', [DashboardController::class, 'destroy']);
     });
 });
 

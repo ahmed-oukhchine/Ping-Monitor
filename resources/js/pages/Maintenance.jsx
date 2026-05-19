@@ -3,16 +3,8 @@ import axios from 'axios';
 import { useLang } from '../contexts/LanguageContext';
 import { useToast } from '../contexts/ToastContext';
 
-const DAYS = [
-    { val: null, labelKey: 'maintenance.daily' },
-    { val: 0,    labelKey: 'maintenance.sunday' },
-    { val: 1,    labelKey: 'maintenance.monday' },
-    { val: 2,    labelKey: 'maintenance.tuesday' },
-    { val: 3,    labelKey: 'maintenance.wednesday' },
-    { val: 4,    labelKey: 'maintenance.thursday' },
-    { val: 5,    labelKey: 'maintenance.friday' },
-    { val: 6,    labelKey: 'maintenance.saturday' },
-];
+const DAY_LABELS = ['maintenance.sunday', 'maintenance.monday', 'maintenance.tuesday', 'maintenance.wednesday', 'maintenance.thursday', 'maintenance.friday', 'maintenance.saturday'];
+const DAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export default function Maintenance() {
     const { t } = useLang();
@@ -22,7 +14,7 @@ export default function Maintenance() {
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [editing, setEditing] = useState(null);
-    const [form, setForm] = useState({ name: '', target_ids: [], day_of_week: null, start_time: '02:00', end_time: '04:00' });
+    const [form, setForm] = useState({ name: '', target_ids: [], days_of_week: [], start_time: '02:00', end_time: '04:00' });
 
     const fetchAll = () => {
         setLoading(true);
@@ -36,13 +28,13 @@ export default function Maintenance() {
 
     const openCreate = () => {
         setEditing(null);
-        setForm({ name: '', target_ids: [], day_of_week: null, start_time: '02:00', end_time: '04:00' });
+        setForm({ name: '', target_ids: [], days_of_week: [], start_time: '02:00', end_time: '04:00' });
         setShowForm(true);
     };
 
     const openEdit = (s) => {
         setEditing(s);
-        setForm({ name: s.name, target_ids: s.target_ids, day_of_week: s.day_of_week, start_time: s.start_time.slice(0, 5), end_time: s.end_time.slice(0, 5) });
+        setForm({ name: s.name, target_ids: s.target_ids, days_of_week: s.days_of_week ?? [], start_time: s.start_time.slice(0, 5), end_time: s.end_time.slice(0, 5) });
         setShowForm(true);
     };
 
@@ -53,11 +45,12 @@ export default function Maintenance() {
     const save = async () => {
         if (!form.name || form.target_ids.length === 0 || !form.start_time || !form.end_time) return;
         try {
+            const payload = { ...form, days_of_week: form.days_of_week.length > 0 ? form.days_of_week : null };
             if (editing) {
-                await axios.put(`/api/maintenance-schedules/${editing.id}`, form);
+                await axios.put(`/api/maintenance-schedules/${editing.id}`, payload);
                 toast(t('maintenance.updated'));
             } else {
-                await axios.post('/api/maintenance-schedules', form);
+                await axios.post('/api/maintenance-schedules', payload);
                 toast(t('maintenance.created'));
             }
             setShowForm(false);
@@ -89,9 +82,9 @@ export default function Maintenance() {
         }
     };
 
-    const dayLabel = (dv) => {
-        const d = DAYS.find(x => x.val === dv);
-        return d ? t(d.labelKey) : '—';
+    const dayLabel = (days) => {
+        if (!days || days.length === 0) return t('maintenance.daily');
+        return days.sort().map(d => DAY_SHORT[d] || '—').join(', ');
     };
 
     return (
@@ -136,7 +129,7 @@ export default function Maintenance() {
                                             )}
                                         </div>
                                         <div className="flex items-center flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-base-content/45 mt-0.5">
-                                            <span>{dayLabel(s.day_of_week)}</span>
+                                            <span>{dayLabel(s.days_of_week ?? (s.day_of_week != null ? [s.day_of_week] : []))}</span>
                                             <span className="text-base-content/20">·</span>
                                             <span>{s.start_time?.slice(0, 5)} – {s.end_time?.slice(0, 5)}</span>
                                             <span className="text-base-content/20">·</span>
@@ -192,13 +185,24 @@ export default function Maintenance() {
 
                                 <div>
                                     <label className="block text-xs font-medium text-base-content/60 mb-1">{t('maintenance.dayOfWeek')}</label>
-                                    <select value={form.day_of_week ?? ''}
-                                        onChange={e => setForm(f => ({ ...f, day_of_week: e.target.value === '' ? null : Number(e.target.value) }))}
-                                        className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors">
-                                        {DAYS.map(d => (
-                                            <option key={d.val ?? 'null'} value={d.val ?? ''}>{t(d.labelKey)}</option>
-                                        ))}
-                                    </select>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {DAY_LABELS.map((key, i) => {
+                                            const selected = form.days_of_week.includes(i);
+                                            return (
+                                                <button key={i} type="button" onClick={() => setForm(f => ({
+                                                    ...f, days_of_week: selected ? f.days_of_week.filter(x => x !== i) : [...f.days_of_week, i].sort()
+                                                }))}
+                                                    className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${
+                                                        selected ? 'bg-primary/15 text-primary border-primary/30' : 'text-base-content/50 border-base-300 hover:bg-base-300/50'
+                                                    }`}>
+                                                    {t(key).slice(0, 3)}
+                                                </button>
+                                            );
+                                        })}
+                                        {form.days_of_week.length === 0 && (
+                                            <span className="text-[10px] text-base-content/30 self-center ml-1">Daily (all days)</span>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3">

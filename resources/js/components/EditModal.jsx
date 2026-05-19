@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const INPUT = "w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors";
 
@@ -16,14 +17,34 @@ export default function EditModal({ target, groups = [], onSave, onClose }) {
     const [alertEmail, setAlertEmail]             = useState(target.alert_email || '');
     const [alertConsecutive, setAlertConsecutive] = useState(target.alert_consecutive ?? 3);
     const [alertCooldown, setAlertCooldown]       = useState(target.alert_cooldown_minutes ?? 60);
+    const [escEnabled, setEscEnabled]             = useState(!!target.escalation_email);
+    const [escEmail, setEscEmail]                 = useState(target.escalation_email || '');
+    const [escAfter, setEscAfter]                 = useState(target.escalation_after_minutes ?? 30);
     const [snmpEnabled, setSnmpEnabled]           = useState(!!target.snmp_enabled);
     const [snmpCommunity, setSnmpCommunity]       = useState(target.snmp_community || '');
     const [loading, setLoading]     = useState(false);
+    const [allTargets, setAllTargets] = useState([]);
+    const [deps, setDeps]           = useState([]);
+
+    useEffect(() => {
+        axios.get('/api/targets').then(r => setAllTargets(r.data.filter(t => t.id !== target.id))).catch(() => {});
+        axios.get(`/api/targets/${target.id}/dependencies`).then(r => setDeps(r.data.map(d => d.id))).catch(() => {});
+    }, [target.id]);
 
     const toggleGroup = (id) => {
         setSelectedGroups(prev =>
             prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
         );
+    };
+
+    const toggleDep = async (depId) => {
+        if (deps.includes(depId)) {
+            await axios.delete(`/api/targets/${target.id}/dependencies/${depId}`);
+            setDeps(prev => prev.filter(id => id !== depId));
+        } else {
+            await axios.post(`/api/targets/${target.id}/dependencies`, { depends_on_target_id: depId });
+            setDeps(prev => [...prev, depId]);
+        }
     };
 
     const submit = async (e) => {
@@ -41,6 +62,8 @@ export default function EditModal({ target, groups = [], onSave, onClose }) {
                 alert_email:            alertEnabled && alertEmail.trim() ? alertEmail.trim() : null,
                 alert_consecutive:      alertEnabled ? parseInt(alertConsecutive) || 3 : null,
                 alert_cooldown_minutes: alertEnabled ? parseInt(alertCooldown)    || 60 : null,
+                escalation_email:       escEnabled && escEmail.trim() ? escEmail.trim() : null,
+                escalation_after_minutes: escEnabled ? parseInt(escAfter) || 30 : null,
                 snmp_enabled:           snmpEnabled,
                 snmp_community:         snmpEnabled && snmpCommunity.trim() ? snmpCommunity.trim() : null,
                 snmp_version:           '2c',
@@ -223,26 +246,78 @@ export default function EditModal({ target, groups = [], onSave, onClose }) {
                                             value={alertEmail} onChange={e => setAlertEmail(e.target.value)}
                                             required={alertEnabled} />
                                     </div>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <div>
-                                            <label className="block text-[11px] font-semibold text-base-content/45 mb-1.5">Trigger after</label>
-                                            <div className="relative">
-                                                <input type="number" min="1" max="20" className={`${INPUT} pr-16`}
-                                                    value={alertConsecutive} onChange={e => setAlertConsecutive(e.target.value)} />
-                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-base-content/30 pointer-events-none whitespace-nowrap">failures</span>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <label className="block text-[11px] font-semibold text-base-content/45 mb-1.5">Trigger after</label>
+                                                <div className="relative">
+                                                    <input type="number" min="1" max="20" className={`${INPUT} pr-16`}
+                                                        value={alertConsecutive} onChange={e => setAlertConsecutive(e.target.value)} />
+                                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-base-content/30 pointer-events-none whitespace-nowrap">failures</span>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="block text-[11px] font-semibold text-base-content/45 mb-1.5">Cooldown</label>
+                                                <div className="relative">
+                                                    <input type="number" min="1" max="10080" className={`${INPUT} pr-8`}
+                                                        value={alertCooldown} onChange={e => setAlertCooldown(e.target.value)} />
+                                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-base-content/30 pointer-events-none">min</span>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div>
-                                            <label className="block text-[11px] font-semibold text-base-content/45 mb-1.5">Cooldown</label>
-                                            <div className="relative">
-                                                <input type="number" min="1" max="10080" className={`${INPUT} pr-8`}
-                                                    value={alertCooldown} onChange={e => setAlertCooldown(e.target.value)} />
-                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-base-content/30 pointer-events-none">min</span>
+
+                                        <div className="border-t border-base-300/40 pt-2 mt-1">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-[11px] font-semibold text-base-content/45">Escalation</span>
+                                                <button type="button" onClick={() => setEscEnabled(v => !v)}
+                                                    className={`relative inline-flex h-4 w-8 items-center rounded-full transition-colors cursor-pointer ${escEnabled ? 'bg-error' : 'bg-base-300'}`}>
+                                                    <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${escEnabled ? 'translate-x-[17px]' : 'translate-x-[3px]'}`} />
+                                                </button>
+                                            </div>
+                                            <div className={`overflow-hidden transition-all duration-200 ${escEnabled ? 'max-h-40 mt-2' : 'max-h-0'}`}>
+                                                <div className="flex flex-col gap-2">
+                                                    <div>
+                                                        <label className="block text-[10px] font-semibold text-base-content/45 mb-1">Escalation email</label>
+                                                        <input type="email" className={INPUT} placeholder="manager@example.com"
+                                                            value={escEmail} onChange={e => setEscEmail(e.target.value)} required={escEnabled} />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-[10px] font-semibold text-base-content/45 mb-1">Escalate after</label>
+                                                        <div className="relative">
+                                                            <input type="number" min="1" max="10080" className={`${INPUT} pr-8`}
+                                                                value={escAfter} onChange={e => setEscAfter(e.target.value)} />
+                                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-base-content/30 pointer-events-none">min</span>
+                                                        </div>
+                                                    </div>
+                                                    <p className="text-[9px] text-base-content/30 leading-relaxed">If still down after this time, the escalation contact is notified instead.</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+
+                                <div className="border-t border-base-300/60 pt-3 mt-2">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <i className="fas fa-sitemap text-[11px] text-info/60"></i>
+                                        <span className="text-xs font-semibold text-base-content/55">Dependencies</span>
+                                        <span className="text-base-content/30 text-xs font-normal">optional</span>
+                                    </div>
+                                    <p className="text-[9px] text-base-content/30 mb-2">If a dependency is down, alerts for this target are suppressed.</p>
+                                    <div className="max-h-32 overflow-y-auto bg-base-100 border border-base-300 rounded-lg p-1.5 space-y-0.5">
+                                        {allTargets.map(t => {
+                                            const sel = deps.includes(t.id);
+                                            return (
+                                                <button key={t.id} type="button" onClick={() => toggleDep(t.id)}
+                                                    className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs transition-all ${
+                                                        sel ? 'bg-info/10 text-info border border-info/20' : 'text-base-content/50 hover:bg-base-300/50'
+                                                    }`}>
+                                                    <i className={`fas ${sel ? 'fa-check-circle' : 'fa-circle'} text-[7px]`}></i>
+                                                    <span className="truncate flex-1 text-left">{t.name}</span>
+                                                    <span className={`w-1.5 h-1.5 rounded-full ${t.last_status === true ? 'bg-success' : t.last_status === false ? 'bg-error' : 'bg-base-300'}`}></span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
                         </div>
 
                     </div>

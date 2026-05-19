@@ -8,15 +8,15 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('role', 10)->default('user')->after('email');
+        Schema::table('maintenance_schedules', function (Blueprint $table) {
+            $table->json('days_of_week')->nullable()->after('target_ids');
         });
     }
 
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('role');
+        Schema::table('maintenance_schedules', function (Blueprint $table) {
+            $table->dropColumn('days_of_week');
         });
     }
 };

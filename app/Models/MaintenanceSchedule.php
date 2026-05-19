@@ -7,11 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class MaintenanceSchedule extends Model
 {
     protected $fillable = [
-        'name', 'target_ids', 'day_of_week', 'start_time', 'end_time', 'is_active', 'last_applied_at',
+        'name', 'target_ids', 'day_of_week', 'days_of_week',
+        'start_time', 'end_time', 'is_active', 'last_applied_at',
     ];
 
     protected $casts = [
         'target_ids'     => 'json',
+        'days_of_week'   => 'json',
         'day_of_week'    => 'integer',
         'is_active'      => 'boolean',
         'last_applied_at' => 'datetime',
@@ -22,7 +24,14 @@ class MaintenanceSchedule extends Model
         if (!$this->is_active) return false;
 
         $now = now();
-        if ($this->day_of_week !== null && (int) $now->format('w') !== $this->day_of_week) return false;
+        $dow = (int) $now->format('w');
+
+        $days = $this->days_of_week ?? [];
+        if (!empty($days)) {
+            if (!in_array($dow, $days)) return false;
+        } elseif ($this->day_of_week !== null && $dow !== $this->day_of_week) {
+            return false;
+        }
 
         $start = $now->copy()->setTimeFromTimeString($this->start_time);
         $end   = $now->copy()->setTimeFromTimeString($this->end_time);

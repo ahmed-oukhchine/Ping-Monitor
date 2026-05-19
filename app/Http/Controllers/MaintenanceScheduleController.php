@@ -26,12 +26,14 @@ class MaintenanceScheduleController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name'        => 'required|string|max:100',
-            'target_ids'  => 'required|array',
-            'target_ids.*' => 'integer|exists:targets,id',
-            'day_of_week' => 'nullable|integer|between:0,6',
-            'start_time'  => 'required|date_format:H:i',
-            'end_time'    => 'required|date_format:H:i',
+            'name'         => 'required|string|max:100',
+            'target_ids'   => 'required|array',
+            'target_ids.*'  => 'integer|exists:targets,id',
+            'day_of_week'  => 'nullable|integer|between:0,6',
+            'days_of_week' => 'nullable|array',
+            'days_of_week.*' => 'integer|between:0,6',
+            'start_time'   => 'required|date_format:H:i',
+            'end_time'     => 'required|date_format:H:i',
         ]);
 
         $schedule = MaintenanceSchedule::create($data);
@@ -42,12 +44,14 @@ class MaintenanceScheduleController extends Controller
     public function update(Request $request, MaintenanceSchedule $maintenanceSchedule)
     {
         $data = $request->validate([
-            'name'        => 'required|string|max:100',
-            'target_ids'  => 'required|array',
-            'target_ids.*' => 'integer|exists:targets,id',
-            'day_of_week' => 'nullable|integer|between:0,6',
-            'start_time'  => 'required|date_format:H:i',
-            'end_time'    => 'required|date_format:H:i',
+            'name'         => 'required|string|max:100',
+            'target_ids'   => 'required|array',
+            'target_ids.*'  => 'integer|exists:targets,id',
+            'day_of_week'  => 'nullable|integer|between:0,6',
+            'days_of_week' => 'nullable|array',
+            'days_of_week.*' => 'integer|between:0,6',
+            'start_time'   => 'required|date_format:H:i',
+            'end_time'     => 'required|date_format:H:i',
         ]);
 
         $old = $maintenanceSchedule->toArray();
