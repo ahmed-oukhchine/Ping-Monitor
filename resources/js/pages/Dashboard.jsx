@@ -389,7 +389,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
 
 
                 {selectedIds.size > 0 && (
-                    <div className="fixed bottom-6 right-6 z-50 backdrop-blur-xl bg-primary/15 border border-primary/30 rounded-xl shadow-lg shadow-primary/10 px-3 py-2.5 min-w-[180px]">
+                    <div className="toast-enter fixed bottom-6 right-6 z-50 backdrop-blur-xl bg-primary/15 border border-primary/30 rounded-xl shadow-lg shadow-primary/10 px-3 py-2.5 min-w-[180px]">
                         <div className="flex items-center justify-between gap-2 mb-1.5 pb-1.5 border-b border-primary/15">
                             <span className="text-xs font-semibold text-primary tabular-nums">{t('dashboard.nSelected', { n: selectedIds.size })}</span>
                             <button onClick={clearSelection} className="text-primary/40 hover:text-primary/70 transition-colors">
