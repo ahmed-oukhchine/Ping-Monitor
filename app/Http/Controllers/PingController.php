@@ -424,6 +424,75 @@ class PingController extends Controller
         }
     }
 
+    public function downloadTemplate()
+    {
+        $path = storage_path('app/templates/targets_template.csv');
+        return response()->download($path, 'targets_import_template.csv');
+    }
+
+    public function importCsv(Request $request)
+    {
+        $request->validate(['file' => 'required|file|mimes:csv,txt|max:2048']);
+
+        $handle = fopen($request->file('file')->getRealPath(), 'r');
+        $header = fgetcsv($handle);
+
+        $expected = ['name', 'ip_address', 'location', 'groups', 'alert_email', 'warn_ms', 'critical_ms', 'snmp_enabled', 'snmp_community'];
+        $header = array_map('trim', $header);
+
+        $imported = 0;
+        $errors = [];
+
+        while (($row = fgetcsv($handle)) !== false) {
+            $data = array_combine($header, $row);
+
+            $validator = validator($data, [
+                'name'       => 'required|string|max:100',
+                'ip_address' => 'required|string|max:100',
+            ]);
+
+            if ($validator->fails()) {
+                $errors[] = 'Row ' . ($imported + 2) . ': ' . implode(', ', $validator->errors()->all());
+                continue;
+            }
+
+            $target = Target::create([
+                'name'                => $data['name'],
+                'ip_address'          => $data['ip_address'],
+                'location'            => $data['location'] ?? null,
+                'alert_email'         => $data['alert_email'] ?? null,
+                'warn_ms'             => $data['warn_ms'] ?? null,
+                'critical_ms'         => $data['critical_ms'] ?? null,
+                'snmp_enabled'        => filter_var($data['snmp_enabled'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'snmp_community'      => $data['snmp_community'] ?? null,
+            ]);
+
+            if (!empty($data['groups'])) {
+                $groupNames = array_map('trim', explode(',', $data['groups']));
+                $groupIds = [];
+                foreach ($groupNames as $gName) {
+                    if (empty($gName)) continue;
+                    $group = Group::firstOrCreate(['name' => $gName]);
+                    $groupIds[] = $group->id;
+                }
+                if (!empty($groupIds)) {
+                    $target->groups()->sync($groupIds);
+                }
+            }
+
+            AuditLog::log('created', 'Target', $target->id, null, $target->toArray());
+            $imported++;
+        }
+
+        fclose($handle);
+
+        return response()->json([
+            'imported' => $imported,
+            'errors'   => $errors,
+            'message'  => "Imported {$imported} target(s)" . (count($errors) > 0 ? ' with ' . count($errors) . ' error(s)' : ''),
+        ]);
+    }
+
     private function thresholdStatus(Target $target, ?float $responseTime): ?string
     {
         return $this->ping->thresholdStatus($target, $responseTime);

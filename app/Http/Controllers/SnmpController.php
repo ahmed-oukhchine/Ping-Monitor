@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Target;
 use App\Models\NetworkInterface;
+use App\Models\BandwidthHistory;
 use App\Services\SnmpService;
 use Illuminate\Http\Request;
 
@@ -77,5 +78,22 @@ class SnmpController extends Controller
         }
 
         return response()->json($query->orderBy('target_id')->orderBy('snmp_index')->get());
+    }
+
+    public function bandwidth(Request $request, Target $target)
+    {
+        $range = $request->input('range', '24h');
+        $since = match ($range) {
+            '7d'  => now()->subDays(7),
+            '30d' => now()->subDays(30),
+            default => now()->subHours(24),
+        };
+
+        $data = BandwidthHistory::whereHas('networkInterface', fn($q) => $q->where('target_id', $target->id))
+            ->where('created_at', '>=', $since)
+            ->orderBy('created_at')
+            ->get(['network_interface_id', 'in_octets', 'out_octets', 'created_at']);
+
+        return response()->json($data);
     }
 }

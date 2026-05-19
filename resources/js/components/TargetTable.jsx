@@ -32,9 +32,23 @@ function SparklineData({ target }) {
     return <Sparkline data={data} width={40} height={16} color={color} />;
 }
 
-export default function TargetTable({ targets, loading, pinging, onPing, onEdit, onDelete, onChart, onDetail, onPause, onResume, isAdmin, paused = false }) {
+export default function TargetTable({ targets, loading, pinging, onPing, onEdit, onDelete, onChart, onDetail, onPause, onResume, isAdmin, paused = false, selectedIds = new Set(), onSelect }) {
     const [, forceRender] = useState(0);
+    const allSelected = targets.length > 0 && targets.every(t => selectedIds.has(t.id));
     useEffect(() => { if (paused) return; const id = setInterval(() => forceRender(t => t + 1), 1000); return () => clearInterval(id); }, [paused]);
+
+    const toggleSelect = (id) => {
+        const next = new Set(selectedIds);
+        if (next.has(id)) next.delete(id); else next.add(id);
+        onSelect(next);
+    };
+
+    const toggleAll = () => {
+        if (allSelected) { onSelect(new Set()); return; }
+        const next = new Set(targets.map(t => t.id));
+        onSelect(next);
+    };
+
     if (loading) {
         return (
             <div className="bg-base-200 border border-base-300 rounded-xl overflow-hidden">
@@ -42,7 +56,7 @@ export default function TargetTable({ targets, loading, pinging, onPing, onEdit,
                     <table className="w-full target-table">
                         <thead>
                             <tr className="border-b border-base-300/80 bg-base-300/25">
-                                {['Device', 'Location', 'IP Address', 'Status', 'Latency', 'Avg Latency', 'Uptime', 'Loss %', 'Last Check', 'Actions'].map(h => (
+                                {['', 'Device', 'Location', 'IP Address', 'Status', 'Latency', 'Avg Latency', 'Uptime', 'Loss %', 'Last Check', 'Actions'].map(h => (
                                     <th key={h} className="text-left py-3 px-4 text-[10px] font-semibold text-base-content/35 uppercase tracking-widest whitespace-nowrap">{h}</th>
                                 ))}
                             </tr>
@@ -50,6 +64,7 @@ export default function TargetTable({ targets, loading, pinging, onPing, onEdit,
                         <tbody>
                             {[...Array(6)].map((_, i) => (
                                 <tr key={i} className="border-b border-base-300/30" style={{ animationDelay: `${i * 0.06}s` }}>
+                                    <td className="py-3.5 px-4"></td>
                                     <td className="py-3.5 px-4">
                                         <div className="flex items-center gap-2.5">
                                             <div className="skeleton-row w-8 h-8 rounded-xl flex-shrink-0" style={{ animationDelay: `${i * 0.06}s` }}></div>
@@ -81,6 +96,10 @@ export default function TargetTable({ targets, loading, pinging, onPing, onEdit,
                     <table className="table-anim w-full target-table">
                         <thead>
                             <tr className="border-b border-base-300/80 bg-base-300/25">
+                                <th className="text-left py-3 px-4 w-10">
+                                    <input type="checkbox" checked={allSelected} onChange={toggleAll}
+                                        className="checkbox checkbox-xs rounded border-base-content/30 checked:border-primary checked:bg-primary" />
+                                </th>
                                 {['Device', 'Location', 'IP Address', 'Status', 'Latency', 'Avg Latency', 'Trend', 'Uptime', 'Loss %', 'Last Check', 'Actions'].map(h => (
                                     <th key={h} className="text-left py-3 px-4 text-[10px] font-semibold text-base-content/35 uppercase tracking-widest whitespace-nowrap">
                                         {h}
@@ -91,7 +110,7 @@ export default function TargetTable({ targets, loading, pinging, onPing, onEdit,
                         <tbody>
                             {targets.length === 0 ? (
                                 <tr>
-                                    <td colSpan={11} className="text-center py-20 text-base-content/30">
+                                    <td colSpan={12} className="text-center py-20 text-base-content/30">
                                         <div className="empty-float mb-4">
                                             <svg width="64" height="64" viewBox="0 0 64 64" fill="none" className="mx-auto opacity-15">
                                                 <rect x="12" y="20" width="40" height="30" rx="4" stroke="currentColor" strokeWidth="2" fill="none"/>
@@ -110,6 +129,8 @@ export default function TargetTable({ targets, loading, pinging, onPing, onEdit,
                                     target={t}
                                     isPinging={!!pinging[t.id]}
                                     isAdmin={isAdmin}
+                                    selected={selectedIds.has(t.id)}
+                                    onToggleSelect={() => toggleSelect(t.id)}
                                     onPing={() => onPing(t)}
                                     onEdit={() => onEdit(t)}
                                     onDelete={() => onDelete(t)}
@@ -132,6 +153,7 @@ export default function TargetTable({ targets, loading, pinging, onPing, onEdit,
                     </div>
                 ) : targets.map(t => (
                     <TargetCard key={t.id} target={t} isPinging={!!pinging[t.id]} isAdmin={isAdmin}
+                        selected={selectedIds.has(t.id)} onToggleSelect={() => toggleSelect(t.id)}
                         onPing={() => onPing(t)} onDetail={() => onDetail(t.id)}
                         onEdit={() => onEdit(t)} onDelete={() => onDelete(t)}
                         onChart={() => onChart(t)} onPause={() => onPause(t)} onResume={() => onResume(t)} />
@@ -141,7 +163,7 @@ export default function TargetTable({ targets, loading, pinging, onPing, onEdit,
     );
 }
 
-function TargetRow({ target: t, isPinging, isAdmin, onPing, onEdit, onDelete, onChart, onDetail, onPause, onResume }) {
+function TargetRow({ target: t, isPinging, isAdmin, onPing, onEdit, onDelete, onChart, onDetail, onPause, onResume, selected, onToggleSelect }) {
     const loss = t.total_pings > 0 ? Math.round(t.failed_pings / t.total_pings * 100) : null;
 
     const latClass = (ms) => {
@@ -162,8 +184,13 @@ function TargetRow({ target: t, isPinging, isAdmin, onPing, onEdit, onDelete, on
         : 'bg-base-300/60 border-base-300';
 
     return (
-        <tr onClick={onDetail}
-            className={`target-row border-b border-base-300/30 group cursor-pointer ${t.is_paused ? 'paused-row' : ''}`}>
+        <tr onClick={e => { if (e.target.type !== 'checkbox') onDetail(); }}
+            className={`target-row border-b border-base-300/30 group cursor-pointer ${t.is_paused ? 'paused-row' : ''} ${selected ? 'bg-primary/5' : ''}`}>
+
+            <td className="py-3.5 px-4" onClick={e => e.stopPropagation()}>
+                <input type="checkbox" checked={selected} onChange={onToggleSelect}
+                    className="checkbox checkbox-xs rounded border-base-content/30 checked:border-primary checked:bg-primary" />
+            </td>
 
             <td className="py-3.5 px-4">
                 <div className="flex items-center gap-2.5">
@@ -337,14 +364,17 @@ function GroupBadge({ group }) {
     );
 }
 
-function TargetCard({ target: t, isPinging, isAdmin, onPing, onDetail, onEdit, onDelete, onChart, onPause, onResume }) {
+function TargetCard({ target: t, isPinging, isAdmin, onPing, onDetail, onEdit, onDelete, onChart, onPause, onResume, selected, onToggleSelect }) {
     const loss = t.total_pings > 0 ? Math.round(t.failed_pings / t.total_pings * 100) : null;
     const statusColor = t.is_paused ? 'text-warning' : t.last_status === true ? 'text-success' : t.last_status === false ? 'text-error' : 'text-base-content/30';
     const statusLabel = t.is_paused ? 'Maintenance' : t.last_status === true ? 'Online' : t.last_status === false ? 'Offline' : 'Unknown';
     return (
-        <div onClick={onDetail} className="target-card cursor-pointer bg-base-200 border border-base-300 rounded-xl p-4">
+        <div onClick={e => { if (e.target.type !== 'checkbox') onDetail(); }} className={`target-card cursor-pointer bg-base-200 border border-base-300 rounded-xl p-4 ${selected ? 'ring-1 ring-primary/30' : ''}`}>
             <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2.5 min-w-0">
+                    <input type="checkbox" checked={selected} onChange={onToggleSelect}
+                        className="checkbox checkbox-xs rounded border-base-content/30 checked:border-primary checked:bg-primary flex-shrink-0"
+                        onClick={e => e.stopPropagation()} />
                     <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 border ${
                         t.is_paused ? 'bg-warning/8 border-warning/20 text-warning' :
                         t.last_status === true ? 'bg-success/8 border-success/20 text-success' :

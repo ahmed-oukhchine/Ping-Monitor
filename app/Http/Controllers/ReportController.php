@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PingHistory;
+use App\Models\ScheduledReport;
 use App\Models\Target;
 use Illuminate\Http\Request;
 
@@ -83,5 +84,40 @@ class ReportController extends Controller
             ],
             'daily'    => $daily,
         ]);
+    }
+
+    public function schedules()
+    {
+        return response()->json(
+            ScheduledReport::orderBy('created_at', 'desc')->get(['id', 'name', 'frequency', 'format', 'recipients', 'last_sent_at'])
+        );
+    }
+
+    public function storeSchedule(Request $request)
+    {
+        $data = $request->validate([
+            'name'       => 'required|string|max:100',
+            'frequency'  => 'required|in:weekly,monthly',
+            'recipients' => 'required|array',
+            'recipients.*' => 'email',
+        ]);
+
+        $data['format'] = 'pdf';
+        $data['user_id'] = $request->user()->id;
+        $report = ScheduledReport::create($data);
+
+        return response()->json($report, 201);
+    }
+
+    public function destroySchedule(ScheduledReport $scheduledReport)
+    {
+        $scheduledReport->delete();
+        return response()->json(['message' => 'Report schedule deleted']);
+    }
+
+    public function sendNow(ScheduledReport $scheduledReport)
+    {
+        $scheduledReport->generateAndSend();
+        return response()->json(['message' => 'Report sent successfully']);
     }
 }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
 export default function TargetDetailModal({ target: t, isAdmin, isPinging, onPing, onEdit, onDelete, onChart, onPause, onResume, onClose }) {
     const [history, setHistory]         = useState([]);
@@ -8,6 +9,9 @@ export default function TargetDetailModal({ target: t, isAdmin, isPinging, onPin
     const [ifacesLoading, setIfacesLoading] = useState(false);
     const [quickCommunity, setQuickCommunity] = useState(t.snmp_community || '');
     const [quickSaving, setQuickSaving] = useState(false);
+    const [bwRange, setBwRange] = useState('24h');
+    const [bwData, setBwData] = useState([]);
+    const [bwLoading, setBwLoading] = useState(false);
     const prevPinging = useRef(isPinging);
 
     const fetchHistory = () => {
@@ -39,6 +43,18 @@ export default function TargetDetailModal({ target: t, isAdmin, isPinging, onPin
     useEffect(() => {
         if (t.snmp_enabled) fetchInterfaces();
     }, [t.id, t.snmp_enabled]);
+
+    const fetchBandwidth = (range = bwRange) => {
+        setBwLoading(true);
+        axios.get(`/api/snmp/${t.id}/bandwidth`, { params: { range } })
+            .then(({ data }) => setBwData(data))
+            .catch(() => {})
+            .finally(() => setBwLoading(false));
+    };
+
+    useEffect(() => {
+        if (t.snmp_enabled) fetchBandwidth();
+    }, [t.id, t.snmp_enabled, bwRange]);
 
     useEffect(() => {
         if (prevPinging.current && !isPinging) fetchHistory();
@@ -273,6 +289,71 @@ export default function TargetDetailModal({ target: t, isAdmin, isPinging, onPin
                                         </span>
                                     </div>
                                 ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {t.snmp_enabled && interfaces.length > 0 && (
+                    <div className="px-6 py-3 border-b border-base-300 flex-shrink-0">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-[10px] font-semibold text-base-content/35 uppercase tracking-wider flex items-center gap-1.5">
+                                <i className="fas fa-chart-line text-[9px]"></i>
+                                Bandwidth
+                            </span>
+                            <div className="flex items-center gap-1">
+                                {['24h','7d','30d'].map(r => (
+                                    <button key={r} onClick={() => setBwRange(r)}
+                                        className={`px-2 py-0.5 rounded text-[9px] font-semibold transition-all ${
+                                            bwRange === r
+                                                ? 'bg-primary/20 text-primary'
+                                                : 'text-base-content/30 hover:text-base-content/50'
+                                        }`}>
+                                        {r}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        {bwLoading ? (
+                            <div className="flex justify-center py-4">
+                                <span className="loading loading-spinner loading-xs text-primary"></span>
+                            </div>
+                        ) : bwData.length === 0 ? (
+                            <p className="text-[11px] text-base-content/30 py-2 text-center">No bandwidth data yet. Run snmp:poll to collect.</p>
+                        ) : (
+                            <div className="flex flex-col gap-3">
+                                {interfaces.map(iface => {
+                                    const ifaceData = bwData.filter(d => d.network_interface_id === iface.id);
+                                    return (
+                                        <div key={iface.id}>
+                                            <span className="text-[10px] font-medium text-base-content/50 block mb-1 truncate">{iface.name}</span>
+                                            <div className="h-20">
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <AreaChart data={ifaceData}>
+                                                        <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-base-300" />
+                                                        <XAxis dataKey="created_at" hide />
+                                                        <YAxis hide domain={['dataMin', 'dataMax']} />
+                                                        <Tooltip
+                                                            contentStyle={{
+                                                                background: 'hsl(var(--b1))',
+                                                                border: '1px solid hsl(var(--b3))',
+                                                                borderRadius: '8px',
+                                                                fontSize: '11px',
+                                                            }}
+                                                            labelFormatter={(v) => new Date(v).toLocaleString()}
+                                                            formatter={(value, name) => [
+                                                                `${((value * 8) / 1_000_000).toFixed(2)} Mbps`,
+                                                                name === 'in_octets' ? 'In' : 'Out'
+                                                            ]}
+                                                        />
+                                                        <Area type="monotone" dataKey="in_octets" stroke="#22c55e" fill="#22c55e" fillOpacity={0.1} strokeWidth={1.5} dot={false} />
+                                                        <Area type="monotone" dataKey="out_octets" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.1} strokeWidth={1.5} dot={false} />
+                                                    </AreaChart>
+                                                </ResponsiveContainer>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>

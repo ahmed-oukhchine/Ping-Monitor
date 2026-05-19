@@ -13,12 +13,25 @@ function fmtDate(d) {
     return d.toISOString().slice(0, 10);
 }
 
-export default function Reports() {
+export default function Reports({ user }) {
     const [data, setData]         = useState(null);
     const [loading, setLoading]   = useState(true);
     const [targetId, setTargetId] = useState('');
     const [dateFrom, setDateFrom] = useState(() => fmtDate(new Date(Date.now() - 7 * 86400000)));
     const [dateTo, setDateTo]     = useState(() => fmtDate(new Date()));
+    const [schedules, setSchedules] = useState([]);
+    const [showScheduleForm, setShowScheduleForm] = useState(false);
+    const [form, setForm] = useState({ name: '', frequency: 'weekly', recipients: '' });
+
+    const isAdmin = user?.role === 'admin';
+
+    useEffect(() => {
+        if (isAdmin) {
+            axios.get('/api/report/schedules')
+                .then(res => setSchedules(res.data))
+                .catch(() => {});
+        }
+    }, [isAdmin]);
 
     useEffect(() => {
         setLoading(true);
@@ -87,7 +100,115 @@ export default function Reports() {
                     </div>
                 </div>
 
-                <div className="anim-fade-up anim-delay-1 bg-base-200 border border-base-300 rounded-xl px-4 py-3 flex items-center flex-wrap gap-x-4 gap-y-2.5">
+                {isAdmin && (
+                    <div className="anim-fade-up anim-delay-1 bg-base-200 border border-base-300 rounded-xl p-4">
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-0.5 h-3.5 rounded-full bg-primary/50 flex-shrink-0"></div>
+                                <h2 className="text-[11px] font-semibold text-base-content/40 uppercase tracking-wider">Scheduled Reports</h2>
+                                <span className="text-[10px] text-base-content/25">({schedules.length})</span>
+                            </div>
+                            <button onClick={() => setShowScheduleForm(true)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-semibold bg-primary/15 text-primary border border-primary/25 hover:bg-primary/25 transition-all">
+                                <i className="fas fa-plus text-[9px]"></i> New Schedule
+                            </button>
+                        </div>
+
+                        {schedules.length === 0 && !showScheduleForm ? (
+                            <p className="text-center text-[11px] text-base-content/30 py-4">No scheduled reports. Create one to auto-generate PDF reports every Monday at 9:00 AM.</p>
+                        ) : (
+                            <div className="flex flex-col gap-1">
+                                {schedules.map(s => (
+                                    <div key={s.id} className="flex items-center justify-between px-3 py-2 rounded-lg bg-base-100 border border-base-300">
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <i className="fas fa-file-pdf text-error/60 text-sm"></i>
+                                            <div className="min-w-0">
+                                                <div className="text-xs font-medium text-base-content truncate">{s.name}</div>
+                                                <div className="flex items-center gap-2 text-[10px] text-base-content/40">
+                                                    <span className="capitalize">{s.frequency}</span>
+                                                    <span className="text-base-content/20">·</span>
+                                                    <span>{s.recipients?.length || 0} recipient{(s.recipients?.length || 0) !== 1 ? 's' : ''}</span>
+                                                    <span className="text-base-content/20">·</span>
+                                                    <span>{s.frequency === 'weekly' ? 'Monday 9:00 AM' : '1st Monday 9:00 AM'}</span>
+                                                    {s.last_sent_at && (
+                                                        <>
+                                                            <span className="text-base-content/20">·</span>
+                                                            <span>Last: {new Date(s.last_sent_at).toLocaleDateString()}</span>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <button onClick={() => {
+                                                axios.post(`/api/report/schedules/${s.id}/send`)
+                                                    .then(() => axios.get('/api/report/schedules').then(r => setSchedules(r.data)));
+                                            }}
+                                                className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-all">
+                                                <i className="fas fa-paper-plane text-[8px]"></i> Send Now
+                                            </button>
+                                            <button onClick={() => {
+                                                axios.delete(`/api/report/schedules/${s.id}`)
+                                                    .then(() => setSchedules(prev => prev.filter(x => x.id !== s.id)));
+                                            }}
+                                                className="text-base-content/30 hover:text-error transition-colors px-1">
+                                                <i className="fas fa-trash text-[11px]"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {showScheduleForm && (
+                            <div className="mt-3 px-3 py-3 rounded-lg bg-base-100 border border-base-300">
+                                <div className="grid grid-cols-3 gap-3 mb-3">
+                                    <div>
+                                        <label className="text-[10px] font-semibold text-base-content/40 uppercase tracking-wider block mb-1">Name</label>
+                                        <input type="text" value={form.name} placeholder="e.g. Weekly SLA Report"
+                                            onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                                            className="w-full bg-base-200 border border-base-300 rounded-lg px-2.5 py-1.5 text-xs text-base-content outline-none focus:border-primary/50 transition-colors" />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-semibold text-base-content/40 uppercase tracking-wider block mb-1">Frequency</label>
+                                        <select value={form.frequency} onChange={e => setForm(f => ({ ...f, frequency: e.target.value }))}
+                                            className="w-full bg-base-200 border border-base-300 rounded-lg px-2.5 py-1.5 text-xs text-base-content outline-none focus:border-primary/50 transition-colors">
+                                            <option value="weekly">Weekly (Monday 9:00 AM)</option>
+                                            <option value="monthly">Monthly (1st Monday 9:00 AM)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-semibold text-base-content/40 uppercase tracking-wider block mb-1">Recipients</label>
+                                        <input type="text" value={form.recipients} placeholder="email1@example.com, email2@..."
+                                            onChange={e => setForm(f => ({ ...f, recipients: e.target.value }))}
+                                            className="w-full bg-base-200 border border-base-300 rounded-lg px-2.5 py-1.5 text-xs text-base-content outline-none focus:border-primary/50 transition-colors" />
+                                    </div>
+                                </div>
+                                <div className="flex items-center justify-end gap-2">
+                                    <button onClick={() => { setShowScheduleForm(false); setForm({ name: '', frequency: 'weekly', recipients: '' }); }}
+                                        className="px-3 py-1.5 rounded-lg text-[10px] font-semibold text-base-content/40 hover:text-base-content/60 transition-colors">
+                                        Cancel
+                                    </button>
+                                    <button onClick={() => {
+                                        const recipients = form.recipients.split(',').map(r => r.trim()).filter(Boolean);
+                                        if (!form.name || recipients.length === 0) return;
+                                        axios.post('/api/report/schedules', { ...form, recipients })
+                                            .then(res => {
+                                                setSchedules(prev => [...prev, res.data]);
+                                                setShowScheduleForm(false);
+                                                setForm({ name: '', frequency: 'weekly', recipients: '' });
+                                            });
+                                    }}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-semibold bg-primary/15 text-primary border border-primary/25 hover:bg-primary/25 transition-all">
+                                        <i className="fas fa-save text-[9px]"></i> Create
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                <div className="anim-fade-up anim-delay-2 bg-base-200 border border-base-300 rounded-xl px-4 py-3 flex items-center flex-wrap gap-x-4 gap-y-2.5">
 
                     <div className="flex items-center gap-2">
                         <span className="text-[10px] font-semibold text-base-content/35 uppercase tracking-wider whitespace-nowrap">Target</span>
@@ -161,7 +282,7 @@ export default function Reports() {
                                       color: 'var(--color-base-content)', icon: 'fa-server', bg: 'bg-base-300/50', ic: 'text-base-content/50',
                                       sub: 'monitored' },
                                 ].map((c, i) => (
-                                    <div key={c.label} className={`anim-fade-up anim-delay-${i + 1} bg-base-200 border border-base-300 rounded-xl p-4 flex items-center gap-3`}>
+                                    <div key={c.label} className={`anim-fade-up anim-delay-${i + 3} bg-base-200 border border-base-300 rounded-xl p-4 flex items-center gap-3`}>
                                         <div className={`w-10 h-10 rounded-xl ${c.bg} flex items-center justify-center flex-shrink-0`}>
                                             <i className={`fas ${c.icon} ${c.ic} text-lg`}></i>
                                         </div>
@@ -176,7 +297,7 @@ export default function Reports() {
                         )}
 
                         {daily.length > 1 && (
-                            <div className="anim-fade-up anim-delay-3 bg-base-200 border border-base-300 rounded-xl p-5">
+                            <div className="anim-fade-up anim-delay-5 bg-base-200 border border-base-300 rounded-xl p-5">
                                 <div className="flex items-center gap-2 mb-5">
                                     <div className="w-0.5 h-3.5 rounded-full bg-primary/50 flex-shrink-0"></div>
                                     <h2 className="text-xs font-semibold text-base-content/40 uppercase tracking-wider">Uptime Trend</h2>
@@ -216,7 +337,7 @@ export default function Reports() {
                             </div>
                         )}
 
-                        <div className="anim-fade-up anim-delay-4 bg-base-200 border border-base-300 rounded-xl overflow-hidden">
+                        <div className="anim-fade-up anim-delay-6 bg-base-200 border border-base-300 rounded-xl overflow-hidden">
                             <div className="flex items-center gap-2 px-5 py-4 border-b border-base-300">
                                 <div className="w-0.5 h-3.5 rounded-full bg-primary/50 flex-shrink-0"></div>
                                 <h2 className="text-xs font-semibold text-base-content/40 uppercase tracking-wider">Per-Target Breakdown</h2>
@@ -302,7 +423,7 @@ export default function Reports() {
                         </div>
 
                         {stats.length > 1 && (
-                            <div className="anim-fade-up anim-delay-5 bg-base-200 border border-base-300 rounded-xl p-5">
+                            <div className="anim-fade-up anim-delay-7 bg-base-200 border border-base-300 rounded-xl p-5">
                                 <div className="flex items-center gap-2 mb-5">
                                     <div className="w-0.5 h-3.5 rounded-full bg-error/60 flex-shrink-0"></div>
                                     <h2 className="text-xs font-semibold text-base-content/40 uppercase tracking-wider">Uptime by Target</h2>
@@ -343,6 +464,7 @@ export default function Reports() {
                                 </div>
                             </div>
                         )}
+
                     </>
                 )}
             </div>

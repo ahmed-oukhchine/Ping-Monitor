@@ -1,8 +1,27 @@
 import React from 'react';
 
-export default function StatsBar({ stats }) {
+function Trend({ value, trend }) {
+    if (trend == null || trend === 0) return null;
+    const up = trend > 0;
+    return (
+        <span className={`inline-flex items-center gap-0.5 text-[9px] font-semibold ml-1 ${up ? 'text-error/60' : 'text-success/60'}`}>
+            <i className={`fas ${up ? 'fa-arrow-up' : 'fa-arrow-down'} text-[7px]`}></i>
+            {Math.abs(trend)}
+        </span>
+    );
+}
+
+export default function StatsBar({ stats, prevStats }) {
     const uptimeSub = stats.fleetUptime != null ? `${stats.fleetUptime}% fleet uptime` : null;
     const offlineAlert = stats.offline > 0;
+
+    const diff = (key) => {
+        if (!prevStats) return null;
+        const cur = parseFloat(stats[key]);
+        const prev = parseFloat(prevStats[key]);
+        if (isNaN(cur) || isNaN(prev) || prev === 0) return null;
+        return Math.round((cur - prev) * 10) / 10;
+    };
 
     const cards = [
         {
@@ -22,6 +41,8 @@ export default function StatsBar({ stats }) {
             subCls: 'text-base-content/30',
             subIcon: null,
             icon: 'fa-check-circle', iconBg: 'bg-success/10', iconColor: 'text-success', border: 'border-t-success/60',
+            trendVal: diff('online'),
+            trendUp: false,
         },
         {
             label: 'Offline',
@@ -34,6 +55,8 @@ export default function StatsBar({ stats }) {
             iconBg: offlineAlert ? 'bg-error/10' : 'bg-base-300/60',
             iconColor: offlineAlert ? 'text-error' : 'text-base-content/25',
             border: offlineAlert ? 'border-t-error/60' : 'border-t-base-300',
+            trendVal: diff('offline'),
+            trendUp: true,
         },
         {
             label: 'Avg Latency',
@@ -45,13 +68,15 @@ export default function StatsBar({ stats }) {
             sub: stats.avgLatency == null ? 'No data yet'
                 : stats.avgLatency < 50  ? 'Fast'
                 : stats.avgLatency < 150 ? 'Moderate'
-                : 'Slow — check targets',
+                : 'Slow',
             subCls: stats.avgLatency == null ? 'text-base-content/25'
                 : stats.avgLatency < 50  ? 'text-success/60'
                 : stats.avgLatency < 150 ? 'text-warning/60'
                 : 'text-error/60',
             subIcon: null,
             icon: 'fa-tachometer-alt', iconBg: 'bg-warning/10', iconColor: 'text-warning', border: 'border-t-warning/60',
+            trendVal: diff('avgLatency'),
+            trendUp: true,
         },
     ];
 
@@ -63,7 +88,15 @@ export default function StatsBar({ stats }) {
                         <i className={`fas ${c.icon} ${c.iconColor} text-lg`}></i>
                     </div>
                     <div className="min-w-0 flex-1">
-                        <div className={`text-2xl font-bold tabular-nums mono leading-none ${c.valueCls}`}>{c.value}</div>
+                        <div className={`text-2xl font-bold tabular-nums mono leading-none ${c.valueCls}`}>
+                            {c.value}
+                            {c.trendVal != null && (
+                                <span className={`inline-flex items-center gap-0.5 text-[10px] font-semibold ml-1.5 align-middle ${c.trendUp ? 'text-error/60' : 'text-success/60'}`}>
+                                    <i className={`fas ${c.trendVal > 0 === c.trendUp ? 'fa-arrow-up' : 'fa-arrow-down'} text-[8px]`}></i>
+                                    {Math.abs(c.trendVal)}
+                                </span>
+                            )}
+                        </div>
                         <div className="text-xs text-base-content/45 mt-0.5 font-medium leading-tight">{c.label}</div>
                         {c.sub && (
                             <div className={`text-[10px] mt-0.5 font-medium flex items-center gap-1 leading-tight ${c.subCls}`}>

@@ -172,9 +172,9 @@ function AppContent() {
                     </div>
                 )}
                 {reportsMounted && (
-                    <div className="page-slot" style={{ display: onReports ? 'block' : 'none' }}>
-                        <Reports />
-                    </div>
+                        <div className="page-slot" style={{ display: onReports ? 'block' : 'none' }}>
+                            <Reports user={user} />
+                        </div>
                 )}
             </div>
         </div>

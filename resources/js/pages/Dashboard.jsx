@@ -10,6 +10,7 @@ import GroupManagerModal from '../components/GroupManagerModal';
 import TargetDetailModal from '../components/TargetDetailModal';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
+import ImportModal from '../components/ImportModal';
 
 const LS_AUTO     = 'argusnet_auto';
 const LS_INTERVAL = 'argusnet_interval';
@@ -32,6 +33,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
     const [interval_, setInterval_]           = useState(() => readLS(LS_INTERVAL, 60));
     const [countdown, setCountdown]           = useState(0);
     const [showAdd, setShowAdd]               = useState(false);
+    const [showImport, setShowImport]          = useState(false);
     const [showGroupManager, setShowGroupManager] = useState(false);
     const [detailTargetId, setDetailTargetId] = useState(null);
     const [editTarget, setEditTarget]         = useState(null);
@@ -41,6 +43,37 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
     const [tick, setTick]                     = useState(0);
     const [search, setSearch]                 = useState('');
     const { toast } = useToast();
+    const prevStatsRef  = useRef(null);
+    const [selectedIds, setSelectedIds] = useState(new Set());
+
+    const clearSelection = () => setSelectedIds(new Set());
+
+    const bulkPing = () => {
+        selectedIds.forEach(id => { const t = targets.find(x => x.id === id); if (t) pingTarget(t); });
+        clearSelection();
+    };
+
+    const bulkPause = () => {
+        Promise.all([...selectedIds].map(id => axios.post(`/targets/${id}/pause`)))
+            .then(() => { toast(`Paused ${selectedIds.size} target(s)`, 'success'); fetchTargets(); })
+            .catch(() => toast('Failed to pause targets', 'error'));
+        clearSelection();
+    };
+
+    const bulkResume = () => {
+        Promise.all([...selectedIds].map(id => axios.post(`/targets/${id}/resume`)))
+            .then(() => { toast(`Resumed ${selectedIds.size} target(s)`, 'success'); fetchTargets(); })
+            .catch(() => toast('Failed to resume targets', 'error'));
+        clearSelection();
+    };
+
+    const bulkDelete = () => {
+        if (!window.confirm(`Delete ${selectedIds.size} target(s)? This cannot be undone.`)) return;
+        Promise.all([...selectedIds].map(id => axios.delete(`/targets/${id}`)))
+            .then(() => { toast(`Deleted ${selectedIds.size} target(s)`, 'success'); fetchTargets(); })
+            .catch(() => toast('Failed to delete targets', 'error'));
+        clearSelection();
+    };
 
     const timerRef      = useRef(null);
     const cdownRef      = useRef(null);
@@ -290,6 +323,8 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
 
     const activeGroupName = selectedGroup ? groups.find(g => g.id === selectedGroup)?.name : null;
 
+    useEffect(() => { prevStatsRef.current = stats; });
+
     const fmtLastUpdated = () => {
         if (!lastUpdated) return null;
         const secs = Math.floor((Date.now() - lastUpdated) / 1000);
@@ -331,10 +366,16 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                         {isAdmin && (
-                            <button onClick={() => setShowAdd(true)}
-                                className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold border border-primary/40 text-primary rounded-lg hover:bg-primary/10 transition-colors">
-                                <i className="fas fa-plus text-[10px]"></i> Add Target
-                            </button>
+                            <>
+                                <button onClick={() => setShowAdd(true)}
+                                    className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold border border-primary/40 text-primary rounded-lg hover:bg-primary/10 transition-colors">
+                                    <i className="fas fa-plus text-[10px]"></i> Add Target
+                                </button>
+                                <button onClick={() => setShowImport(true)}
+                                    className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold border border-accent/40 text-accent rounded-lg hover:bg-accent/10 transition-colors">
+                                    <i className="fas fa-file-import text-[10px]"></i> Import
+                                </button>
+                            </>
                         )}
                         <button onClick={() => pingAll()} disabled={pingAllLoading}
                             className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold bg-primary text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 shadow-[0_0_14px_color-mix(in_oklch,var(--color-primary)_35%,transparent)]">
@@ -345,6 +386,27 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                 </div>
 
 
+                {selectedIds.size > 0 && (
+                    <div className="flex items-center gap-2 px-4 py-2.5 mb-3 bg-primary/8 border border-primary/25 rounded-xl">
+                        <span className="text-xs font-semibold text-primary/80 tabular-nums">{selectedIds.size} selected</span>
+                        <div className="w-px h-4 bg-primary/20"></div>
+                        <button onClick={bulkPing} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold text-primary border border-primary/30 hover:bg-primary/10 transition-all">
+                            <i className="fas fa-play text-[8px]"></i> Ping
+                        </button>
+                        <button onClick={bulkPause} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold text-warning border border-warning/30 hover:bg-warning/10 transition-all">
+                            <i className="fas fa-pause text-[8px]"></i> Pause
+                        </button>
+                        <button onClick={bulkResume} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold text-success border border-success/30 hover:bg-success/10 transition-all">
+                            <i className="fas fa-play text-[8px]"></i> Resume
+                        </button>
+                        <button onClick={bulkDelete} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold text-error border border-error/30 hover:bg-error/10 transition-all">
+                            <i className="fas fa-trash text-[8px]"></i> Delete
+                        </button>
+                        <button onClick={clearSelection} className="ml-auto flex items-center gap-1 text-[10px] text-base-content/30 hover:text-base-content/50 transition-colors">
+                            <i className="fas fa-times text-[8px]"></i> Clear
+                        </button>
+                    </div>
+                )}
                 <div ref={sentinelRef} className="h-px"></div>
                 {offlineTargets.length > 0 && (
                     <div className="banner-enter flex items-center gap-3 px-4 py-3 mb-4 bg-error/8 border border-error/25 rounded-xl">
@@ -371,7 +433,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
                     </div>
                 )}
 
-                <StatsBar stats={stats} />
+                <StatsBar stats={stats} prevStats={prevStatsRef.current} />
 
 
                 {targets.length > 0 && (
@@ -515,11 +577,15 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading }
 
                 <TargetTable targets={filteredTargets} loading={loading} pinging={pinging} isAdmin={isAdmin}
                     onPing={pingTarget} onEdit={setEditTarget} onDelete={setDeleteTarget} onChart={setChartTarget}
-                    onDetail={setDetailTargetId} onPause={pauseTarget} onResume={resumeTarget} paused={pingAllLoading} />
+                    onDetail={setDetailTargetId} onPause={pauseTarget} onResume={resumeTarget} paused={pingAllLoading}
+                    selectedIds={selectedIds} onSelect={setSelectedIds} />
             </div>
 
             {showAdd && (
                 <AddModal groups={groups} onSave={addTarget} onClose={() => setShowAdd(false)} />
+            )}
+            {showImport && (
+                <ImportModal onClose={() => setShowImport(false)} onImported={() => { setShowImport(false); fetchTargets(); }} />
             )}
             {editTarget && (
                 <EditModal target={editTarget} groups={groups} onSave={updateTarget} onClose={() => setEditTarget(null)} />

@@ -25,15 +25,21 @@ Route::middleware('auth')->group(function () {
     Route::post('/targets/{target}/ping', [PingController::class, 'ping'])->name('targets.ping');
     Route::post('/ping-all',              [PingController::class, 'pingAll']);
 
-    Route::get('/api/report', [ReportController::class, 'apiReport']);
+    Route::get('/api/report',              [ReportController::class, 'apiReport']);
+    Route::get('/api/report/schedules',    [ReportController::class, 'schedules'])->middleware(EnsureAdmin::class);
+    Route::post('/api/report/schedules',   [ReportController::class, 'storeSchedule'])->middleware(EnsureAdmin::class);
+    Route::delete('/api/report/schedules/{scheduledReport}', [ReportController::class, 'destroySchedule'])->middleware(EnsureAdmin::class);
+    Route::post('/api/report/schedules/{scheduledReport}/send', [ReportController::class, 'sendNow'])->middleware(EnsureAdmin::class);
     Route::get('/api/snmp/interfaces',       [SnmpController::class, 'allInterfaces']);
     Route::get('/api/snmp/{target}/interfaces', [SnmpController::class, 'interfaces']);
     Route::post('/api/snmp/{target}/discover',  [SnmpController::class, 'discover'])->middleware(EnsureAdmin::class);
     Route::post('/api/snmp/{target}/poll',      [SnmpController::class, 'poll']);
+    Route::get('/api/snmp/{target}/bandwidth',   [SnmpController::class, 'bandwidth']);
 
     Route::get('/api/users', [UserController::class, 'index']);
     Route::put('/api/profile/password', [UserController::class, 'updateOwnPassword']);
     Route::put('/api/profile', [UserController::class, 'updateOwnProfile']);
+    Route::get('/api/targets/template', [PingController::class, 'downloadTemplate']);
 
     Route::middleware(EnsureAdmin::class)->group(function () {
         Route::get('/api/audit-logs',                    [AuditLogController::class, 'index']);
@@ -49,6 +55,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/api/groups',           [GroupController::class, 'store']);
         Route::put('/api/groups/{group}',    [GroupController::class, 'update']);
         Route::delete('/api/groups/{group}', [GroupController::class, 'destroy']);
+
+        Route::post('/api/targets/import',    [PingController::class, 'importCsv']);
     });
 });
 
