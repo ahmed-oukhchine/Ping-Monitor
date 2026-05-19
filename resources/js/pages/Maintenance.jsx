@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useLang } from '../contexts/LanguageContext';
+import { useToast } from '../contexts/ToastContext';
 
 const DAYS = [
     { val: null, labelKey: 'maintenance.daily' },
@@ -15,6 +16,7 @@ const DAYS = [
 
 export default function Maintenance() {
     const { t } = useLang();
+    const { toast } = useToast();
     const [schedules, setSchedules] = useState([]);
     const [targets, setTargets] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -53,24 +55,38 @@ export default function Maintenance() {
         try {
             if (editing) {
                 await axios.put(`/api/maintenance-schedules/${editing.id}`, form);
+                toast(t('maintenance.updated'));
             } else {
                 await axios.post('/api/maintenance-schedules', form);
+                toast(t('maintenance.created'));
             }
             setShowForm(false);
             setEditing(null);
             fetchAll();
-        } catch {}
+        } catch {
+            toast(t('maintenance.saveError'), 'error');
+        }
     };
 
     const toggleActive = async (s) => {
-        await axios.post(`/api/maintenance-schedules/${s.id}/toggle`);
-        fetchAll();
+        try {
+            await axios.post(`/api/maintenance-schedules/${s.id}/toggle`);
+            toast(s.is_active ? t('maintenance.disabled') : t('maintenance.enabled'));
+            fetchAll();
+        } catch {
+            toast(t('maintenance.toggleError'), 'error');
+        }
     };
 
     const del = async (s) => {
         if (!window.confirm(t('maintenance.confirmDelete'))) return;
-        await axios.delete(`/api/maintenance-schedules/${s.id}`);
-        fetchAll();
+        try {
+            await axios.delete(`/api/maintenance-schedules/${s.id}`);
+            toast(t('maintenance.deleted'));
+            fetchAll();
+        } catch {
+            toast(t('maintenance.deleteError'), 'error');
+        }
     };
 
     const dayLabel = (dv) => {

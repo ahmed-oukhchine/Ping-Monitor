@@ -470,6 +470,14 @@ const translations = {
   'maintenance.cancel': { en: 'Cancel', fr: 'Annuler' },
   'maintenance.create': { en: 'Create', fr: 'Créer' },
   'maintenance.update': { en: 'Update', fr: 'Mettre à jour' },
+  'maintenance.created': { en: 'Schedule created', fr: 'Plage créée' },
+  'maintenance.updated': { en: 'Schedule updated', fr: 'Plage mise à jour' },
+  'maintenance.deleted': { en: 'Schedule deleted', fr: 'Plage supprimée' },
+  'maintenance.enabled': { en: 'Schedule enabled', fr: 'Plage activée' },
+  'maintenance.disabled': { en: 'Schedule disabled', fr: 'Plage désactivée' },
+  'maintenance.saveError': { en: 'Failed to save schedule', fr: 'Échec de l\'enregistrement' },
+  'maintenance.deleteError': { en: 'Failed to delete schedule', fr: 'Échec de la suppression' },
+  'maintenance.toggleError': { en: 'Failed to toggle schedule', fr: 'Échec du changement d\'état' },
 
   /* ── Topology ── */
   'topology.title': { en: 'Network Topology', fr: 'Topologie réseau' },
