@@ -389,23 +389,27 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
 
 
                 {selectedIds.size > 0 && (
-                    <div className="fixed top-3 z-50 flex items-center gap-2 px-4 py-2.5 backdrop-blur-xl bg-primary/15 border border-primary/30 rounded-xl shadow-lg shadow-primary/10"
+                    <div className="fixed top-3 z-50 backdrop-blur-xl bg-primary/15 border border-primary/30 rounded-xl shadow-lg shadow-primary/10 px-4 py-3"
                         style={{ left: sidebarOpen ? 'calc(14rem + 12px)' : 'calc(4rem + 12px)', right: '12px' }}>
-                        <span className="text-xs font-semibold text-primary tabular-nums">{t('dashboard.nSelected', { n: selectedIds.size })}</span>
-                        <div className="w-px h-4 bg-primary/25"></div>
-                        <button onClick={bulkPing} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-primary/20 text-primary border border-primary/35 hover:bg-primary/30 transition-all">
-                            <i className="fas fa-play text-[8px]"></i> {t('dashboard.ping')}
-                        </button>
-                        <button onClick={bulkPause} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-primary/15 text-primary/70 border border-primary/25 hover:bg-primary/25 transition-all">
-                            <i className="fas fa-pause text-[8px]"></i> {t('dashboard.pause')}
-                        </button>
-                        <button onClick={bulkResume} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-primary/15 text-primary/70 border border-primary/25 hover:bg-primary/25 transition-all">
-                            <i className="fas fa-play text-[8px]"></i> {t('dashboard.resume')}
-                        </button>
-                        <button onClick={bulkDelete} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-primary/15 text-error/80 border border-error/30 hover:bg-error/15 transition-all">
-                            <i className="fas fa-trash text-[8px]"></i> {t('dashboard.delete')}
-                        </button>
-                        <button onClick={clearSelection} className="ml-auto flex items-center gap-1 text-[10px] text-primary/40 hover:text-primary/70 transition-colors">
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="text-xs font-semibold text-primary tabular-nums">{t('dashboard.nSelected', { n: selectedIds.size })}</span>
+                            <div className="w-px h-3 bg-primary/25"></div>
+                            <button onClick={bulkPing} className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-primary/20 text-primary border border-primary/35 hover:bg-primary/30 transition-all">
+                                <i className="fas fa-play text-[8px]"></i> {t('dashboard.ping')}
+                            </button>
+                            <button onClick={bulkPause} className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-primary/15 text-primary/70 border border-primary/25 hover:bg-primary/25 transition-all">
+                                <i className="fas fa-pause text-[8px]"></i> {t('dashboard.pause')}
+                            </button>
+                        </div>
+                        <div className="flex items-center gap-2 mb-2">
+                            <button onClick={bulkResume} className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-primary/15 text-primary/70 border border-primary/25 hover:bg-primary/25 transition-all">
+                                <i className="fas fa-play text-[8px]"></i> {t('dashboard.resume')}
+                            </button>
+                            <button onClick={bulkDelete} className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-primary/15 text-error/80 border border-error/30 hover:bg-error/15 transition-all">
+                                <i className="fas fa-trash text-[8px]"></i> {t('dashboard.delete')}
+                            </button>
+                        </div>
+                        <button onClick={clearSelection} className="w-full flex items-center justify-center gap-1 text-[10px] text-primary/40 hover:text-primary/70 transition-colors py-1">
                             <i className="fas fa-times text-[8px]"></i> {t('dashboard.clear')}
                         </button>
                     </div>
