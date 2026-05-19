@@ -400,13 +400,13 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
                             <button onClick={bulkPing} className="flex items-center justify-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold bg-primary/20 text-primary border border-primary/35 hover:bg-primary/30 transition-all">
                                 <i className="fas fa-play text-[7px]"></i> {t('dashboard.ping')}
                             </button>
-                            <button onClick={bulkPause} className="flex items-center justify-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold bg-primary/15 text-primary/70 border border-primary/25 hover:bg-primary/25 transition-all">
+                            <button onClick={bulkPause} className="flex items-center justify-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold bg-warning/15 text-warning border border-warning/30 hover:bg-warning/25 transition-all">
                                 <i className="fas fa-pause text-[7px]"></i> {t('dashboard.pause')}
                             </button>
-                            <button onClick={bulkResume} className="flex items-center justify-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold bg-primary/15 text-primary/70 border border-primary/25 hover:bg-primary/25 transition-all">
+                            <button onClick={bulkResume} className="flex items-center justify-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold bg-success/15 text-success border border-success/30 hover:bg-success/25 transition-all">
                                 <i className="fas fa-play text-[7px]"></i> {t('dashboard.resume')}
                             </button>
-                            <button onClick={bulkDelete} className="flex items-center justify-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold bg-primary/15 text-error/80 border border-error/30 hover:bg-error/15 transition-all">
+                            <button onClick={bulkDelete} className="flex items-center justify-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold bg-error/15 text-error border border-error/30 hover:bg-error/25 transition-all">
                                 <i className="fas fa-trash text-[7px]"></i> {t('dashboard.delete')}
                             </button>
                         </div>
