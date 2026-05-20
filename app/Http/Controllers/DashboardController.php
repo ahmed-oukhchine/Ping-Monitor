@@ -10,7 +10,7 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        return response()->json(CustomDashboard::orderBy('created_at', 'desc')->get());
+        return response()->json(CustomDashboard::where('created_by', auth()->id())->orderBy('created_at', 'desc')->get());
     }
 
     public function store(Request $request)
@@ -23,7 +23,7 @@ class DashboardController extends Controller
 
         $data['created_by'] = auth()->id();
 
-        if (CustomDashboard::count() === 0) {
+        if (CustomDashboard::where('created_by', auth()->id())->count() === 0) {
             $data['is_default'] = true;
         }
 
@@ -34,6 +34,9 @@ class DashboardController extends Controller
 
     public function update(Request $request, CustomDashboard $customDashboard)
     {
+        if ($customDashboard->created_by !== auth()->id()) {
+            abort(403, 'Forbidden');
+        }
         $data = $request->validate([
             'name'        => 'sometimes|string|max:100',
             'description' => 'nullable|string|max:500',
@@ -49,6 +52,9 @@ class DashboardController extends Controller
 
     public function destroy(CustomDashboard $customDashboard)
     {
+        if ($customDashboard->created_by !== auth()->id()) {
+            abort(403, 'Forbidden');
+        }
         AuditLog::log('deleted', 'custom_dashboard', $customDashboard->id, $customDashboard->toArray());
         $customDashboard->delete();
         return response()->json(['deleted' => true]);

@@ -12,7 +12,6 @@ import AuditLog from './pages/AuditLog';
 import Reports from './pages/Reports';
 import Maintenance from './pages/Maintenance';
 import Topology from './pages/Topology';
-import CustomDashboardPage from './pages/CustomDashboard';
 import Login from './pages/Login';
 import Sidebar from './components/Sidebar';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -37,7 +36,6 @@ function AppContent() {
     const [reportsMounted,    setReportsMounted]    = useState(false);
     const [maintenanceMounted, setMaintenanceMounted] = useState(false);
     const [topologyMounted, setTopologyMounted]       = useState(false);
-    const [dashboardsMounted, setDashboardsMounted]   = useState(false);
     const [sidebarOpen, setSidebarOpen]             = useState(true);
 
     const [targets, setTargets]             = useState([]);
@@ -106,7 +104,6 @@ function AppContent() {
         if (pathname === '/reports')    setReportsMounted(true);
         if (pathname === '/maintenance') setMaintenanceMounted(true);
         if (pathname === '/topology')    setTopologyMounted(true);
-        if (pathname === '/dashboards')  setDashboardsMounted(true);
     }, [pathname]);
 
     if (authLoading) {
@@ -131,7 +128,6 @@ function AppContent() {
     const onReports    = pathname === '/reports';
     const onMaintenance = pathname === '/maintenance';
     const onTopology    = pathname === '/topology';
-    const onDashboards  = pathname === '/dashboards';
 
     return (
         <div className="flex min-h-screen bg-base-100">
@@ -200,11 +196,7 @@ function AppContent() {
                         <Topology />
                     </div>
                 )}
-                {dashboardsMounted && (
-                    <div className="page-slot" style={{ display: onDashboards ? 'block' : 'none' }}>
-                        <CustomDashboardPage />
-                    </div>
-                )}
+
             </div>
         </div>
     );

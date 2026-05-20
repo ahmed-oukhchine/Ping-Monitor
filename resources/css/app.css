@@ -89,13 +89,20 @@ html, body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI'
 }
 .empty-float { animation: float 4s ease-in-out infinite; }
 
-/* ── Responsive target card ── */
+/* ── Responsive target card (glassmorphism) ── */
 .target-card {
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+    background: color-mix(in oklch, var(--color-base-100) 70%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid color-mix(in oklch, var(--color-base-content) 8%, transparent);
 }
 .target-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px color-mix(in oklch, var(--color-base-content) 8%, transparent);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow:
+        0 12px 40px color-mix(in oklch, var(--color-base-content) 10%, transparent),
+        0 0 0 1px color-mix(in oklch, var(--color-primary) 20%, transparent);
+    border-color: color-mix(in oklch, var(--color-primary) 30%, transparent);
 }
 @media (min-width: 768px) {
     .target-card { display: none; }
@@ -249,11 +256,11 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     to   { opacity: 1; transform: scale(1)    translateY(0);    }
 }
 @keyframes backdrop-in {
-    from { opacity: 0; }
-    to   { opacity: 1; }
+    from { opacity: 0; backdrop-filter: blur(0px); }
+    to   { opacity: 1; backdrop-filter: blur(6px); }
 }
 .modal-enter    { animation: modal-in    0.22s cubic-bezier(0.22, 1, 0.36, 1); }
-.backdrop-enter { animation: backdrop-in 0.18s ease-out; }
+.backdrop-enter { animation: backdrop-in 0.25s ease-out forwards; }
 
 /* ── Sidebar active link: left accent glow ── */
 .nav-active {
@@ -282,6 +289,103 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     to   { opacity: 1; transform: translateX(0);     }
 }
 .sidebar-animate { animation: sidebar-in 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
+
+/* ── Glassmorphism card ── */
+.glass-card {
+    background: color-mix(in oklch, var(--color-base-100) 65%, transparent);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
+    box-shadow: 0 8px 32px color-mix(in oklch, var(--color-base-content) 6%, transparent);
+}
+.glass-card:hover {
+    border-color: color-mix(in oklch, var(--color-primary) 25%, transparent);
+    box-shadow: 0 8px 32px color-mix(in oklch, var(--color-primary) 12%, transparent);
+}
+
+/* ── Glassmorphism modal ── */
+.modal-glass {
+    background: color-mix(in oklch, var(--color-base-200) 70%, transparent);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid color-mix(in oklch, var(--color-base-content) 8%, transparent);
+}
+
+/* ── Glow button ── */
+.btn-glow {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.btn-glow::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background: conic-gradient(from var(--angle, 0deg),
+        transparent,
+        color-mix(in oklch, var(--color-primary) 40%, transparent),
+        transparent,
+        color-mix(in oklch, var(--color-primary) 40%, transparent),
+        transparent
+    );
+    z-index: -2;
+    animation: glow-rotate 4s linear infinite;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+.btn-glow:hover::after { opacity: 1; }
+.btn-glow::before {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    border-radius: inherit;
+    background: inherit;
+    z-index: -1;
+}
+@keyframes glow-rotate {
+    to { --angle: 360deg; }
+}
+@property --angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+}
+
+/* ── Animated gradient background ── */
+@keyframes gradient-shift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+.bg-gradient-animated {
+    background: linear-gradient(-45deg,
+        oklch(0.25 0.08 260 / 0.4),
+        oklch(0.20 0.06 285 / 0.3),
+        oklch(0.22 0.07 240 / 0.4),
+        oklch(0.18 0.05 300 / 0.3)
+    );
+    background-size: 400% 400%;
+    animation: gradient-shift 15s ease infinite;
+}
+[data-theme="light"] .bg-gradient-animated {
+    background: linear-gradient(-45deg,
+        oklch(0.92 0.04 260 / 0.3),
+        oklch(0.88 0.03 285 / 0.2),
+        oklch(0.90 0.04 240 / 0.3),
+        oklch(0.86 0.03 300 / 0.2)
+    );
+    background-size: 400% 400%;
+    animation: gradient-shift 15s ease infinite;
+}
+
+/* ── Scale-in animation for modals ── */
+@keyframes scale-in {
+    from { opacity: 0; transform: scale(0.92) translateY(8px); }
+    to   { opacity: 1; transform: scale(1)    translateY(0);    }
+}
+.scale-in { animation: scale-in 0.25s cubic-bezier(0.22, 1, 0.36, 1); }
 
 /* Generic fade-up for cards / rows */
 @keyframes fade-up {
@@ -320,6 +424,10 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     cursor: default;
     position: relative;
     overflow: hidden;
+    background: color-mix(in oklch, var(--color-base-100) 75%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid color-mix(in oklch, var(--color-base-content) 8%, transparent);
 }
 .stat-card::before {
     content: '';

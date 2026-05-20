@@ -1,7 +1,6 @@
 const translations = {
   /* ── Sidebar ── */
   'sidebar.dashboard': { en: 'Dashboard', fr: 'Tableau de bord' },
-  'sidebar.customDashboards': { en: 'Dashboards', fr: 'Tableaux de bord' },
   'sidebar.monitoring': { en: 'Monitoring', fr: 'Surveillance' },
   'sidebar.history': { en: 'History', fr: 'Historique' },
   'sidebar.incidents': { en: 'Incidents', fr: 'Incidents' },
@@ -489,6 +488,29 @@ const translations = {
   'dashboard.bandwidth': { en: 'Bandwidth', fr: 'Bande passante' },
   'dashboard.incidents': { en: 'Incidents', fr: 'Incidents' },
   'incidents.noIncidents': { en: 'No incidents', fr: 'Aucun incident' },
+
+  /* ── Discovery ── */
+  'discovery.title': { en: 'Network Discovery', fr: 'Découverte réseau' },
+  'discovery.placeholder': { en: 'e.g. 192.168.1.0/24', fr: 'Ex: 192.168.1.0/24' },
+  'discovery.scan': { en: 'Scan', fr: 'Analyser' },
+  'discovery.scanning': { en: 'Scanning...', fr: 'Analyse...' },
+  'discovery.addSelected': { en: 'Add {n} selected', fr: 'Ajouter {n} sélectionnés' },
+  'discovery.adding': { en: 'Adding...', fr: 'Ajout...' },
+  'discovery.total': { en: 'Total', fr: 'Total' },
+  'discovery.alive': { en: 'Alive', fr: 'Actif' },
+  'discovery.new': { en: 'New', fr: 'Nouveau' },
+  'discovery.existing': { en: 'Existing', fr: 'Existant' },
+  'discovery.ipAddress': { en: 'IP Address', fr: 'Adresse IP' },
+  'discovery.status': { en: 'Status', fr: 'Statut' },
+  'discovery.latency': { en: 'Latency', fr: 'Latence' },
+  'discovery.hostname': { en: 'Hostname', fr: 'Nom d\'hôte' },
+  'discovery.noHosts': { en: 'No hosts found in this range', fr: 'Aucun hôte trouvé dans cette plage' },
+  'discovery.noSelection': { en: 'No hosts selected', fr: 'Aucun hôte sélectionné' },
+  'discovery.added': { en: 'Added {n} target(s)', fr: '{n} cible(s) ajoutée(s)' },
+  'discovery.failed': { en: 'Failed to add targets', fr: 'Échec d\'ajout des cibles' },
+  'discovery.scanFailed': { en: 'Scan failed', fr: 'Analyse échouée' },
+  'discovery.cancel': { en: 'Cancel', fr: 'Annuler' },
+  'discovery.tooLarge': { en: 'Subnet too large (max /20)', fr: 'Sous-réseau trop grand (max /20)' },
 
   /* ── Topology ── */
   'topology.title': { en: 'Network Topology', fr: 'Topologie réseau' },

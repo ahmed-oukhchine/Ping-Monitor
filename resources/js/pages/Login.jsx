@@ -30,12 +30,14 @@ export default function Login() {
     return (
         <div className="min-h-screen bg-base-100 flex items-center justify-center px-4 relative overflow-hidden">
 
+            <div className="absolute inset-0 bg-gradient-animated pointer-events-none"></div>
+
             <div className="absolute inset-0 login-grid pointer-events-none"></div>
 
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[480px] h-[480px] rounded-full bg-primary/6 blur-3xl pointer-events-none"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[560px] h-[560px] rounded-full bg-primary/8 blur-3xl pointer-events-none glow-breathe"></div>
 
             <div className="w-full max-w-sm relative z-10">
-                <div className="modal-enter bg-base-200 border border-base-300 rounded-2xl p-8 shadow-2xl">
+                <div className="modal-enter modal-glass border border-base-300 rounded-2xl p-8 shadow-2xl">
 
                     <div className="flex items-center gap-3 mb-8">
                         <div className="w-10 h-10 rounded-xl bg-primary/15 border border-primary/25 flex items-center justify-center flex-shrink-0 shadow-[0_0_18px_color-mix(in_oklch,var(--color-primary)_28%,transparent)]">

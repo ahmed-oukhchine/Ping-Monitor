@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useLang } from '../contexts/LanguageContext';
 import { useToast } from '../contexts/ToastContext';
+import ConfirmModal from '../components/ConfirmModal';
 
 const DAY_LABELS = ['maintenance.sunday', 'maintenance.monday', 'maintenance.tuesday', 'maintenance.wednesday', 'maintenance.thursday', 'maintenance.friday', 'maintenance.saturday'];
 const DAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -14,6 +15,7 @@ export default function Maintenance() {
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [editing, setEditing] = useState(null);
+    const [pendingDelete, setPendingDelete] = useState(null);
     const [form, setForm] = useState({ name: '', target_ids: [], days_of_week: [], start_time: '02:00', end_time: '04:00' });
 
     const fetchAll = () => {
@@ -71,11 +73,11 @@ export default function Maintenance() {
         }
     };
 
-    const del = async (s) => {
-        if (!window.confirm(t('maintenance.confirmDelete'))) return;
+    const confirmDelete = async () => {
         try {
-            await axios.delete(`/api/maintenance-schedules/${s.id}`);
+            await axios.delete(`/api/maintenance-schedules/${pendingDelete.id}`);
             toast(t('maintenance.deleted'));
+            setPendingDelete(null);
             fetchAll();
         } catch {
             toast(t('maintenance.deleteError'), 'error');
@@ -92,7 +94,10 @@ export default function Maintenance() {
             <div className="max-w-4xl mx-auto px-6 py-6">
 
                 <div className="flex items-center justify-between mb-3">
-                    <h1 className="text-sm font-bold text-base-content">{t('maintenance.title')}</h1>
+                    <div className="flex items-center gap-2">
+                        <div className="w-0.5 h-4 rounded-full bg-primary/50 flex-shrink-0"></div>
+                        <h1 className="text-sm font-bold text-base-content">{t('maintenance.title')}</h1>
+                    </div>
                     <button onClick={openCreate}
                         className="flex items-center gap-1.5 px-2.5 py-1.5 text-[10px] font-semibold bg-primary text-white rounded-lg hover:brightness-110 transition-all">
                         <i className="fas fa-plus text-[8px]"></i> {t('maintenance.newSchedule')}
@@ -154,7 +159,7 @@ export default function Maintenance() {
                                             title={t('maintenance.edit')}>
                                             <i className="fas fa-pen text-[11px]"></i>
                                         </button>
-                                        <button onClick={() => del(s)}
+                                        <button onClick={() => setPendingDelete(s)}
                                             className="w-7 h-7 flex items-center justify-center rounded-lg text-xs text-base-content/35 hover:bg-error/12 hover:text-error transition-all"
                                             title={t('maintenance.delete')}>
                                             <i className="fas fa-trash text-[11px]"></i>
@@ -168,7 +173,7 @@ export default function Maintenance() {
 
                 {showForm && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setShowForm(false)}>
-                        <div className="bg-base-200 border border-base-300 rounded-xl p-5 w-full max-w-lg mx-4 shadow-2xl" onClick={e => e.stopPropagation()}>
+                        <div className="modal-glass border border-base-300 rounded-xl p-5 w-full max-w-lg mx-4 shadow-2xl scale-in" onClick={e => e.stopPropagation()}>
                             <div className="flex items-center gap-2.5 mb-4">
                                 <div className="w-0.5 h-4 rounded-full bg-primary/50 flex-shrink-0"></div>
                                 <h2 className="text-sm font-semibold text-base-content">{editing ? t('maintenance.editSchedule') : t('maintenance.newSchedule')}</h2>
@@ -251,6 +256,14 @@ export default function Maintenance() {
                     </div>
                 )}
 
+            {pendingDelete && (
+                <ConfirmModal
+                    title={t('maintenance.confirmDelete')}
+                    message={`Delete "${pendingDelete.name}"?`}
+                    onConfirm={confirmDelete}
+                    onClose={() => setPendingDelete(null)}
+                />
+            )}
             </div>
         </div>
     );

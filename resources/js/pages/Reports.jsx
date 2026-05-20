@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell, AreaChart, Area } from 'recharts';
 import { useLang } from '../contexts/LanguageContext';
+import { useToast } from '../contexts/ToastContext';
+import ConfirmModal from '../components/ConfirmModal';
 
 const RANGES = (t) => [
     { label: t('reports.24h'),  days: 1 },
@@ -16,8 +18,10 @@ function fmtDate(d) {
 
 export default function Reports({ user }) {
     const { t } = useLang();
+    const { toast } = useToast();
     const ranges = RANGES(t);
     const [data, setData]         = useState(null);
+    const [pendingDelete, setPendingDelete] = useState(null);
     const [loading, setLoading]   = useState(true);
     const [targetId, setTargetId] = useState('');
     const [dateFrom, setDateFrom] = useState(() => fmtDate(new Date(Date.now() - 7 * 86400000)));
@@ -147,10 +151,7 @@ export default function Reports({ user }) {
                                                 className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-all">
                                                 <i className="fas fa-paper-plane text-[8px]"></i> {t('reports.sendNow')}
                                             </button>
-                                            <button onClick={() => {
-                                                axios.delete(`/api/report/schedules/${s.id}`)
-                                                    .then(() => setSchedules(prev => prev.filter(x => x.id !== s.id)));
-                                            }}
+                                            <button onClick={() => setPendingDelete(s)}
                                                 className="text-base-content/30 hover:text-error transition-colors px-1">
                                                 <i className="fas fa-trash text-[11px]"></i>
                                             </button>
@@ -468,6 +469,20 @@ export default function Reports({ user }) {
                     </>
                 )}
             </div>
+
+            {pendingDelete && (
+                <ConfirmModal
+                    title="Delete scheduled report?"
+                    message={`Delete the scheduled report for "${pendingDelete.target?.name || 'this target'}"?`}
+                    onConfirm={async () => {
+                        await axios.delete(`/api/report/schedules/${pendingDelete.id}`);
+                        setSchedules(prev => prev.filter(x => x.id !== pendingDelete.id));
+                        setPendingDelete(null);
+                        toast('Scheduled report deleted');
+                    }}
+                    onClose={() => setPendingDelete(null)}
+                />
+            )}
         </div>
     );
 }

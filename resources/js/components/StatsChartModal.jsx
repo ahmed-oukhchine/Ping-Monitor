@@ -106,7 +106,7 @@ export default function StatsChartModal({ targets, onClose }) {
         : 'text-error';
 
     return (
-        <div className="backdrop-enter fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+        <div className="backdrop-enter fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md" onClick={onClose}>
             <div
                 className="modal-enter bg-base-200 border border-base-300 rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col"
                 style={{ maxHeight: '88vh' }}

@@ -5,13 +5,14 @@ import TargetTable from '../components/TargetTable';
 import AddModal from '../components/AddModal';
 import EditModal from '../components/EditModal';
 import ChartModal from '../components/ChartModal';
-import DeleteModal from '../components/DeleteModal';
+import ConfirmModal from '../components/ConfirmModal';
 import GroupManagerModal from '../components/GroupManagerModal';
 import TargetDetailModal from '../components/TargetDetailModal';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { useLang } from '../contexts/LanguageContext';
 import ImportModal from '../components/ImportModal';
+import DiscoverModal from '../components/DiscoverModal';
 
 const LS_AUTO     = 'argusnet_auto';
 const LS_INTERVAL = 'argusnet_interval';
@@ -35,11 +36,13 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
     const [countdown, setCountdown]           = useState(0);
     const [showAdd, setShowAdd]               = useState(false);
     const [showImport, setShowImport]          = useState(false);
+    const [showDiscover, setShowDiscover]      = useState(false);
     const [showGroupManager, setShowGroupManager] = useState(false);
     const [detailTargetId, setDetailTargetId] = useState(null);
     const [editTarget, setEditTarget]         = useState(null);
     const [chartTarget, setChartTarget]       = useState(null);
     const [deleteTarget, setDeleteTarget]     = useState(null);
+
     const [lastUpdated, setLastUpdated]       = useState(null);
     const [tick, setTick]                     = useState(0);
     const [search, setSearch]                 = useState('');
@@ -47,6 +50,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
     const { toast } = useToast();
     const prevStatsRef  = useRef(null);
     const [selectedIds, setSelectedIds] = useState(new Set());
+    const [showBulkDelete, setShowBulkDelete] = useState(false);
 
     const clearSelection = () => setSelectedIds(new Set());
 
@@ -69,12 +73,16 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
         clearSelection();
     };
 
-    const bulkDelete = () => {
-        if (!window.confirm(t('dashboard.confirmDelete', { n: selectedIds.size }))) return;
-        Promise.all([...selectedIds].map(id => axios.delete(`/targets/${id}`)))
-            .then(() => { toast(t('dashboard.deletedN', { n: selectedIds.size }), 'success'); fetchTargets(); })
-            .catch(() => toast(t('dashboard.failedToDelete'), 'error'));
+    const confirmBulkDelete = async () => {
+        try {
+            await Promise.all([...selectedIds].map(id => axios.delete(`/targets/${id}`)));
+            toast(t('dashboard.deletedN', { n: selectedIds.size }), 'success');
+            fetchTargets();
+        } catch {
+            toast(t('dashboard.failedToDelete'), 'error');
+        }
         clearSelection();
+        setShowBulkDelete(false);
     };
 
     const timerRef      = useRef(null);
@@ -377,10 +385,14 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
                                     className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold border border-accent/40 text-accent rounded-lg hover:bg-accent/10 transition-colors">
                                     <i className="fas fa-file-import text-[10px]"></i> {t('dashboard.import')}
                                 </button>
+                                <button onClick={() => setShowDiscover(true)}
+                                    className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold border border-primary/40 text-primary rounded-lg hover:bg-primary/10 transition-colors">
+                                    <i className="fas fa-wifi text-[10px]"></i> Discover
+                                </button>
                             </>
                         )}
                         <button onClick={() => pingAll()} disabled={pingAllLoading}
-                            className="btn-prime flex items-center gap-2 px-3 py-1.5 text-xs font-semibold bg-primary text-white rounded-lg hover:brightness-110 transition-all disabled:opacity-50 shadow-[0_0_14px_color-mix(in_oklch,var(--color-primary)_35%,transparent)]">
+                            className="btn-glow btn-prime flex items-center gap-2 px-3 py-1.5 text-xs font-semibold bg-primary text-white rounded-lg hover:brightness-110 transition-all disabled:opacity-50 shadow-[0_0_14px_color-mix(in_oklch,var(--color-primary)_35%,transparent)]">
                             <i className={`fas ${pingAllLoading ? 'fa-spinner fa-spin' : 'fa-broadcast-tower'} text-[10px]`}></i>
                             {pingAllLoading ? t('dashboard.checking') : t('dashboard.checkAll')}
                         </button>
@@ -389,7 +401,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
 
 
                 {selectedIds.size > 0 && (
-                    <div className="toast-enter fixed bottom-6 right-6 z-50 backdrop-blur-xl bg-primary/15 border border-primary/30 rounded-xl shadow-lg shadow-primary/10 px-3 py-2.5 min-w-[180px]">
+                    <div className="toast-enter fixed bottom-6 right-6 z-50 glass-card border-primary/30 rounded-xl shadow-lg shadow-primary/10 px-3 py-2.5 min-w-[180px]">
                         <div className="flex items-center justify-between gap-2 mb-1.5 pb-1.5 border-b border-primary/15">
                             <span className="text-xs font-semibold text-primary tabular-nums">{t('dashboard.nSelected', { n: selectedIds.size })}</span>
                             <button onClick={clearSelection} className="text-primary/40 hover:text-primary/70 transition-colors">
@@ -407,7 +419,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
                                 <i className="fas fa-play text-[7px]"></i> {t('dashboard.resume')}
                             </button>
                             {isAdmin && (
-                                <button onClick={bulkDelete} className="flex items-center justify-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold bg-error/15 text-error border border-error/30 hover:bg-error/25 transition-all">
+                                <button onClick={() => setShowBulkDelete(true)} className="flex items-center justify-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold bg-error/15 text-error border border-error/30 hover:bg-error/25 transition-all">
                                     <i className="fas fa-trash text-[7px]"></i> {t('dashboard.delete')}
                                 </button>
                             )}
@@ -596,11 +608,29 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
             {showImport && (
                 <ImportModal onClose={() => setShowImport(false)} onImported={() => { setShowImport(false); fetchTargets(); }} />
             )}
+            {showDiscover && (
+                <DiscoverModal onClose={() => setShowDiscover(false)} onImported={() => { setShowDiscover(false); fetchTargets(); }} />
+            )}
             {editTarget && (
                 <EditModal target={editTarget} groups={groups} onSave={updateTarget} onClose={() => setEditTarget(null)} />
             )}
             {chartTarget  && <ChartModal  target={chartTarget}  onClose={() => setChartTarget(null)} />}
-            {deleteTarget && <DeleteModal target={deleteTarget} onConfirm={confirmDelete} onClose={() => setDeleteTarget(null)} />}
+            {deleteTarget && (
+              <ConfirmModal
+                title={`Delete “${deleteTarget.name}”?`}
+                message={`“${deleteTarget.name}” (${deleteTarget.ip_address}) will be permanently deleted along with all ping history.`}
+                onConfirm={() => confirmDelete(deleteTarget)}
+                onClose={() => setDeleteTarget(null)}
+              />
+            )}
+            {showBulkDelete && (
+              <ConfirmModal
+                title={`Delete ${selectedIds.size} target(s)?`}
+                message="This will permanently delete all selected targets and their ping history."
+                onConfirm={confirmBulkDelete}
+                onClose={() => setShowBulkDelete(false)}
+              />
+            )}
             {showGroupManager && (
                 <GroupManagerModal groups={groups} onSave={saveGroup} onDelete={deleteGroup} onClose={() => setShowGroupManager(false)} />
             )}

@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function Users() {
     const { user: me } = useAuth();
+    const { toast } = useToast();
     const [users, setUsers]       = useState([]);
     const [loading, setLoading]   = useState(true);
     const [showForm, setShowForm] = useState(false);
@@ -11,6 +14,7 @@ export default function Users() {
     const [exitingId, setExitingId]     = useState(null);
     const [newestId, setNewestId]       = useState(null);
     const [deleteError, setDeleteError] = useState('');
+    const [pendingDeleteUser, setPendingDeleteUser] = useState(null);
 
     const [name, setName]         = useState('');
     const [email, setEmail]       = useState('');
@@ -73,6 +77,11 @@ export default function Users() {
         } finally { setDeleting(null); }
     };
 
+    const confirmDeleteUser = async () => {
+        await deleteUser(pendingDeleteUser);
+        setPendingDeleteUser(null);
+    };
+
     const admins  = users.filter(u => u.role === 'admin');
     const usersList = users.filter(u => u.role === 'user');
 
@@ -94,7 +103,7 @@ export default function Users() {
                 </div>
 
                 {showForm && (
-                    <div className="form-enter bg-base-200 border border-base-300 rounded-xl p-5 mb-5">
+                    <div className="form-enter modal-glass border border-base-300 rounded-xl p-5 mb-5">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
                                 <div className="w-0.5 h-4 rounded-full bg-primary/50 flex-shrink-0"></div>
@@ -287,7 +296,7 @@ export default function Users() {
                                             deleting={deleting === u.id}
                                             isExiting={exitingId === u.id}
                                             isNew={newestId === u.id}
-                                            onDelete={() => deleteUser(u)}
+                                            onDelete={() => setPendingDeleteUser(u)}
                                         />
                                     ))}
                                 </div>
@@ -296,6 +305,15 @@ export default function Users() {
                     </div>
                 )}
             </div>
+
+            {pendingDeleteUser && (
+                <ConfirmModal
+                    title="Delete user?"
+                    message={`Delete user "${pendingDeleteUser.name}" (${pendingDeleteUser.email})? This cannot be undone.`}
+                    onConfirm={confirmDeleteUser}
+                    onClose={() => setPendingDeleteUser(null)}
+                />
+            )}
         </div>
     );
 }

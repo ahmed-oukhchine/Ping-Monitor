@@ -13,7 +13,6 @@ export default function Sidebar({ open, onToggle, onLogout, onCycleTheme, themeP
 
     const navItems = [
         { to: '/',           label: t('sidebar.dashboard'),  icon: 'fa-chart-pie',          show: true,  badge: null },
-        { to: '/dashboards', label: t('sidebar.customDashboards'), icon: 'fa-th-large',    show: true,  badge: null },
         { to: '/monitoring', label: t('sidebar.monitoring'), icon: 'fa-tachometer-alt',     show: true,  badge: offlineCount > 0 ? offlineCount : null },
         { to: '/topology',   label: t('sidebar.topology'),   icon: 'fa-project-diagram',     show: true,  badge: null },
         { to: '/history',    label: t('sidebar.history'),    icon: 'fa-history',            show: true,  badge: null },
@@ -33,7 +32,7 @@ export default function Sidebar({ open, onToggle, onLogout, onCycleTheme, themeP
         } ${open ? 'gap-3 px-3 py-2.5' : 'gap-0 px-0 py-3 justify-center'}`;
 
     return (
-        <aside className={`fixed top-0 left-0 h-screen bg-base-200 border-r border-base-300 flex flex-col z-50 shadow-xl shadow-black/15 transition-all duration-300 ${
+        <aside className={`fixed top-0 left-0 h-screen bg-base-200/90 backdrop-blur-xl border-r border-base-300 flex flex-col z-50 shadow-xl shadow-black/15 transition-all duration-300 ${
             open ? 'w-56' : 'w-16'
         }`}>
             <button onClick={onToggle} className="px-4 py-5 border-b border-base-300 flex-shrink-0 flex items-center justify-center w-full hover:bg-base-300/30 transition-colors cursor-pointer">

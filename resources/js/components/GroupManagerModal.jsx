@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ConfirmModal from './ConfirmModal';
 
 const PRESET_COLORS = [
     '#3b82f6', '#22c55e', '#f59e0b', '#ef4444',
@@ -12,6 +13,7 @@ export default function GroupManagerModal({ groups, onSave, onDelete, onClose })
     const [newName, setNewName]     = useState('');
     const [newColor, setNewColor]   = useState(PRESET_COLORS[0]);
     const [editingId, setEditingId] = useState(null);
+    const [pendingDelete, setPendingDelete] = useState(null);
     const [editName, setEditName]   = useState('');
     const [editColor, setEditColor] = useState('');
     const [loading, setLoading]     = useState(false);
@@ -47,7 +49,7 @@ export default function GroupManagerModal({ groups, onSave, onDelete, onClose })
     };
 
     return (
-        <div className="backdrop-enter fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+        <div className="backdrop-enter fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md" onClick={onClose}>
             <div className="modal-enter bg-base-200 border border-base-300 rounded-2xl shadow-2xl w-full max-w-lg" onClick={e => e.stopPropagation()}>
 
                 <div className="flex items-center justify-between px-6 py-4 border-b border-base-300">
@@ -110,7 +112,7 @@ export default function GroupManagerModal({ groups, onSave, onDelete, onClose })
                                                 className="w-7 h-7 flex items-center justify-center rounded-lg text-base-content/30 hover:text-base-content hover:bg-base-300 transition-all">
                                                 <i className="fas fa-pen text-[10px]"></i>
                                             </button>
-                                            <button onClick={() => onDelete(g.id)}
+                                            <button onClick={() => setPendingDelete(g)}
                                                 className="w-7 h-7 flex items-center justify-center rounded-lg text-base-content/30 hover:text-error hover:bg-error/10 transition-all">
                                                 <i className="fas fa-trash text-[10px]"></i>
                                             </button>
@@ -155,6 +157,14 @@ export default function GroupManagerModal({ groups, onSave, onDelete, onClose })
                     </div>
                 </form>
             </div>
+            {pendingDelete && (
+                <ConfirmModal
+                    title="Delete group?"
+                    message={`Delete "${pendingDelete.name}"? Targets in this group will not be affected.`}
+                    onConfirm={() => { onDelete(pendingDelete.id); setPendingDelete(null); }}
+                    onClose={() => setPendingDelete(null)}
+                />
+            )}
         </div>
     );
 }

@@ -28,7 +28,7 @@ export default function ImportModal({ onClose, onImported }) {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4"
             onClick={e => e.target === e.currentTarget && onClose()}>
             <div className="bg-base-200 border border-base-300 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden anim-scale-in">
                 <div className="flex items-center justify-between px-5 py-4 border-b border-base-300">

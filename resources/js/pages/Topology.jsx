@@ -9,6 +9,7 @@ import axios from 'axios';
 import { useLang } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
+import ConfirmModal from '../components/ConfirmModal';
 
 function TargetNode({ data }) {
   const statusColor = data.isPaused ? 'warning'
@@ -123,7 +124,6 @@ export default function Topology() {
   const [connectingLabel, setConnectingLabel] = useState('');
   const [showLabelModal, setShowLabelModal] = useState(false);
   const [pendingConnection, setPendingConnection] = useState(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
 
   const [layoutLocked, setLayoutLocked] = useState(false);
@@ -243,17 +243,12 @@ export default function Topology() {
     }
   };
 
-  const deleteConnection = async (connId) => {
+  const confirmDeleteConnection = async () => {
     try {
-      await axios.delete(`/api/topology/${connId}`);
+      await axios.delete(`/api/topology/${pendingDeleteId}`);
+      setPendingDeleteId(null);
       fetchTopology();
     } catch {}
-  };
-
-  const confirmDelete = () => {
-    if (pendingDeleteId) deleteConnection(pendingDeleteId);
-    setShowDeleteModal(false);
-    setPendingDeleteId(null);
   };
 
   const onNodeDragStop = useCallback(async (_event, node) => {
@@ -269,7 +264,6 @@ export default function Topology() {
     event.stopPropagation();
     if (edge.data?.connId && isAdmin) {
       setPendingDeleteId(edge.data.connId);
-      setShowDeleteModal(true);
     }
   }, [isAdmin]);
 
@@ -384,7 +378,8 @@ export default function Topology() {
     <div className="h-[calc(100vh-2rem)] flex flex-col" onClick={closeContextMenu}>
       {/* ── toolbar ── */}
       <div className="flex items-center justify-between px-6 py-2.5 flex-shrink-0">
-        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4">
+          <div className="w-0.5 h-5 rounded-full bg-primary/50 flex-shrink-0"></div>
           <h1 className="text-base font-bold text-base-content">{t('topology.title')}</h1>
           <div className="flex items-center gap-2">
             <div className="relative">
@@ -579,31 +574,18 @@ export default function Topology() {
       )}
 
       {/* ── modals ── */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => { setShowDeleteModal(false); setPendingDeleteId(null); }}>
-          <div className="bg-base-200 border border-base-300 rounded-xl p-5 w-full max-w-xs mx-4 shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-0.5 h-4 rounded-full bg-error/50 flex-shrink-0"></div>
-              <h2 className="text-sm font-semibold text-base-content">{t('topology.deleteConfirm')}</h2>
-            </div>
-            <p className="text-xs text-base-content/50 mb-5">This will remove the connection line. Nodes will not be affected.</p>
-            <div className="flex items-center justify-end gap-2">
-              <button onClick={() => { setShowDeleteModal(false); setPendingDeleteId(null); }}
-                className="px-4 py-2 text-xs font-medium text-base-content/50 hover:text-base-content transition-colors">
-                {t('topology.cancel')}
-              </button>
-              <button onClick={confirmDelete}
-                className="flex items-center gap-2 px-4 py-2 text-xs font-semibold bg-error text-white rounded-lg hover:brightness-110 transition-all">
-                <i className="fas fa-trash text-xs"></i> Delete
-              </button>
-            </div>
-          </div>
-        </div>
+      {pendingDeleteId && (
+        <ConfirmModal
+          title={t('topology.deleteConfirm')}
+          message="This will remove the connection line. Nodes will not be affected."
+          onConfirm={confirmDeleteConnection}
+          onClose={() => setPendingDeleteId(null)}
+        />
       )}
 
       {showLabelModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => { setShowLabelModal(false); setPendingConnection(null); }}>
-          <div className="bg-base-200 border border-base-300 rounded-xl p-5 w-full max-w-sm mx-4 shadow-2xl" onClick={e => e.stopPropagation()}>
+          <div className="modal-glass border border-base-300 rounded-xl p-5 w-full max-w-sm mx-4 shadow-2xl scale-in" onClick={e => e.stopPropagation()}>
             <div className="flex items-center gap-2.5 mb-4">
               <div className="w-0.5 h-4 rounded-full bg-primary/50 flex-shrink-0"></div>
               <h2 className="text-sm font-semibold text-base-content">{t('topology.newConnection')}</h2>

@@ -9,8 +9,6 @@ use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
     public function run(): void
     {
         User::create([
@@ -19,7 +17,6 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
             'role'     => 'admin',
         ]);
-
         User::create([
             'name'     => 'User',
             'email'    => 'user@argusnet.local',
@@ -27,4 +24,5 @@ class DatabaseSeeder extends Seeder
             'role'     => 'user',
         ]);
     }
+}
 }

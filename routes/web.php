@@ -10,6 +10,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\MaintenanceScheduleController;
 use App\Http\Controllers\TopologyController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DiscoveryController;
 use App\Http\Middleware\EnsureAdmin;
 use Illuminate\Support\Facades\Route;
 
@@ -63,6 +64,8 @@ Route::middleware('auth')->group(function () {
         Route::delete('/api/groups/{group}', [GroupController::class, 'destroy']);
 
         Route::post('/api/targets/import',    [PingController::class, 'importCsv']);
+        Route::post('/api/targets/discover', [DiscoveryController::class, 'discover']);
+        Route::post('/api/targets/discover/store', [DiscoveryController::class, 'store']);
 
         Route::get('/api/maintenance-schedules',       [MaintenanceScheduleController::class, 'index']);
         Route::get('/api/maintenance-targets',          [MaintenanceScheduleController::class, 'targets']);
@@ -71,17 +74,14 @@ Route::middleware('auth')->group(function () {
         Route::delete('/api/maintenance-schedules/{maintenanceSchedule}', [MaintenanceScheduleController::class, 'destroy']);
         Route::post('/api/maintenance-schedules/{maintenanceSchedule}/toggle', [MaintenanceScheduleController::class, 'toggle']);
 
-        Route::get('/api/targets/{target}/dependencies', [PingController::class, 'dependencies']);
-        Route::post('/api/targets/{target}/dependencies', [PingController::class, 'addDependency']);
-        Route::delete('/api/targets/{target}/dependencies/{dependsOnTarget}', [PingController::class, 'removeDependency']);
-
         Route::post('/api/topology', [TopologyController::class, 'store']);
         Route::delete('/api/topology/{networkTopology}', [TopologyController::class, 'destroy']);
-        Route::get('/api/dashboards', [DashboardController::class, 'index']);
-        Route::post('/api/dashboards', [DashboardController::class, 'store']);
-        Route::put('/api/dashboards/{customDashboard}', [DashboardController::class, 'update']);
-        Route::delete('/api/dashboards/{customDashboard}', [DashboardController::class, 'destroy']);
     });
+
+    Route::get('/api/dashboards', [DashboardController::class, 'index']);
+    Route::post('/api/dashboards', [DashboardController::class, 'store']);
+    Route::put('/api/dashboards/{customDashboard}', [DashboardController::class, 'update']);
+    Route::delete('/api/dashboards/{customDashboard}', [DashboardController::class, 'destroy']);
 });
 
 Route::get('/{any}', fn() => view('app'))->where('any', '.*');
