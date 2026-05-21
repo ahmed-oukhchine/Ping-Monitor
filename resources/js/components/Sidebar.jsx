@@ -178,21 +178,21 @@ export default function Sidebar({ open, onToggle, onLogout, onCycleTheme, themeP
         )}
 
         {!open && (
-          <div className="px-2 pb-4 pt-3 border-t border-base-300 flex-shrink-0 space-y-1">
-            <div className="flex items-center justify-center py-2">
+          <div className="px-1.5 pb-4 pt-3 border-t border-base-300 flex-shrink-0 space-y-2">
+            <div className="flex items-center justify-center">
               <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center"
                 title={user?.name}>
                 <i className="fas fa-user text-primary text-[10px]"></i>
               </div>
             </div>
 
-            <div className="flex items-center justify-center gap-1">
+            <div className="flex items-center justify-center gap-[1px]">
               {['light', 'dark', 'system'].map(mode => (
                 <button key={mode} onClick={() => onCycleTheme(mode)}
-                  className={`w-7 h-7 flex items-center justify-center rounded-lg text-[10px] transition-all ${
+                  className={`w-[15px] h-[18px] flex items-center justify-center rounded-md text-[7px] transition-all ${
                     themePref === mode
                       ? 'bg-primary/15 text-primary'
-                      : 'text-base-content/30 hover:text-base-content hover:bg-base-300/50'
+                      : 'text-base-content/25 hover:text-base-content hover:bg-base-300/50'
                   }`}
                   title={mode.charAt(0).toUpperCase() + mode.slice(1)}>
                   <i className={`fas ${themeIcons[mode]}`}></i>
@@ -201,9 +201,9 @@ export default function Sidebar({ open, onToggle, onLogout, onCycleTheme, themeP
             </div>
 
             <button onClick={onLogout}
-              className="w-full flex items-center justify-center py-2 rounded-xl text-base-content/40 hover:text-error hover:bg-error/10 transition-all"
+              className="w-full flex items-center justify-center py-1.5 rounded-xl text-base-content/30 hover:text-error hover:bg-error/10 transition-all"
               title="Sign out">
-              <i className="fas fa-sign-out-alt text-xs"></i>
+              <i className="fas fa-sign-out-alt text-[10px]"></i>
             </button>
           </div>
         )}
