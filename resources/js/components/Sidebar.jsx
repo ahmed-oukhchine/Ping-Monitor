@@ -88,57 +88,67 @@ export default function Sidebar({ open, onToggle, onLogout, onCycleTheme, themeP
           </div>
         </button>
 
-        <nav className="flex-1 px-2 py-3 overflow-y-auto space-y-3">
-          {sections.map((section) => {
-            if (section.admin && !isAdmin) return null;
-            const visible = section.items.filter(i => !i.admin || isAdmin);
-            if (!visible.length) return null;
-
-            return (
-              <div key={section.label}>
-                {open && (
-                  <div className="px-3 mb-1">
-                    <div className="text-[8px] font-semibold uppercase tracking-widest text-base-content/25">{section.label}</div>
-                  </div>
-                )}
-
-                <div className="space-y-0.5">
-                  {visible.map((item) => {
-                    const active = pathname === item.to;
-                    const badge = item.to === '/monitoring' ? offlineCount : null;
-
-                    return (
-                      <Link key={item.to} to={item.to} style={{ textDecoration: 'none' }}
-                        className={linkClass(active)}
-                        title={!open ? t(`sidebar.${item.labelKey}`) : undefined}>
-                        {active && open && (
-                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full bg-primary"></div>
-                        )}
-                        <div className="relative flex items-center justify-center flex-shrink-0 w-4">
-                          <i className={`nav-icon fas ${item.icon} text-xs text-center ${active ? 'text-primary' : 'text-base-content/35'}`}></i>
-                          {badge != null && badge > 0 && !open && (
-                            <span className="absolute -top-2 -right-3 min-w-[14px] h-[14px] rounded-full bg-error text-white text-[7px] font-bold flex items-center justify-center px-0.5 leading-none shadow-sm shadow-error/40">
-                              {badge > 9 ? '9+' : badge}
-                            </span>
-                          )}
-                        </div>
-                        {open && (
-                          <>
+        <nav className="flex-1 px-2 py-3 overflow-y-auto">
+          {open ? (
+            <div className="space-y-3">
+              {sections.map((section) => {
+                if (section.admin && !isAdmin) return null;
+                const visible = section.items.filter(i => !i.admin || isAdmin);
+                if (!visible.length) return null;
+                return (
+                  <div key={section.label}>
+                    <div className="px-3 mb-1">
+                      <div className="text-[8px] font-semibold uppercase tracking-widest text-base-content/25">{section.label}</div>
+                    </div>
+                    <div className="space-y-0.5">
+                      {visible.map((item) => {
+                        const active = pathname === item.to;
+                        const badge = item.to === '/monitoring' ? offlineCount : null;
+                        return (
+                          <Link key={item.to} to={item.to} style={{ textDecoration: 'none' }}
+                            className={linkClass(active)}>
+                            {active && (
+                              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full bg-primary"></div>
+                            )}
+                            <div className="relative flex items-center justify-center flex-shrink-0 w-4">
+                              <i className={`nav-icon fas ${item.icon} text-xs text-center ${active ? 'text-primary' : 'text-base-content/35'}`}></i>
+                            </div>
                             <span className="flex-1">{t(`sidebar.${item.labelKey}`)}</span>
                             {badge != null && badge > 0 && (
                               <span className="min-w-[18px] h-[18px] rounded-full bg-error text-white text-[9px] font-bold flex items-center justify-center px-1 leading-none shadow-sm shadow-error/40">
                                 {badge > 99 ? '99+' : badge}
                               </span>
                             )}
-                          </>
-                        )}
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="space-y-0.5">
+              {sections.flatMap(s => s.items).filter(i => !i.admin || isAdmin).map((item) => {
+                const active = pathname === item.to;
+                const badge = item.to === '/monitoring' ? offlineCount : null;
+                return (
+                  <Link key={item.to} to={item.to} style={{ textDecoration: 'none' }}
+                    className={linkClass(active)}
+                    title={t(`sidebar.${item.labelKey}`)}>
+                    <div className="relative flex items-center justify-center flex-shrink-0 w-4">
+                      <i className={`nav-icon fas ${item.icon} text-xs text-center ${active ? 'text-primary' : 'text-base-content/35'}`}></i>
+                      {badge != null && badge > 0 && (
+                        <span className="absolute -top-2 -right-3 min-w-[14px] h-[14px] rounded-full bg-error text-white text-[7px] font-bold flex items-center justify-center px-0.5 leading-none shadow-sm shadow-error/40">
+                          {badge > 9 ? '9+' : badge}
+                        </span>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </nav>
 
         {open && (
