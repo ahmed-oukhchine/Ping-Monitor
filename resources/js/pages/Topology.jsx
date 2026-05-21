@@ -434,7 +434,7 @@ export default function Topology() {
       const bwResp = target?.snmp_enabled ? axios.get(`/api/snmp/${targetId}/bandwidth`, { params: { range: '24h' } }).catch(() => null) : null;
 
       const [deps, inc, ifaces, bw] = await Promise.all([depsResp, incResp, ifaceResp, bwResp].filter(Boolean));
-      data.dependencies = deps?.data || [];
+      data.dependencies = Array.isArray(deps?.data) ? deps.data : [];
       data.recentIncidents = inc?.data?.data || [];
       if (ifaces) data.interfaces = ifaces.data;
       if (bw) data.bandwidth = bw.data;
