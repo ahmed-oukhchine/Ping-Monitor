@@ -485,7 +485,7 @@ export default function Topology() {
   const applyGeographicLayout = () => {
     const w = flowRef.current?.getBounds?.()?.width || 800;
     const h = flowRef.current?.getBounds?.()?.height || 600;
-    const withIp = initialNodes.map(n => ({ node: n, ip: ipToNumber(topologyData.targets.find(t => t.id === n.data.targetId)?.address) }));
+    const withIp = initialNodes.map(n => ({ node: n, ip: ipToNumber(topologyData.targets.find(t => t.id === n.data.targetId)?.ip_address) }));
     const sorted = [...withIp].sort((a, b) => (a.ip ?? Infinity) - (b.ip ?? Infinity));
     const n = sorted.length;
     const cols = Math.ceil(Math.sqrt(n)) || 1;
