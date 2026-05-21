@@ -7,7 +7,7 @@ const themeIcons = { light: 'fa-sun', dark: 'fa-moon', system: 'fa-desktop' };
 
 const sections = [
   {
-    label: 'Overview',
+    labelKey: 'Overview',
     items: [
       { to: '/',           labelKey: 'dashboard',  icon: 'fa-chart-pie',          admin: false },
       { to: '/monitoring', labelKey: 'monitoring', icon: 'fa-tachometer-alt',     admin: false },
@@ -15,21 +15,21 @@ const sections = [
     ],
   },
   {
-    label: 'Data & Alerts',
+    labelKey: 'Data',
     items: [
       { to: '/history',    labelKey: 'history',    icon: 'fa-history',            admin: false },
       { to: '/incidents',  labelKey: 'incidents',  icon: 'fa-exclamation-circle', admin: false },
     ],
   },
   {
-    label: 'Management',
+    labelKey: 'Management',
     items: [
       { to: '/reports',    labelKey: 'reports',    icon: 'fa-file-alt',           admin: false },
       { to: '/maintenance', labelKey: 'maintenance', icon: 'fa-calendar-alt',     admin: false },
     ],
   },
   {
-    label: 'Administration',
+    labelKey: 'Administration',
     admin: true,
     items: [
       { to: '/users',      labelKey: 'users',      icon: 'fa-users',              admin: true },
@@ -37,7 +37,7 @@ const sections = [
     ],
   },
   {
-    label: 'System',
+    labelKey: 'System',
     items: [
       { to: '/settings',   labelKey: 'settings',   icon: 'fa-cog',                admin: false },
     ],
@@ -96,9 +96,9 @@ export default function Sidebar({ open, onToggle, onLogout, onCycleTheme, themeP
                 const visible = section.items.filter(i => !i.admin || isAdmin);
                 if (!visible.length) return null;
                 return (
-                  <div key={section.label}>
+                  <div key={section.labelKey}>
                     <div className="px-3 mb-1">
-                      <div className="text-[8px] font-semibold uppercase tracking-widest text-base-content/25">{section.label}</div>
+                      <div className="text-[8px] font-semibold uppercase tracking-widest text-base-content/25">{t(`sidebar.section${section.labelKey}`)}</div>
                     </div>
                     <div className="space-y-0.5">
                       {visible.map((item) => {

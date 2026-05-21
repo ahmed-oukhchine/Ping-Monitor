@@ -4,13 +4,13 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLang } from '../contexts/LanguageContext';
 
 const sections = [
-  { id: 'profile',     label: 'profile',     icon: 'fa-user-circle',     desc: 'Manage your name and email' },
-  { id: 'password',    label: 'changePassword', icon: 'fa-lock',         desc: 'Update your password' },
-  { id: 'appearance',  label: 'appearance',   icon: 'fa-palette',        desc: 'Theme and language' },
-  { id: 'alerts',      label: 'alertDefaults', icon: 'fa-bell',          desc: 'Default thresholds for new targets' },
-  { id: 'notify',      label: 'notifications', icon: 'fa-envelope',      desc: 'Email and notification settings' },
-  { id: 'snmp',        label: 'snmp',          icon: 'fa-network-wired', desc: 'Default SNMP settings' },
-  { id: 'system',      label: 'system',        icon: 'fa-sliders-h',     desc: 'Data retention and advanced' },
+  { id: 'profile',     label: 'profile',     icon: 'fa-user-circle',     descKey: 'profileDesc' },
+  { id: 'password',    label: 'changePassword', icon: 'fa-lock',         descKey: 'passwordDesc' },
+  { id: 'appearance',  label: 'appearance',   icon: 'fa-palette',        descKey: 'appearanceDesc' },
+  { id: 'alerts',      label: 'alertDefaults', icon: 'fa-bell',          descKey: 'alertDefaultsDesc' },
+  { id: 'notify',      label: 'notifications', icon: 'fa-envelope',      descKey: 'notificationsDesc' },
+  { id: 'snmp',        label: 'snmp',          icon: 'fa-network-wired', descKey: 'snmpDesc' },
+  { id: 'system',      label: 'system',        icon: 'fa-sliders-h',     descKey: 'systemDesc' },
 ];
 
 export default function Settings() {

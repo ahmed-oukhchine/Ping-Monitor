@@ -42,3 +42,4 @@ export function LanguageProvider({ children }) {
 export function useLang() {
     return useContext(LangContext);
 }
+export { LangContext };

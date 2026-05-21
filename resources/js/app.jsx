@@ -14,6 +14,7 @@ const Maintenance = React.lazy(() => import('./pages/Maintenance'));
 const Topology = React.lazy(() => import('./pages/Topology'));
 const Login = React.lazy(() => import('./pages/Login'));
 import Sidebar from './components/Sidebar';
+import { LangContext } from './contexts/LanguageContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { LanguageProvider } from './contexts/LanguageContext';
@@ -23,17 +24,19 @@ axios.defaults.headers.common['Accept'] = 'application/json';
 axios.defaults.xsrfCookieName = 'XSRF-TOKEN';
 axios.defaults.xsrfHeaderName = 'X-XSRF-TOKEN';
 
-class PageErrorBoundary extends React.Component {
+class ErrorFallback extends React.Component {
   state = { error: null };
-  static getDerivedStateFromError(error) { return { error }; }
+  static contextType = LangContext;
+  componentDidCatch() { this.setState({ error: true }); }
   render() {
     if (this.state.error) {
+      const { t } = this.context;
       return (
         <div className="flex items-center justify-center h-full text-base-content/40">
           <div className="text-center">
             <div className="text-2xl mb-2">⚠</div>
-            <div className="text-sm font-medium mb-1">Page crashed</div>
-            <button onClick={() => this.setState({ error: null })} className="text-xs text-primary hover:underline">Reload page</button>
+            <div className="text-sm font-medium mb-1">{t('error.pageCrashed')}</div>
+            <button onClick={() => this.setState({ error: null })} className="text-xs text-primary hover:underline">{t('error.reloadPage')}</button>
           </div>
         </div>
       );
@@ -161,7 +164,7 @@ function AppContent() {
             />
 
             <div ref={mainRef} className={`flex-1 overflow-y-auto transition-all duration-300 ${sidebarOpen ? 'ps-56' : 'ps-16'}`} style={{ height: '100vh' }}>
-                <PageErrorBoundary>
+                <ErrorFallback>
                 <Suspense fallback={<div className="flex items-center justify-center py-20"><span className="loading loading-spinner loading-lg text-primary"></span></div>}>
                 <div className="page-slot" style={{ display: onDashboard ? 'block' : 'none' }}>
                     <Statistics targets={targets} loading={targetsLoading} onRefresh={fetchTargets} />
@@ -219,7 +222,7 @@ function AppContent() {
                 )}
 
                 </Suspense>
-                </PageErrorBoundary>
+                </ErrorFallback>
             </div>
         </div>
     );

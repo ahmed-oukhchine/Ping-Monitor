@@ -6,7 +6,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import axios from 'axios';
-import { useLang } from '../contexts/LanguageContext';
+import { useLang, LangContext } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import ConfirmModal from '../components/ConfirmModal';
@@ -15,10 +15,12 @@ const GROUP_COLORS = ['#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981','#06b6d4
 
 class SidebarBoundary extends React.Component {
   state = { error: null };
-  static getDerivedStateFromError(error) { return { error }; }
+  static contextType = LangContext;
+  componentDidCatch() { this.setState({ error: true }); }
   render() {
     if (this.state.error) {
-      return <div className="w-80 ml-3 bg-base-200 border border-base-300 rounded-xl p-4 flex items-center justify-center text-[10px] text-base-content/30">Could not load details</div>;
+      const { t } = this.context;
+      return <div className="w-80 ml-3 bg-base-200 border border-base-300 rounded-xl p-4 flex items-center justify-center text-[10px] text-base-content/30">{t('error.couldNotLoad')}</div>;
     }
     return this.props.children;
   }

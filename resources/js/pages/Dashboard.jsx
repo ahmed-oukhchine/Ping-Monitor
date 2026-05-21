@@ -197,11 +197,11 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
                     threshold_status: data.threshold_status ?? null };
             }));
             if (data.success) {
-                toast(`${target.name} responded (${data.response_time} ms)`, 'success');
+                toast(t('dashboard.responded', { name: target.name, ms: data.response_time }), 'success');
             } else {
-                toast(`${target.name} unreachable`, 'error');
+                toast(t('dashboard.unreachable', { name: target.name }), 'error');
             }
-        } catch { toast(`${target.name} check failed`, 'error'); } finally { setPinging(p => ({ ...p, [target.id]: false })); }
+        } catch { toast(t('dashboard.checkFailed', { name: target.name }), 'error'); } finally { setPinging(p => ({ ...p, [target.id]: false })); }
     };
 
     const pingAll = async (auto = false) => {
