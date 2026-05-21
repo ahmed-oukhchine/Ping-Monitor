@@ -75,6 +75,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/api/maintenance-schedules/{maintenanceSchedule}/toggle', [MaintenanceScheduleController::class, 'toggle']);
 
         Route::post('/api/topology', [TopologyController::class, 'store']);
+        Route::put('/api/topology/{networkTopology}', [TopologyController::class, 'update']);
         Route::delete('/api/topology/{networkTopology}', [TopologyController::class, 'destroy']);
     });
 

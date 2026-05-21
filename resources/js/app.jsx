@@ -1,18 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, useLocation } from 'react-router-dom';
 import axios from 'axios';
-import Dashboard from './pages/Dashboard';
-import Statistics from './pages/Statistics';
-import History from './pages/History';
-import Incidents from './pages/Incidents';
-import Users from './pages/Users';
-import Settings from './pages/Settings';
-import AuditLog from './pages/AuditLog';
-import Reports from './pages/Reports';
-import Maintenance from './pages/Maintenance';
-import Topology from './pages/Topology';
-import Login from './pages/Login';
+const Dashboard = React.lazy(() => import('./pages/Dashboard'));
+const Statistics = React.lazy(() => import('./pages/Statistics'));
+const History = React.lazy(() => import('./pages/History'));
+const Incidents = React.lazy(() => import('./pages/Incidents'));
+const Users = React.lazy(() => import('./pages/Users'));
+const Settings = React.lazy(() => import('./pages/Settings'));
+const AuditLog = React.lazy(() => import('./pages/AuditLog'));
+const Reports = React.lazy(() => import('./pages/Reports'));
+const Maintenance = React.lazy(() => import('./pages/Maintenance'));
+const Topology = React.lazy(() => import('./pages/Topology'));
+const Login = React.lazy(() => import('./pages/Login'));
 import Sidebar from './components/Sidebar';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
@@ -22,6 +22,25 @@ axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 axios.defaults.headers.common['Accept'] = 'application/json';
 axios.defaults.xsrfCookieName = 'XSRF-TOKEN';
 axios.defaults.xsrfHeaderName = 'X-XSRF-TOKEN';
+
+class PageErrorBoundary extends React.Component {
+  state = { error: null };
+  static getDerivedStateFromError(error) { return { error }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="flex items-center justify-center h-full text-base-content/40">
+          <div className="text-center">
+            <div className="text-2xl mb-2">⚠</div>
+            <div className="text-sm font-medium mb-1">Page crashed</div>
+            <button onClick={() => this.setState({ error: null })} className="text-xs text-primary hover:underline">Reload page</button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 function AppContent() {
     const { pathname } = useLocation();
@@ -142,6 +161,8 @@ function AppContent() {
             />
 
             <div ref={mainRef} className={`flex-1 overflow-y-auto transition-all duration-300 ${sidebarOpen ? 'pl-56' : 'pl-16'}`} style={{ height: '100vh' }}>
+                <PageErrorBoundary>
+                <Suspense fallback={<div className="flex items-center justify-center py-20"><span className="loading loading-spinner loading-lg text-primary"></span></div>}>
                 <div className="page-slot" style={{ display: onDashboard ? 'block' : 'none' }}>
                     <Statistics targets={targets} loading={targetsLoading} onRefresh={fetchTargets} />
                 </div>
@@ -197,6 +218,8 @@ function AppContent() {
                     </div>
                 )}
 
+                </Suspense>
+                </PageErrorBoundary>
             </div>
         </div>
     );

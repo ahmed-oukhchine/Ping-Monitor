@@ -11,49 +11,76 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import ConfirmModal from '../components/ConfirmModal';
 
-function TargetNode({ data }) {
+const GROUP_COLORS = ['#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981','#06b6d4','#f97316','#6366f1','#14b8a6','#e11d48'];
+
+class SidebarBoundary extends React.Component {
+  state = { error: null };
+  static getDerivedStateFromError(error) { return { error }; }
+  render() {
+    if (this.state.error) {
+      return <div className="w-80 ml-3 bg-base-200 border border-base-300 rounded-xl p-4 flex items-center justify-center text-[10px] text-base-content/30">Could not load details</div>;
+    }
+    return this.props.children;
+  }
+}
+
+const TargetNode = React.memo(({ data }) => {
   const statusColor = data.isPaused ? 'warning'
     : data.lastStatus === true ? 'success'
     : data.lastStatus === false ? 'error' : 'ghost';
   const dimmed = data.dimmed;
+  const showIncident = data.lastStatus === false && !data.isPaused;
 
   return (
-    <div className={`px-3 py-2 rounded-xl border-2 shadow-lg bg-base-100 min-w-[130px] transition-all hover:shadow-xl ${
-      data.selected ? 'ring-2 ring-primary shadow-xl scale-105' : ''
+    <div className={`relative px-3 py-2 rounded-xl border-2 shadow-lg bg-base-100 min-w-[130px] transition-all hover:shadow-xl ${
+      data.selected ? 'ring-2 ring-primary shadow-xl scale-105'
+      : data.monitored ? 'ring-2 ring-secondary/60'
+      : ''
     } ${
       statusColor === 'success' ? 'border-success/40'
       : statusColor === 'error' ? 'border-error/40'
       : statusColor === 'warning' ? 'border-warning/40'
       : 'border-base-300'
     } ${dimmed ? 'opacity-30' : ''}`}>
+      {data.groupColor && (
+        <div className="absolute left-0 top-1 bottom-1 w-1 rounded-full" style={{ backgroundColor: data.groupColor }} />
+      )}
+      {showIncident && (
+        <span className="absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full bg-error flex items-center justify-center shadow-lg">
+          <span className="absolute inline-flex h-full w-full rounded-full bg-error animate-ping opacity-60"></span>
+          <span className="relative w-1.5 h-1.5 rounded-full bg-white"></span>
+        </span>
+      )}
       <Handle type="target" position={Position.Left}
         className="w-2.5 h-2.5 border-2 border-base-100 !bg-primary" />
       <div className="flex items-center gap-2">
-        <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+        <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 transition-all ${
           statusColor === 'success' ? 'bg-success'
           : statusColor === 'error' ? 'bg-error'
           : statusColor === 'warning' ? 'bg-warning'
           : 'bg-base-300'
-        }`}></span>
+        } ${data.monitored ? 'ring-2 ring-secondary ring-offset-1 ring-offset-base-100' : ''}`}></span>
         <div className="min-w-0">
           <div className="text-xs font-bold text-base-content leading-tight truncate">{data.label}</div>
           <div className="text-[9px] text-base-content/40 font-mono">{data.ip}</div>
+          {data.lastResponseTime != null && (
+            <div className="text-[8px] font-mono text-base-content/25 mt-0.5">{data.lastResponseTime}ms</div>
+          )}
         </div>
       </div>
       <Handle type="source" position={Position.Right}
         className="w-2.5 h-2.5 border-2 border-base-100 !bg-primary" />
     </div>
   );
-}
+});
 
 const nodeTypes = { targetNode: TargetNode };
 
 /* ── layout algorithms ── */
-function circularLayout(nodeCount, centerX, centerY, radius) {
-  return nodeCount === 0 ? [] : Array.from({ length: nodeCount }, (_, i) => {
-    const angle = (2 * Math.PI * i) / nodeCount - Math.PI / 2;
-    return { x: centerX + radius * Math.cos(angle), y: centerY + radius * Math.sin(angle) };
-  });
+function ipToNumber(ip) {
+  const parts = ip?.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
+  if (!parts) return null;
+  return ((+parts[1]*256 + +parts[2])*256 + +parts[3])*256 + +parts[4];
 }
 
 function forceDirectedLayout(nodes, edges, centerX, centerY, iterations = 80) {
@@ -100,9 +127,9 @@ function forceDirectedLayout(nodes, edges, centerX, centerY, iterations = 80) {
       });
     });
     const cooling = 1 - iter / iterations;
-    pos.forEach(p => {
-      p.x += forces[0].x * cooling;
-      p.y += forces[0].y * cooling;
+    pos.forEach((p, i) => {
+      p.x += forces[i].x * cooling;
+      p.y += forces[i].y * cooling;
     });
   }
   const cx = pos.reduce((s, p) => s + p.x, 0) / pos.length;
@@ -118,8 +145,11 @@ export default function Topology() {
   const { toast } = useToast();
   const isAdmin = user?.role === 'admin';
   const flowRef = useRef(null);
+  const rfInstance = useRef(null);
 
   const [topologyData, setTopologyData] = useState({ targets: [], connections: [] });
+  const topologyRef = useRef(topologyData);
+  topologyRef.current = topologyData;
   const [loading, setLoading] = useState(true);
   const [connectingLabel, setConnectingLabel] = useState('');
   const [showLabelModal, setShowLabelModal] = useState(false);
@@ -130,24 +160,71 @@ export default function Topology() {
   const [contextMenu, setContextMenu] = useState(null);
   const [selectedNodeData, setSelectedNodeData] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  useEffect(() => {
+    const t = setTimeout(() => setSearchQuery(searchInput), 200);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+  const [edgeTooltip, setEdgeTooltip] = useState(null);
+  const [editingEdge, setEditingEdge] = useState(null);
+  const [editEdgeLabel, setEditEdgeLabel] = useState('');
+  const [layoutType, setLayoutType] = useState('force');
   const [hiddenTargets, setHiddenTargets] = useState(new Set());
+  const [hiddenGroupIds, setHiddenGroupIds] = useState(new Set());
   const [showTargetFilter, setShowTargetFilter] = useState(false);
+  const [selectedInMonitoring, setSelectedInMonitoring] = useState(new Set());
+
+  useEffect(() => {
+    const saved = localStorage.getItem('topology_selected');
+    if (saved) setSelectedInMonitoring(new Set(JSON.parse(saved)));
+    const interval = setInterval(() => {
+      const saved = localStorage.getItem('topology_selected');
+      if (saved) setSelectedInMonitoring(new Set(JSON.parse(saved)));
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const groupColorMap = useMemo(() => {
+    const seen = {};
+    topologyData.targets.forEach(t => (t.groups || []).forEach(g => { if (!seen[g.id]) seen[g.id] = g; }));
+    return Object.values(seen).reduce((m, g, i) => { m[g.id] = GROUP_COLORS[i % GROUP_COLORS.length]; return m; }, {});
+  }, [topologyData.targets]);
+
+  const groupLegend = useMemo(() => {
+    const seen = {};
+    topologyData.targets.forEach(t => (t.groups || []).forEach(g => { if (!seen[g.id]) seen[g.id] = g; }));
+    return Object.values(seen).map(g => ({ id: g.id, name: g.name, color: groupColorMap[g.id] }));
+  }, [topologyData.targets, groupColorMap]);
+
+  const toggleGroup = (id) => {
+    setHiddenGroupIds(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
+  };
 
   const filteredTargets = useMemo(() =>
-    topologyData.targets.filter(t => !hiddenTargets.has(t.id)),
-  [topologyData.targets, hiddenTargets]);
+    topologyData.targets.filter(t => !hiddenTargets.has(t.id) && !(t.groups || []).some(g => hiddenGroupIds.has(g.id))),
+  [topologyData.targets, hiddenTargets, hiddenGroupIds]);
 
-  const initialNodes = useMemo(() => filteredTargets.map(tgt => ({
-    id: `target-${tgt.id}`,
-    type: 'targetNode',
-    position: { x: tgt.topology_x ?? 50 + (tgt.id % 5) * 180, y: tgt.topology_y ?? 50 + Math.floor(tgt.id / 5) * 120 },
-    data: {
-      label: tgt.name, ip: tgt.ip_address,
-      lastStatus: tgt.last_status, isPaused: tgt.is_paused,
-      targetId: tgt.id, dimmed: false, selected: false,
-    },
-    draggable: !layoutLocked,
-  })), [filteredTargets, layoutLocked]);
+  const initialNodes = useMemo(() => filteredTargets.map(tgt => {
+    const group = (tgt.groups || [])[0];
+    return {
+      id: `target-${tgt.id}`,
+      type: 'targetNode',
+      position: { x: tgt.topology_x ?? 50 + (tgt.id % 5) * 180, y: tgt.topology_y ?? 50 + Math.floor(tgt.id / 5) * 120 },
+      data: {
+        label: tgt.name, ip: tgt.ip_address,
+        location: tgt.location, notes: tgt.notes,
+        lastStatus: tgt.last_status, isPaused: tgt.is_paused,
+        lastResponseTime: tgt.last_response_time, lastPingAt: tgt.last_ping_at,
+        warnMs: tgt.warn_ms, criticalMs: tgt.critical_ms,
+        snmpEnabled: tgt.snmp_enabled,
+        uptimePercent: tgt.uptime_percent,
+        groups: tgt.groups || [],
+        targetId: tgt.id, dimmed: false, selected: false, monitored: selectedInMonitoring.has(tgt.id),
+        groupColor: group ? groupColorMap[group.id] : null,
+      },
+      draggable: !layoutLocked,
+    };
+  }), [filteredTargets, groupColorMap, layoutLocked, selectedInMonitoring]);
 
   const initialEdges = useMemo(() => topologyData.connections
     .filter(conn => !hiddenTargets.has(conn.source_target_id) && !hiddenTargets.has(conn.destination_target_id))
@@ -215,6 +292,12 @@ export default function Topology() {
   }, []);
 
   useEffect(() => { fetchTopology(); }, []);
+  useEffect(() => {
+    const interval = setInterval(() => fetchTopology(), 10000);
+    const onVisible = () => { if (!document.hidden) fetchTopology(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => { clearInterval(interval); document.removeEventListener('visibilitychange', onVisible); };
+  }, []);
 
   /* ── connection handlers ── */
   const onConnect = useCallback((params) => {
@@ -243,6 +326,16 @@ export default function Topology() {
     }
   };
 
+  const saveEdgeLabel = async () => {
+    if (!editingEdge) return;
+    try {
+      await axios.put(`/api/topology/${editingEdge}`, { label: editEdgeLabel || null });
+      setEditingEdge(null);
+      fetchTopology();
+      toast('Label updated');
+    } catch { toast('Failed to update label', 'error'); }
+  };
+
   const confirmDeleteConnection = async () => {
     try {
       await axios.delete(`/api/topology/${pendingDeleteId}`);
@@ -253,12 +346,41 @@ export default function Topology() {
 
   const onNodeDragStop = useCallback(async (_event, node) => {
     const targetId = parseInt(node.id.replace('target-', ''));
+    const threshold = 60;
+    const near = nodes.find(n => {
+      if (n.id === node.id) return false;
+      const dx = n.position.x - node.position.x;
+      const dy = n.position.y - node.position.y;
+      return Math.sqrt(dx * dx + dy * dy) < threshold;
+    });
+    if (near && isAdmin) {
+      const nearId = parseInt(near.id.replace('target-', ''));
+      const exists = topologyData.connections.some(c =>
+        (c.source_target_id === targetId && c.destination_target_id === nearId) ||
+        (c.source_target_id === nearId && c.destination_target_id === targetId)
+      );
+      if (!exists) {
+        setPendingConnection({ source: node.id, target: near.id });
+        setConnectingLabel('');
+        setShowLabelModal(true);
+      } else {
+        toast('Connection already exists', 'error');
+      }
+    }
     try {
       await axios.post('/api/topology/positions', {
         positions: [{ id: targetId, topology_x: Math.round(node.position.x), topology_y: Math.round(node.position.y) }],
       });
+      setTopologyData(prev => ({
+        ...prev,
+        targets: prev.targets.map(t =>
+          t.id === targetId
+            ? { ...t, topology_x: Math.round(node.position.x), topology_y: Math.round(node.position.y) }
+            : t
+        ),
+      }));
     } catch {}
-  }, []);
+  }, [nodes, isAdmin, topologyData.connections]);
 
   const onEdgeClick = useCallback((event, edge) => {
     event.stopPropagation();
@@ -266,6 +388,21 @@ export default function Topology() {
       setPendingDeleteId(edge.data.connId);
     }
   }, [isAdmin]);
+
+  const onEdgeDoubleClick = useCallback((event, edge) => {
+    event.stopPropagation();
+    if (!isAdmin || !edge.data?.connId) return;
+    setEditingEdge(edge.data.connId);
+    setEditEdgeLabel(edge.data?.label || '');
+  }, [isAdmin]);
+
+  /* ── edge tooltip ── */
+  const onEdgeMouseEnter = useCallback((event, edge) => {
+    const sourceTgt = topologyData.targets.find(t => t.id === parseInt(edge.source.replace('target-', '')));
+    const destTgt = topologyData.targets.find(t => t.id === parseInt(edge.target.replace('target-', '')));
+    setEdgeTooltip({ x: event.clientX, y: event.clientY, label: edge.data?.label || '', source: sourceTgt?.name || '', dest: destTgt?.name || '' });
+  }, [topologyData.targets]);
+  const onEdgeMouseLeave = useCallback(() => setEdgeTooltip(null), []);
 
   /* ── context menu ── */
   const onNodeContextMenu = useCallback((event, node) => {
@@ -275,8 +412,9 @@ export default function Topology() {
 
   const closeContextMenu = () => setContextMenu(null);
 
-  const loadNodeDetails = useCallback(async (targetId, targetName) => {
-    setSelectedNodeData({ id: targetId, name: targetName, loading: true });
+  const loadNodeDetails = async (targetId, targetName) => {
+    const target = topologyRef.current.targets.find(t => t.id === targetId);
+    setSelectedNodeData({ id: targetId, name: targetName, loading: true, target });
     try {
       const { data: points } = await axios.get(`/api/targets/${targetId}/chart-data?range=24h`);
       const valid = points.filter(p => p.response_time != null);
@@ -284,13 +422,21 @@ export default function Topology() {
       const min = valid.length ? Math.min(...valid.map(p => p.response_time)).toFixed(0) : null;
       const max = valid.length ? Math.max(...valid.map(p => p.response_time)).toFixed(0) : null;
       const loss = points.length ? ((points.filter(p => !p.is_success).length / points.length) * 100).toFixed(1) : null;
-      setSelectedNodeData({ id: targetId, name: targetName, loading: false, points, stats: { avg, min, max, loss: loss ? `${loss}%` : null } });
-      try {
-        const incResp = await axios.get('/api/incidents', { params: { target_id: targetId, per_page: 5 } });
-        setSelectedNodeData(prev => ({ ...prev, recentIncidents: incResp.data.data || [] }));
-      } catch {}
-    } catch { setSelectedNodeData({ id: targetId, name: targetName, loading: false }); }
-  }, []);
+      const data = { id: targetId, name: targetName, target, loading: false, points, stats: { avg, min, max, loss: loss ? `${loss}%` : null } };
+
+      const depsResp = axios.get(`/api/targets/${targetId}/dependencies`).catch(() => null);
+      const incResp = axios.get('/api/incidents', { params: { target_id: targetId, per_page: 5 } }).catch(() => null);
+      const ifaceResp = target?.snmp_enabled ? axios.get(`/api/snmp/${targetId}/interfaces`).catch(() => null) : null;
+      const bwResp = target?.snmp_enabled ? axios.get(`/api/snmp/${targetId}/bandwidth`, { params: { range: '24h' } }).catch(() => null) : null;
+
+      const [deps, inc, ifaces, bw] = await Promise.all([depsResp, incResp, ifaceResp, bwResp].filter(Boolean));
+      data.dependencies = deps?.data || [];
+      data.recentIncidents = inc?.data?.data || [];
+      if (ifaces) data.interfaces = ifaces.data;
+      if (bw) data.bandwidth = bw.data;
+      setSelectedNodeData(data);
+    } catch { setSelectedNodeData({ id: targetId, name: targetName, target, loading: false }); }
+  };
 
   const contextMenuAction = async (action) => {
     if (!contextMenu) return;
@@ -320,22 +466,12 @@ export default function Topology() {
   };
 
   /* ── node click → sidebar ── */
-  const onNodeClick = useCallback((_event, node) => {
+  const onNodeClick = (_event, node) => {
     if (selectedNodeData?.id === node.data.targetId) return;
     loadNodeDetails(node.data.targetId, node.data.label);
-  }, [selectedNodeData, loadNodeDetails]);
-
-  /* ── layout ── */
-  const applyCircularLayout = () => {
-    const w = flowRef.current?.getBounds?.()?.width || 800;
-    const h = flowRef.current?.getBounds?.()?.height || 600;
-    const positions = circularLayout(initialNodes.length, w / 2, h / 2, Math.min(w, h) * 0.35);
-    const updates = initialNodes.map((n, i) => ({ id: n.data.targetId, x: Math.round(positions[i].x), y: Math.round(positions[i].y) }));
-    setNodes(nds => nds.map((n, i) => ({ ...n, position: { x: positions[i].x, y: positions[i].y } })));
-    axios.post('/api/topology/positions', { positions: updates.map(u => ({ id: u.id, topology_x: u.x, topology_y: u.y })) }).catch(() => {});
-    toast('Circular layout applied');
   };
 
+  /* ── layout ── */
   const applyForceLayout = () => {
     const w = flowRef.current?.getBounds?.()?.width || 800;
     const h = flowRef.current?.getBounds?.()?.height || 600;
@@ -344,6 +480,27 @@ export default function Topology() {
     setNodes(nds => nds.map((n, i) => ({ ...n, position: { x: positions[i].x, y: positions[i].y } })));
     axios.post('/api/topology/positions', { positions: updates.map(u => ({ id: u.id, topology_x: u.x, topology_y: u.y })) }).catch(() => {});
     toast('Force-directed layout applied');
+  };
+
+  const applyGeographicLayout = () => {
+    const w = flowRef.current?.getBounds?.()?.width || 800;
+    const h = flowRef.current?.getBounds?.()?.height || 600;
+    const withIp = initialNodes.map(n => ({ node: n, ip: ipToNumber(topologyData.targets.find(t => t.id === n.data.targetId)?.address) }));
+    const sorted = [...withIp].sort((a, b) => (a.ip ?? Infinity) - (b.ip ?? Infinity));
+    const n = sorted.length;
+    const cols = Math.ceil(Math.sqrt(n)) || 1;
+    const gapX = Math.min(220, (w - 80) / cols);
+    const gapY = Math.min(130, (h - 80) / Math.ceil(n / cols));
+    const positions = {};
+    sorted.forEach(({ node, ip }, i) => {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      positions[node.data.targetId] = { x: Math.round(40 + col * gapX), y: Math.round(40 + row * gapY) };
+    });
+    setNodes(nds => nds.map(n => ({ ...n, position: positions[n.data.targetId] || n.position })));
+    const updates = Object.entries(positions).map(([id, p]) => ({ id: Number(id), topology_x: p.x, topology_y: p.y }));
+    axios.post('/api/topology/positions', { positions: updates }).catch(() => {});
+    toast('Geographic layout applied');
   };
 
   /* ── export ── */
@@ -384,7 +541,7 @@ export default function Topology() {
           <div className="flex items-center gap-2">
             <div className="relative">
               <i className="fas fa-search absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-base-content/25"></i>
-              <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+              <input type="text" value={searchInput} onChange={e => setSearchInput(e.target.value)}
                 placeholder="Filter nodes…"
                 className="w-40 bg-base-200 border border-base-300 rounded-lg pl-7 pr-3 py-1.5 text-xs text-base-content outline-none focus:border-primary/40 transition-colors placeholder:text-base-content/20" />
             </div>
@@ -398,17 +555,27 @@ export default function Topology() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={applyCircularLayout}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-base-300 text-base-content/50 hover:text-base-content hover:bg-base-200 transition-all">
-            <i className="fas fa-circle text-[10px]"></i> Circular
-          </button>
-          <button onClick={applyForceLayout}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-base-300 text-base-content/50 hover:text-base-content hover:bg-base-200 transition-all">
-            <i className="fas fa-share-alt text-[10px]"></i> Force
-          </button>
+          <select value={layoutType} onChange={e => {
+            const v = e.target.value;
+            setLayoutType(v);
+            requestAnimationFrame(() => {
+              if (v === 'force') applyForceLayout();
+              else if (v === 'geographic') applyGeographicLayout();
+              requestAnimationFrame(() => { rfInstance.current?.fitView({ duration: 200 }); });
+            });
+          }}
+            className="bg-base-200 border border-base-300 rounded-lg px-3 py-1.5 text-xs text-base-content outline-none focus:border-primary/40 transition-colors cursor-pointer">
+            <option value="force">Force-directed</option>
+            <option value="geographic">Geographic</option>
+          </select>
+          <div className="w-px h-5 bg-base-300 mx-1"></div>
           <button onClick={exportPng}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-base-300 text-base-content/50 hover:text-base-content hover:bg-base-200 transition-all">
             <i className="fas fa-download text-[10px]"></i> Export
+          </button>
+          <button onClick={() => { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-base-300 text-base-content/50 hover:text-base-content hover:bg-base-200 transition-all">
+            <i className="fas fa-expand text-[10px]"></i> Fullscreen
           </button>
           <div className="w-px h-5 bg-base-300 mx-1"></div>
           <button onClick={() => setLayoutLocked(o => !o)}
@@ -440,6 +607,25 @@ export default function Topology() {
         </div>
       )}
 
+      {/* ── group legend ── */}
+        {groupLegend.length > 1 && (
+          <div className="flex items-center gap-3 px-6 py-1.5 flex-shrink-0">
+            <span className="text-[9px] font-semibold text-base-content/30 uppercase tracking-wider">Groups</span>
+            {groupLegend.map(g => {
+              const hidden = hiddenGroupIds.has(g.id);
+              return (
+                <button key={g.name} onClick={() => toggleGroup(g.id)}
+                  className={`flex items-center gap-1.5 text-[10px] transition-all px-1.5 py-0.5 rounded-md ${
+                    hidden ? 'text-base-content/20 line-through' : 'text-base-content/50 hover:bg-base-300/40'
+                  }`}>
+                  <span className={`w-2 h-2 rounded-full ${hidden ? 'opacity-30' : ''}`} style={{ backgroundColor: g.color }}></span>
+                  {g.name}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
       {/* ── main area ── */}
       {loading ? (
         <div className="flex-1 flex items-center justify-center text-base-content/30">
@@ -451,11 +637,15 @@ export default function Topology() {
             <ReactFlow
               nodes={nodes}
               edges={edges}
+              onInit={instance => { rfInstance.current = instance; }}
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
               onConnect={isAdmin ? onConnect : undefined}
               onNodeDragStop={onNodeDragStop}
               onEdgeClick={onEdgeClick}
+              onEdgeDoubleClick={onEdgeDoubleClick}
+              onEdgeMouseEnter={onEdgeMouseEnter}
+              onEdgeMouseLeave={onEdgeMouseLeave}
               onNodeContextMenu={onNodeContextMenu}
               onNodeClick={onNodeClick}
               nodeTypes={nodeTypes}
@@ -488,8 +678,9 @@ export default function Topology() {
 
           {/* ── detail sidebar ── */}
           {selectedNodeData && (
-            <div className="w-72 ml-3 bg-base-200 border border-base-300 rounded-xl p-4 overflow-y-auto flex-shrink-0">
-              <div className="flex items-center justify-between mb-3">
+            <SidebarBoundary>
+            <div className="w-80 ml-3 bg-base-200 border border-base-300 rounded-xl overflow-y-auto flex-shrink-0">
+              <div className="sticky top-0 z-10 bg-base-200 border-b border-base-300/60 px-4 py-2.5 flex items-center justify-between">
                 <h3 className="text-sm font-bold text-base-content truncate mr-2">{selectedNodeData.name}</h3>
                 <button onClick={closeSidebar}
                   className="w-5 h-5 flex items-center justify-center rounded text-[9px] text-base-content/25 hover:text-base-content hover:bg-base-300/50 transition-all">
@@ -497,39 +688,213 @@ export default function Topology() {
                 </button>
               </div>
               {selectedNodeData.loading ? (
-                <div className="flex items-center justify-center py-8 text-[10px] text-base-content/30">
+                <div className="flex items-center justify-center py-12 text-[10px] text-base-content/30">
                   <span className="loading loading-spinner loading-sm mr-2"></span> Loading…
                 </div>
               ) : (
-                <>
+                <div className="p-4 space-y-4">
+                  {/* ── Status + IP ── */}
+                  {(() => {
+                    const tgt = selectedNodeData.target;
+                    const status = tgt?.is_paused ? 'paused' : tgt?.last_status === true ? 'online' : tgt?.last_status === false ? 'offline' : 'unknown';
+                    const statusColors = { online: 'bg-success text-success-content', offline: 'bg-error text-error-content', paused: 'bg-warning text-warning-content', unknown: 'bg-base-300 text-base-content/50' };
+                    const statusLabels = { online: 'Online', offline: 'Offline', paused: 'Paused', unknown: 'Unknown' };
+                    return (
+                      <div className="flex items-center gap-3">
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${statusColors[status]}`}>{statusLabels[status]}</span>
+                        <span className="text-xs font-mono text-base-content/50">{tgt?.ip_address || '—'}</span>
+                      </div>
+                    );
+                  })()}
+                  {selectedNodeData.target?.location && (
+                    <div className="text-[10px] text-base-content/40 flex items-center gap-1.5">
+                      <i className="fas fa-map-marker-alt text-[9px]"></i> {selectedNodeData.target.location}
+                    </div>
+                  )}
+
+                  {/* ── Stats row ── */}
                   {selectedNodeData.stats && (
-                    <div className="grid grid-cols-2 gap-2 mb-3">
+                    <div className="grid grid-cols-4 gap-1.5">
                       {[
-                        { label: 'Avg Latency', value: selectedNodeData.stats.avg, cls: 'text-primary border-primary/20' },
-                        { label: 'Min', value: selectedNodeData.stats.min, cls: 'text-success border-success/20' },
-                        { label: 'Max', value: selectedNodeData.stats.max, cls: 'text-error border-error/20' },
-                        { label: 'Packet Loss', value: selectedNodeData.stats.loss, cls: 'text-warning border-warning/20' },
+                        { label: 'Uptime', value: selectedNodeData.target?.uptime_percent != null ? `${selectedNodeData.target.uptime_percent}%` : '—', cls: 'text-base-content' },
+                        { label: 'Avg', value: selectedNodeData.stats.avg ? `${selectedNodeData.stats.avg}ms` : '—', cls: 'text-primary' },
+                        { label: 'Loss', value: selectedNodeData.stats.loss || '—', cls: 'text-warning' },
+                        { label: 'Last', value: selectedNodeData.target?.last_response_time != null ? `${selectedNodeData.target.last_response_time}ms` : '—', cls: 'text-base-content/60' },
                       ].map(s => (
-                        <div key={s.label} className={`border rounded-lg px-2 py-1.5 ${s.cls}`}>
+                        <div key={s.label} className="text-center">
                           <div className="text-[9px] text-base-content/40 font-medium">{s.label}</div>
-                          <div className="text-xs font-black tabular-nums">{s.value ?? '—'}</div>
+                          <div className={`text-xs font-black tabular-nums ${s.cls}`}>{s.value}</div>
                         </div>
                       ))}
                     </div>
                   )}
-                  {selectedNodeData.points?.length > 0 && (
-                    <div className="mb-3">
-                      <div className="text-[9px] font-semibold text-base-content/40 uppercase tracking-wider mb-1.5">Latency (24h)</div>
-                      <div className="flex items-end gap-px h-16">
-                        {selectedNodeData.points.slice(-60).map((p, i) => {
-                          const max = Math.max(...selectedNodeData.points.map(x => x.response_time || 0), 1);
-                          const h = Math.min(100, ((p.response_time || 0) / max) * 100);
-                          return <div key={i} className={`flex-1 rounded-t ${p.is_success ? 'bg-primary/30' : 'bg-error/40'}`}
-                            style={{ height: `${h}%` }}></div>;
-                        })}
+
+                  {/* ── Quick actions ── */}
+                  <div className="flex items-center gap-1.5">
+                    <button onClick={async () => { closeSidebar(); try { const { data } = await axios.post(`/targets/${selectedNodeData.id}/ping`); toast(`${selectedNodeData.name} responded (${data.response_time}ms)`, 'success'); } catch {} }}
+                      className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-all">
+                      <i className="fas fa-bolt text-[9px]"></i> Ping
+                    </button>
+                    {selectedNodeData.target?.is_paused ? (
+                      <button onClick={async () => { try { await axios.post(`/targets/${selectedNodeData.id}/resume`); toast('Resumed', 'success'); fetchTopology(); } catch {} }}
+                        className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold bg-success/10 text-success hover:bg-success/20 transition-all">
+                        <i className="fas fa-play text-[9px]"></i> Resume
+                      </button>
+                    ) : (
+                      <button onClick={async () => { try { await axios.post(`/targets/${selectedNodeData.id}/pause`); toast('Paused', 'success'); fetchTopology(); } catch {} }}
+                        className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold bg-warning/10 text-warning hover:bg-warning/20 transition-all">
+                        <i className="fas fa-pause text-[9px]"></i> Pause
+                      </button>
+                    )}
+                    <button onClick={() => window.location.href = '/monitoring'}
+                      className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold bg-base-300/50 text-base-content/50 hover:text-base-content hover:bg-base-300 transition-all">
+                      <i className="fas fa-external-link-alt text-[9px]"></i> Open
+                    </button>
+                  </div>
+
+                  {/* ── Groups ── */}
+                  {selectedNodeData.target?.groups?.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {selectedNodeData.target.groups.map(g => (
+                        <span key={g.id} className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-base-300/70 text-base-content/60">{g.name}</span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* ── Connections ── */}
+                  {(() => {
+                    const conns = topologyData.connections.filter(c => c.source_target_id === selectedNodeData.id || c.destination_target_id === selectedNodeData.id);
+                    if (!conns.length) return null;
+                    return (
+                      <div>
+                        <div className="text-[9px] font-semibold text-base-content/40 uppercase tracking-wider mb-1.5">Connections</div>
+                        <div className="space-y-0.5">
+                          {conns.map(c => {
+                            const isOut = c.source_target_id === selectedNodeData.id;
+                            const other = topologyData.targets.find(t => t.id === (isOut ? c.destination_target_id : c.source_target_id));
+                            return (
+                              <div key={c.id} className="flex items-center gap-1.5 text-[10px] text-base-content/60">
+                                <span className="text-[9px]">{isOut ? '→' : '←'}</span>
+                                <span className="truncate">{other?.name || '?'}</span>
+                                {c.label && <span className="text-[8px] text-base-content/30 ml-auto">({c.label})</span>}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* ── Dependencies ── */}
+                  {selectedNodeData.dependencies?.length > 0 && (
+                    <div>
+                      <div className="text-[9px] font-semibold text-base-content/40 uppercase tracking-wider mb-1.5">Depends On</div>
+                      <div className="space-y-0.5">
+                        {selectedNodeData.dependencies.map(d => (
+                          <div key={d.id} className="flex items-center gap-1.5 text-[10px] text-base-content/60">
+                            <i className="fas fa-link text-[8px] text-base-content/30"></i>
+                            <span className="truncate">{d.name}</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
+
+                  {/* ── Notes ── */}
+                  {selectedNodeData.target?.notes && (
+                    <div>
+                      <div className="text-[9px] font-semibold text-base-content/40 uppercase tracking-wider mb-1">Notes</div>
+                      <p className="text-[10px] text-base-content/50 leading-relaxed">{selectedNodeData.target.notes}</p>
+                    </div>
+                  )}
+
+                  {/* ── Latency chart + thresholds ── */}
+                  {selectedNodeData.points?.length > 0 && (
+                    <div>
+                      <div className="text-[9px] font-semibold text-base-content/40 uppercase tracking-wider mb-1.5">Latency (24h)</div>
+                      <div className="relative">
+                        {/* threshold lines */}
+                        {(() => {
+                          const warn = selectedNodeData.target?.warn_ms;
+                          const crit = selectedNodeData.target?.critical_ms;
+                          const maxVal = Math.max(...selectedNodeData.points.map(x => x.response_time || 0), crit || 1);
+                          if (warn || crit) {
+                            const h = 64;
+                            return (
+                              <div className="absolute inset-0 pointer-events-none" style={{ height: h }}>
+                                {warn && <div className="absolute left-0 right-0 border-t border-dashed border-warning/40" style={{ bottom: `${(warn / maxVal) * 100}%` }}>
+                                  <span className="absolute -top-3 right-0 text-[7px] text-warning/50">{warn}ms</span>
+                                </div>}
+                                {crit && <div className="absolute left-0 right-0 border-t border-dashed border-error/40" style={{ bottom: `${(crit / maxVal) * 100}%` }}>
+                                  <span className="absolute -top-3 right-0 text-[7px] text-error/50">{crit}ms (crit)</span>
+                                </div>}
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
+                        <div className="flex items-end gap-px h-16">
+                          {selectedNodeData.points.slice(-60).map((p, i) => {
+                            const max = Math.max(...selectedNodeData.points.map(x => x.response_time || 0), 1);
+                            const h = Math.min(100, ((p.response_time || 0) / max) * 100);
+                            return <div key={i} className={`flex-1 rounded-t ${p.is_success ? 'bg-primary/30' : 'bg-error/40'}`}
+                              style={{ height: `${h}%` }}></div>;
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── SNMP + Bandwidth ── */}
+                  {selectedNodeData.interfaces?.length > 0 && (
+                    <div>
+                      <div className="text-[9px] font-semibold text-base-content/40 uppercase tracking-wider mb-1.5">
+                        SNMP ({selectedNodeData.interfaces.length} interfaces)
+                      </div>
+                      <div className="space-y-1">
+                        {selectedNodeData.interfaces.slice(0, 4).map(iface => (
+                          <div key={iface.id} className="flex items-center justify-between text-[9px] px-2 py-1 rounded bg-base-100/50">
+                            <span className="font-medium text-base-content/60 truncate mr-2">{iface.name || iface.description}</span>
+                            <span className={`tabular-nums ${iface.is_up ? 'text-success' : 'text-error'}`}>{iface.is_up ? 'UP' : 'DOWN'}</span>
+                          </div>
+                        ))}
+                        {selectedNodeData.interfaces.length > 4 && (
+                          <div className="text-[8px] text-base-content/30 text-center">+{selectedNodeData.interfaces.length - 4} more</div>
+                        )}
+                      </div>
+                      {selectedNodeData.bandwidth?.length > 0 && (
+                        <div className="mt-2">
+                          <div className="text-[9px] font-semibold text-base-content/40 uppercase tracking-wider mb-1">Bandwidth</div>
+                          <div className="flex items-end gap-px h-10">
+                            {selectedNodeData.bandwidth.slice(-40).map((b, i) => {
+                              const max = Math.max(...selectedNodeData.bandwidth.map(x => Math.max(x.in_octets || 0, x.out_octets || 0)), 1);
+                              const hIn = ((b.in_octets || 0) / max) * 100;
+                              const hOut = ((b.out_octets || 0) / max) * 100;
+                              return (
+                                <div key={i} className="flex-1 flex flex-col-reverse gap-px">
+                                  <div className="rounded-t bg-primary/30" style={{ height: `${Math.min(100, hIn)}%` }}></div>
+                                  <div className="rounded-t bg-secondary/30" style={{ height: `${Math.min(100, hOut)}%` }}></div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <div className="flex items-center gap-3 mt-1">
+                            <span className="flex items-center gap-1 text-[8px] text-primary/50"><span className="w-1.5 h-1.5 rounded-sm bg-primary/30"></span> In</span>
+                            <span className="flex items-center gap-1 text-[8px] text-secondary/50"><span className="w-1.5 h-1.5 rounded-sm bg-secondary/30"></span> Out</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ── Last ping time ── */}
+                  {selectedNodeData.target?.last_ping_at && (
+                    <div className="text-[8px] text-base-content/20 text-center">
+                      Last ping: {new Date(selectedNodeData.target.last_ping_at).toLocaleString()}
+                    </div>
+                  )}
+
+                  {/* ── Recent Incidents ── */}
                   {selectedNodeData.recentIncidents?.length > 0 && (
                     <div>
                       <div className="text-[9px] font-semibold text-base-content/40 uppercase tracking-wider mb-1.5">Recent Incidents</div>
@@ -544,9 +909,10 @@ export default function Topology() {
                       </div>
                     </div>
                   )}
-                </>
+                </div>
               )}
             </div>
+            </SidebarBoundary>
           )}
         </div>
       )}
@@ -569,6 +935,16 @@ export default function Topology() {
                 {item.label}
               </button>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── edge tooltip ── */}
+      {edgeTooltip && (
+        <div className="fixed z-50 pointer-events-none" style={{ left: edgeTooltip.x + 12, top: edgeTooltip.y - 10 }}>
+          <div className="bg-base-200 border border-base-300 rounded-lg shadow-xl px-3 py-1.5 text-[10px] whitespace-nowrap">
+            <div className="font-semibold text-base-content">{edgeTooltip.source} → {edgeTooltip.dest}</div>
+            {edgeTooltip.label && <div className="text-base-content/40 text-[9px]">{edgeTooltip.label}</div>}
           </div>
         </div>
       )}
@@ -609,6 +985,32 @@ export default function Topology() {
                 <i className="fas fa-link text-xs"></i>
                 {t('topology.connect')}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editingEdge && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setEditingEdge(null)}>
+          <div className="modal-glass border border-base-300 rounded-xl p-5 w-full max-w-sm mx-4 shadow-2xl scale-in" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className="w-0.5 h-4 rounded-full bg-primary/50 flex-shrink-0"></div>
+              <h2 className="text-sm font-semibold text-base-content">Edit Connection Label</h2>
+            </div>
+            <div className="space-y-3 mb-4">
+              <div>
+                <label className="block text-xs font-medium text-base-content/60 mb-1">Label</label>
+                <input type="text" value={editEdgeLabel}
+                  onChange={e => setEditEdgeLabel(e.target.value)}
+                  placeholder="e.g. VPN, Backup Link, 10 Gbps"
+                  className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors" />
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-2">
+              <button onClick={() => setEditingEdge(null)}
+                className="px-4 py-2 text-xs font-medium text-base-content/50 hover:text-base-content transition-colors">Cancel</button>
+              <button onClick={saveEdgeLabel}
+                className="px-4 py-2 text-xs font-semibold bg-primary text-white rounded-lg hover:brightness-110 transition-all">Save</button>
             </div>
           </div>
         </div>

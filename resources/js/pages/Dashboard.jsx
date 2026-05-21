@@ -49,7 +49,11 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
     const { t } = useLang();
     const { toast } = useToast();
     const prevStatsRef  = useRef(null);
-    const [selectedIds, setSelectedIds] = useState(new Set());
+    const [selectedIds, setSelectedIds] = useState(() => {
+        const saved = localStorage.getItem('topology_selected');
+        return saved ? new Set(JSON.parse(saved)) : new Set();
+    });
+    useEffect(() => { localStorage.setItem('topology_selected', JSON.stringify([...selectedIds])); }, [selectedIds]);
     const [showBulkDelete, setShowBulkDelete] = useState(false);
 
     const clearSelection = () => setSelectedIds(new Set());
@@ -401,26 +405,26 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
 
 
                 {selectedIds.size > 0 && (
-                    <div className="toast-enter fixed bottom-6 right-6 z-50 glass-card border-primary/30 rounded-xl shadow-lg shadow-primary/10 px-3 py-2.5 min-w-[180px]">
-                        <div className="flex items-center justify-between gap-2 mb-1.5 pb-1.5 border-b border-primary/15">
-                            <span className="text-xs font-semibold text-primary tabular-nums">{t('dashboard.nSelected', { n: selectedIds.size })}</span>
+                    <div className="toast-enter fixed bottom-8 right-8 z-50 glass-card border-primary/30 rounded-2xl shadow-xl shadow-primary/15 px-7 py-5 min-w-[300px] backdrop-blur-xl">
+                        <div className="flex items-center justify-between gap-4 mb-3 pb-3 border-b border-primary/15">
+                            <span className="text-base font-bold text-primary tabular-nums">{t('dashboard.nSelected', { n: selectedIds.size })}</span>
                             <button onClick={clearSelection} className="text-primary/40 hover:text-primary/70 transition-colors">
-                                <i className="fas fa-times text-[9px]"></i>
+                                <i className="fas fa-times text-sm"></i>
                             </button>
                         </div>
-                        <div className={`grid gap-1.5 ${isAdmin ? 'grid-cols-2' : 'grid-cols-3'}`}>
-                            <button onClick={bulkPing} className="flex items-center justify-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold bg-primary/20 text-primary border border-primary/35 hover:bg-primary/30 transition-all">
-                                <i className="fas fa-play text-[7px]"></i> {t('dashboard.ping')}
+                        <div className={`grid gap-3 ${isAdmin ? 'grid-cols-2' : 'grid-cols-3'}`}>
+                            <button onClick={bulkPing} className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold bg-primary/20 text-primary border border-primary/35 hover:bg-primary/30 transition-all shadow-sm">
+                                <i className="fas fa-play text-sm"></i> {t('dashboard.ping')}
                             </button>
-                            <button onClick={bulkPause} className="flex items-center justify-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold bg-warning/15 text-warning border border-warning/30 hover:bg-warning/25 transition-all">
-                                <i className="fas fa-pause text-[7px]"></i> {t('dashboard.pause')}
+                            <button onClick={bulkPause} className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold bg-warning/15 text-warning border border-warning/30 hover:bg-warning/25 transition-all shadow-sm">
+                                <i className="fas fa-pause text-sm"></i> {t('dashboard.pause')}
                             </button>
-                            <button onClick={bulkResume} className="flex items-center justify-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold bg-success/15 text-success border border-success/30 hover:bg-success/25 transition-all">
-                                <i className="fas fa-play text-[7px]"></i> {t('dashboard.resume')}
+                            <button onClick={bulkResume} className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold bg-success/15 text-success border border-success/30 hover:bg-success/25 transition-all shadow-sm">
+                                <i className="fas fa-play text-sm"></i> {t('dashboard.resume')}
                             </button>
                             {isAdmin && (
-                                <button onClick={() => setShowBulkDelete(true)} className="flex items-center justify-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold bg-error/15 text-error border border-error/30 hover:bg-error/25 transition-all">
-                                    <i className="fas fa-trash text-[7px]"></i> {t('dashboard.delete')}
+                                <button onClick={() => setShowBulkDelete(true)} className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold bg-error/15 text-error border border-error/30 hover:bg-error/25 transition-all shadow-sm">
+                                    <i className="fas fa-trash text-sm"></i> {t('dashboard.delete')}
                                 </button>
                             )}
                         </div>

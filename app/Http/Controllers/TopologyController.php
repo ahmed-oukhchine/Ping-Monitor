@@ -11,7 +11,38 @@ class TopologyController extends Controller
 {
     public function index()
     {
-        $targets = Target::orderBy('name')->get(['id', 'name', 'ip_address', 'last_status', 'is_paused', 'topology_x', 'topology_y']);
+        $targets = Target::withCount([
+            'pingHistories as total_pings',
+            'pingHistories as failed_pings' => fn($q) => $q->where('is_success', false),
+        ])
+        ->with(['groups:id,name', 'latestPing'])
+        ->orderBy('name')
+        ->get()
+        ->map(function ($t) {
+            return [
+                'id'                 => $t->id,
+                'name'               => $t->name,
+                'ip_address'         => $t->ip_address,
+                'location'           => $t->location,
+                'is_paused'          => (bool) $t->is_paused,
+                'warn_ms'            => $t->warn_ms,
+                'critical_ms'        => $t->critical_ms,
+                'snmp_enabled'       => (bool) $t->snmp_enabled,
+                'notes'              => $t->notes,
+                'groups'             => $t->groups->map(fn($g) => ['id' => $g->id, 'name' => $g->name])->values(),
+                'total_pings'        => $t->total_pings,
+                'failed_pings'       => $t->failed_pings,
+                'uptime_percent'     => $t->total_pings > 0
+                    ? round(($t->total_pings - $t->failed_pings) / $t->total_pings * 100, 1)
+                    : null,
+                'last_status'        => $t->latestPing?->is_success,
+                'last_response_time' => $t->latestPing?->response_time,
+                'last_ping_at'       => $t->latestPing?->created_at,
+                'topology_x'         => $t->topology_x,
+                'topology_y'         => $t->topology_y,
+            ];
+        });
+
         $connections = NetworkTopology::with(['source:id,name', 'destination:id,name'])->get();
 
         return response()->json([
@@ -42,6 +73,15 @@ class TopologyController extends Controller
         AuditLog::log('created', 'topology_connection', $connection->id, null, $connection->toArray());
 
         return response()->json($connection, 201);
+    }
+
+    public function update(Request $request, NetworkTopology $networkTopology)
+    {
+        $data = $request->validate(['label' => 'nullable|string|max:100']);
+        $old = $networkTopology->toArray();
+        $networkTopology->update($data);
+        AuditLog::log('updated', 'topology_connection', $networkTopology->id, $old, $networkTopology->fresh()->toArray());
+        return response()->json($networkTopology);
     }
 
     public function destroy(NetworkTopology $networkTopology)

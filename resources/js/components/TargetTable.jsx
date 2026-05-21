@@ -33,7 +33,7 @@ function SparklineData({ target }) {
     return <Sparkline data={data} width={40} height={16} color={color} />;
 }
 
-export default function TargetTable({ targets, loading, pinging, onPing, onEdit, onDelete, onChart, onDetail, onPause, onResume, isAdmin, paused = false, selectedIds = new Set(), onSelect }) {
+const TargetTable = React.memo(({ targets, loading, pinging, onPing, onEdit, onDelete, onChart, onDetail, onPause, onResume, isAdmin, paused = false, selectedIds = new Set(), onSelect }) => {
     const { t } = useLang();
     const [, forceRender] = useState(0);
     const allSelected = targets.length > 0 && targets.every(t => selectedIds.has(t.id));
@@ -102,7 +102,7 @@ export default function TargetTable({ targets, loading, pinging, onPing, onEdit,
                             <tr className="border-b border-base-300/80 bg-base-300/25">
                                 <th className="text-left py-3 px-4 w-10">
                                     <input type="checkbox" checked={allSelected} onChange={toggleAll}
-                                        className="checkbox checkbox-xs rounded border-base-content/30 checked:border-primary checked:bg-primary" />
+                                        className="checkbox checkbox-sm rounded border-base-content/30 checked:border-primary checked:bg-primary" />
                                 </th>
                                 {headerLabels.filter((_, i) => i !== 0).map(h => (
                                     <th key={h} className="text-left py-3 px-4 text-[10px] font-semibold text-base-content/35 uppercase tracking-widest whitespace-nowrap">
@@ -165,7 +165,7 @@ export default function TargetTable({ targets, loading, pinging, onPing, onEdit,
             </div>
         </>
     );
-}
+});
 
 function TargetRow({ target: t, isPinging, isAdmin, onPing, onEdit, onDelete, onChart, onDetail, onPause, onResume, selected, onToggleSelect }) {
     const { t: tr } = useLang();
@@ -194,7 +194,7 @@ function TargetRow({ target: t, isPinging, isAdmin, onPing, onEdit, onDelete, on
 
             <td className="py-3.5 px-4" onClick={e => e.stopPropagation()}>
                 <input type="checkbox" checked={selected} onChange={onToggleSelect}
-                    className="checkbox checkbox-xs rounded border-base-content/30 checked:border-primary checked:bg-primary" />
+                    className="checkbox checkbox-sm rounded border-base-content/30 checked:border-primary checked:bg-primary" />
             </td>
 
             <td className="py-3.5 px-4">
@@ -351,7 +351,7 @@ function TargetCard({ target: t, isPinging, isAdmin, onPing, onDetail, onEdit, o
             <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2.5 min-w-0">
                     <input type="checkbox" checked={selected} onChange={onToggleSelect}
-                        className="checkbox checkbox-xs rounded border-base-content/30 checked:border-primary checked:bg-primary flex-shrink-0"
+                        className="checkbox checkbox-sm rounded border-base-content/30 checked:border-primary checked:bg-primary flex-shrink-0"
                         onClick={e => e.stopPropagation()} />
                     <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 border ${
                         t.is_paused ? 'bg-warning/8 border-warning/20 text-warning' :
@@ -404,3 +404,5 @@ function ActionBtn({ onClick, disabled, title, cls, icon }) {
         </button>
     );
 }
+
+export default TargetTable;

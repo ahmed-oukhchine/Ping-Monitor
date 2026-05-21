@@ -23,7 +23,7 @@ function useMouseGlow() {
     return handleMouseMove;
 }
 
-export default function StatsBar({ stats, prevStats }) {
+const StatsBar = React.memo(({ stats, prevStats }) => {
     const { t } = useLang();
     const uptimeSub = stats.fleetUptime != null ? t('stats.fleetUptime', { pct: stats.fleetUptime }) : null;
     const offlineAlert = stats.offline > 0;
@@ -124,4 +124,6 @@ export default function StatsBar({ stats, prevStats }) {
             ))}
         </div>
     );
-}
+});
+
+export default StatsBar;
