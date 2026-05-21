@@ -148,10 +148,13 @@ const translations = {
 
   /* ── Settings ── */
   'settings.title': { en: 'Settings', fr: 'Paramètres' },
-  'settings.subtitle': { en: 'Manage your account', fr: 'Gérer votre compte' },
-  'settings.account': { en: 'Account', fr: 'Compte' },
+  'settings.profile': { en: 'Profile', fr: 'Profil' },
   'settings.changePassword': { en: 'Change Password', fr: 'Changer le mot de passe' },
-  'settings.language': { en: 'Language', fr: 'Langue' },
+  'settings.appearance': { en: 'Appearance', fr: 'Apparence' },
+  'settings.alertDefaults': { en: 'Alert Defaults', fr: 'Seuils par défaut' },
+  'settings.notifications': { en: 'Notifications', fr: 'Notifications' },
+  'settings.snmp': { en: 'SNMP', fr: 'SNMP' },
+  'settings.system': { en: 'System', fr: 'Système' },
   'settings.name': { en: 'Name', fr: 'Nom' },
   'settings.email': { en: 'Email', fr: 'E-mail' },
   'settings.role': { en: 'Role', fr: 'Rôle' },
