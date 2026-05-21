@@ -6,6 +6,7 @@ use App\Mail\TargetDownAlert;
 use App\Models\AuditLog;
 use App\Models\Group;
 use App\Models\PingHistory;
+use App\Models\Setting;
 use App\Models\Target;
 use App\Services\PingService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -326,8 +327,11 @@ class PingController extends Controller
         ]);
 
         $data = $request->only('name', 'ip_address', 'location', 'notes', 'warn_ms', 'critical_ms', 'alert_email', 'alert_consecutive', 'alert_cooldown_minutes', 'escalation_email', 'escalation_after_minutes', 'snmp_enabled', 'snmp_community', 'snmp_version');
-        $data['alert_consecutive'] ??= 3;
-        $data['alert_cooldown_minutes'] ??= 60;
+        $data['warn_ms'] ??= Setting::getValue('alert_default_warn_ms', 100);
+        $data['critical_ms'] ??= Setting::getValue('alert_default_critical_ms', 300);
+        $data['alert_email'] ??= Setting::getValue('alert_default_email', '');
+        $data['alert_consecutive'] ??= Setting::getValue('alert_default_consecutive', 3);
+        $data['alert_cooldown_minutes'] ??= Setting::getValue('alert_default_cooldown', 15);
         $target = Target::create($data);
 
         if ($request->filled('group_ids')) {

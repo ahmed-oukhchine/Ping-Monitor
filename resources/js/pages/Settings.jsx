@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { useLang } from '../contexts/LanguageContext';
@@ -25,6 +25,15 @@ export default function Settings() {
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSuccess, setProfileSuccess] = useState(false);
   const [profileError, setProfileError] = useState('');
+
+  /* ── Alert defaults state ── */
+  const [alertDefaults, setAlertDefaults] = useState(null);
+  const [alertSaving, setAlertSaving] = useState(false);
+  const [alertSuccess, setAlertSuccess] = useState(false);
+
+  useEffect(() => {
+    axios.get('/api/settings').then(({ data }) => setAlertDefaults(data)).catch(() => {});
+  }, []);
 
   /* ── Password state ── */
   const [currentPw, setCurrentPw] = useState('');
@@ -325,10 +334,69 @@ export default function Settings() {
               <Card id="alerts">
                 <SectionTitle label={t('settings.alertDefaults')} desc="Default thresholds applied to every new target" />
 
-                <div className="flex items-center justify-center py-10 text-base-content/30">
-                  <i className="fas fa-wrench text-lg mr-2"></i>
-                  <span className="text-xs">Coming soon</span>
-                </div>
+                {alertDefaults && (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-base-content/60 mb-1">Warning threshold (ms)</label>
+                        <input type="number" value={alertDefaults.alert_default_warn_ms}
+                          onChange={e => setAlertDefaults(p => ({ ...p, alert_default_warn_ms: e.target.value }))}
+                          className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-base-content/60 mb-1">Critical threshold (ms)</label>
+                        <input type="number" value={alertDefaults.alert_default_critical_ms}
+                          onChange={e => setAlertDefaults(p => ({ ...p, alert_default_critical_ms: e.target.value }))}
+                          className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors" />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-base-content/60 mb-1">Default alert email</label>
+                      <input type="email" value={alertDefaults.alert_default_email}
+                        onChange={e => setAlertDefaults(p => ({ ...p, alert_default_email: e.target.value }))}
+                        placeholder="admin@example.com"
+                        className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors" />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-base-content/60 mb-1">Consecutive failures</label>
+                        <input type="number" min={1} max={100} value={alertDefaults.alert_default_consecutive}
+                          onChange={e => setAlertDefaults(p => ({ ...p, alert_default_consecutive: e.target.value }))}
+                          className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-base-content/60 mb-1">Cooldown (minutes)</label>
+                        <input type="number" min={0} max={1440} value={alertDefaults.alert_default_cooldown}
+                          onChange={e => setAlertDefaults(p => ({ ...p, alert_default_cooldown: e.target.value }))}
+                          className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors" />
+                      </div>
+                    </div>
+
+                    <hr className="border-base-300" />
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <button onClick={async () => {
+                        setAlertSaving(true); setAlertSuccess(false);
+                        try {
+                          await axios.put('/api/settings', alertDefaults);
+                          setAlertSuccess(true);
+                        } catch {}
+                        setAlertSaving(false);
+                      }} disabled={alertSaving}
+                        className="btn-prime flex items-center gap-2 px-4 py-2 text-xs font-semibold bg-primary text-white rounded-lg hover:brightness-110 disabled:opacity-50 transition-all shadow-[0_0_14px_color-mix(in_oklch,var(--color-primary)_35%,transparent)]">
+                        <i className={`fas ${alertSaving ? 'fa-spinner fa-spin' : 'fa-save'} text-xs`}></i>
+                        {alertSaving ? 'Saving…' : 'Save'}
+                      </button>
+                      {alertSuccess && (
+                        <span className="msg-enter text-xs text-success flex items-center gap-1">
+                          <i className="fas fa-check-circle text-[10px]"></i> Settings saved
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
               </Card>
             )}
 
@@ -347,10 +415,57 @@ export default function Settings() {
               <Card id="snmp">
                 <SectionTitle label={t('settings.snmp')} desc="Default SNMP credentials for new target discovery" />
 
-                <div className="flex items-center justify-center py-10 text-base-content/30">
-                  <i className="fas fa-wrench text-lg mr-2"></i>
-                  <span className="text-xs">Coming soon</span>
-                </div>
+                {alertDefaults && (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium text-base-content/60 mb-1">SNMP Community</label>
+                      <input type="text" value={alertDefaults.snmp_default_community}
+                        onChange={e => setAlertDefaults(p => ({ ...p, snmp_default_community: e.target.value }))}
+                        className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-base-content/60 mb-1">SNMP Version</label>
+                      <div className="flex items-center gap-2 bg-base-100 border border-base-300 rounded-xl p-1 w-fit">
+                        {['v1', 'v2c', 'v3'].map(v => {
+                          const act = alertDefaults.snmp_default_version === v;
+                          return (
+                            <button key={v} onClick={() => setAlertDefaults(p => ({ ...p, snmp_default_version: v }))}
+                              className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                                act
+                                  ? 'bg-primary text-white shadow-sm'
+                                  : 'text-base-content/55 hover:text-base-content'
+                              }`}>{v}</button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <hr className="border-base-300" />
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <button onClick={async () => {
+                        setAlertSaving(true); setAlertSuccess(false);
+                        try {
+                          await axios.put('/api/settings', {
+                            snmp_default_community: alertDefaults.snmp_default_community,
+                            snmp_default_version: alertDefaults.snmp_default_version,
+                          });
+                          setAlertSuccess(true);
+                        } catch {}
+                        setAlertSaving(false);
+                      }} disabled={alertSaving}
+                        className="btn-prime flex items-center gap-2 px-4 py-2 text-xs font-semibold bg-primary text-white rounded-lg hover:brightness-110 disabled:opacity-50 transition-all shadow-[0_0_14px_color-mix(in_oklch,var(--color-primary)_35%,transparent)]">
+                        <i className={`fas ${alertSaving ? 'fa-spinner fa-spin' : 'fa-save'} text-xs`}></i>
+                        {alertSaving ? 'Saving…' : 'Save'}
+                      </button>
+                      {alertSuccess && (
+                        <span className="msg-enter text-xs text-success flex items-center gap-1">
+                          <i className="fas fa-check-circle text-[10px]"></i> Settings saved
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
               </Card>
             )}
 
@@ -358,10 +473,39 @@ export default function Settings() {
               <Card id="system">
                 <SectionTitle label={t('settings.system')} desc="Data retention, cleanup, and advanced configuration" />
 
-                <div className="flex items-center justify-center py-10 text-base-content/30">
-                  <i className="fas fa-wrench text-lg mr-2"></i>
-                  <span className="text-xs">Coming soon</span>
-                </div>
+                {alertDefaults && (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium text-base-content/60 mb-1">Data retention (days)</label>
+                      <input type="number" min={1} max={3650} value={alertDefaults.data_retention_days}
+                        onChange={e => setAlertDefaults(p => ({ ...p, data_retention_days: e.target.value }))}
+                        className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors" />
+                      <p className="text-[10px] text-base-content/30 mt-1">Ping history older than this will be automatically pruned</p>
+                    </div>
+
+                    <hr className="border-base-300" />
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <button onClick={async () => {
+                        setAlertSaving(true); setAlertSuccess(false);
+                        try {
+                          await axios.put('/api/settings', { data_retention_days: alertDefaults.data_retention_days });
+                          setAlertSuccess(true);
+                        } catch {}
+                        setAlertSaving(false);
+                      }} disabled={alertSaving}
+                        className="btn-prime flex items-center gap-2 px-4 py-2 text-xs font-semibold bg-primary text-white rounded-lg hover:brightness-110 disabled:opacity-50 transition-all shadow-[0_0_14px_color-mix(in_oklch,var(--color-primary)_35%,transparent)]">
+                        <i className={`fas ${alertSaving ? 'fa-spinner fa-spin' : 'fa-save'} text-xs`}></i>
+                        {alertSaving ? 'Saving…' : 'Save'}
+                      </button>
+                      {alertSuccess && (
+                        <span className="msg-enter text-xs text-success flex items-center gap-1">
+                          <i className="fas fa-check-circle text-[10px]"></i> Settings saved
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
               </Card>
             )}
 
