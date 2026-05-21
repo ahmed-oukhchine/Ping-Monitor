@@ -160,7 +160,7 @@ function AppContent() {
                 offlineCount={targets.filter(t => !t.is_paused && t.last_status === false).length}
             />
 
-            <div ref={mainRef} className={`flex-1 overflow-y-auto transition-all duration-300 ${sidebarOpen ? 'pl-56' : 'pl-16'}`} style={{ height: '100vh' }}>
+            <div ref={mainRef} className={`flex-1 overflow-y-auto transition-all duration-300 ${sidebarOpen ? 'ps-56' : 'ps-16'}`} style={{ height: '100vh' }}>
                 <PageErrorBoundary>
                 <Suspense fallback={<div className="flex items-center justify-center py-20"><span className="loading loading-spinner loading-lg text-primary"></span></div>}>
                 <div className="page-slot" style={{ display: onDashboard ? 'block' : 'none' }}>

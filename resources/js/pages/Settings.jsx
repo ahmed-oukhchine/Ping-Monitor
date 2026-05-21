@@ -290,6 +290,7 @@ export default function Settings() {
                       {[
                         { code: 'en', label: 'English', flag: '🇬🇧' },
                         { code: 'fr', label: 'Français', flag: '🇫🇷' },
+                        { code: 'ar', label: 'العربية', flag: '🇸🇦' },
                       ].map(opt => {
                         const act = lang === opt.code;
                         return (

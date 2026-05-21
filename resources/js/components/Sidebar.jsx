@@ -63,7 +63,7 @@ export default function Sidebar({ open, onToggle, onLogout, onCycleTheme, themeP
         <div className="fixed inset-0 bg-black/30 z-40 lg:hidden" onClick={onToggle} />
       )}
 
-      <aside className={`fixed top-0 left-0 h-screen bg-base-200/95 backdrop-blur-xl border-r border-base-300 flex flex-col z-50 shadow-xl shadow-black/15 transition-all duration-300 ${
+      <aside className={`fixed top-0 start-0 h-screen bg-base-200/95 backdrop-blur-xl border-e border-base-300 flex flex-col z-50 shadow-xl shadow-black/15 transition-all duration-300 ${
         open ? 'w-56' : 'w-16'
       }`}>
 
@@ -80,7 +80,7 @@ export default function Sidebar({ open, onToggle, onLogout, onCycleTheme, themeP
               </svg>
             </div>
             {open && (
-              <div className="leading-none text-left ml-3">
+              <div className="leading-none text-start ms-3">
                 <div className="text-sm font-bold text-base-content tracking-wide">ArgusNet</div>
                 <div className="text-[10px] text-base-content/40 mt-0.5">{t('sidebar.networkMonitor')}</div>
               </div>
@@ -108,7 +108,7 @@ export default function Sidebar({ open, onToggle, onLogout, onCycleTheme, themeP
                           <Link key={item.to} to={item.to} style={{ textDecoration: 'none' }}
                             className={linkClass(active)}>
                             {active && (
-                              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full bg-primary"></div>
+                              <div className="absolute start-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full bg-primary"></div>
                             )}
                             <div className="relative flex items-center justify-center flex-shrink-0 w-4">
                               <i className={`nav-icon fas ${item.icon} text-xs text-center ${active ? 'text-primary' : 'text-base-content/35'}`}></i>
@@ -139,7 +139,7 @@ export default function Sidebar({ open, onToggle, onLogout, onCycleTheme, themeP
                     <div className="relative flex items-center justify-center flex-shrink-0 w-4">
                       <i className={`nav-icon fas ${item.icon} text-xs text-center ${active ? 'text-primary' : 'text-base-content/35'}`}></i>
                       {badge != null && badge > 0 && (
-                        <span className="absolute -top-2 -right-3 min-w-[14px] h-[14px] rounded-full bg-error text-white text-[7px] font-bold flex items-center justify-center px-0.5 leading-none shadow-sm shadow-error/40">
+                        <span className="absolute -top-2 -end-3 min-w-[14px] h-[14px] rounded-full bg-error text-white text-[7px] font-bold flex items-center justify-center px-0.5 leading-none shadow-sm shadow-error/40">
                           {badge > 9 ? '9+' : badge}
                         </span>
                       )}

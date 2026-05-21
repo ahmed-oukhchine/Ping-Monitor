@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import translations from '../i18n/translations';
 
 const LangContext = createContext();
@@ -9,11 +9,18 @@ function getInitial() {
 
 export function LanguageProvider({ children }) {
     const [lang, setLangState] = useState(getInitial);
+    const rtlLangs = ['ar'];
 
     const setLang = useCallback((l) => {
         setLangState(l);
         try { localStorage.setItem('argusnet_lang', l); } catch {}
     }, []);
+
+    const isRTL = rtlLangs.includes(lang);
+
+    useEffect(() => {
+        document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
+    }, [isRTL]);
 
     const t = useCallback((key, params = {}) => {
         const entry = translations[key];
@@ -26,7 +33,7 @@ export function LanguageProvider({ children }) {
     }, [lang]);
 
     return (
-        <LangContext.Provider value={{ lang, setLang, t }}>
+        <LangContext.Provider value={{ lang, setLang, t, isRTL }}>
             {children}
         </LangContext.Provider>
     );
