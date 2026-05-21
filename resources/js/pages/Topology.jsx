@@ -260,26 +260,30 @@ export default function Topology() {
 
   /* ── search dimming ── */
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setNodes(nds => nds.map(n => ({ ...n, data: { ...n.data, dimmed: false } })));
-      return;
-    }
-    const q = searchQuery.toLowerCase();
-    setNodes(nds => nds.map(n => ({
-      ...n,
-      data: {
-        ...n.data,
-        dimmed: !n.data.label.toLowerCase().includes(q) && !n.data.ip.toLowerCase().includes(q),
-      },
-    })));
+    try {
+      if (!searchQuery.trim()) {
+        setNodes(nds => nds.map(n => ({ ...n, data: { ...n.data, dimmed: false } })));
+        return;
+      }
+      const q = searchQuery.toLowerCase();
+      setNodes(nds => nds.map(n => ({
+        ...n,
+        data: {
+          ...n.data,
+          dimmed: !n.data.label.toLowerCase().includes(q) && !n.data.ip.toLowerCase().includes(q),
+        },
+      })));
+    } catch {}
   }, [searchQuery, setNodes]);
 
   /* ── selected highlight ── */
   useEffect(() => {
-    setNodes(nds => nds.map(n => ({
-      ...n,
-      data: { ...n.data, selected: n.data.targetId === selectedNodeData?.id },
-    })));
+    try {
+      setNodes(nds => nds.map(n => ({
+        ...n,
+        data: { ...n.data, selected: n.data.targetId === selectedNodeData?.id },
+      })));
+    } catch {}
   }, [selectedNodeData, setNodes]);
 
   /* ── data fetching ── */
