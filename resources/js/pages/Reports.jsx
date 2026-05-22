@@ -455,7 +455,7 @@ export default function Reports({ user }) {
                                             margin={{ top: 4, right: 60, left: 8, bottom: 80 }}>
                                             <CartesianGrid strokeDasharray="3 8" stroke="rgba(255,255,255,0.06)" vertical={false} />
                                             <XAxis type="category" dataKey="target_name" interval={0} angle={-45} textAnchor="end"
-                                                tick={{ fill: '#c9cdd6', fontSize: 10, fontWeight: 500 }}
+                                                tick={{ fill: '#c9cdd6', fontSize: 11, fontWeight: 500 }}
                                                 tickLine={false} axisLine={{ stroke: 'rgba(255,255,255,0.12)' }} />
                                             <YAxis type="number" domain={[90, 100]}
                                                 tick={{ fill: '#c9cdd6', fontSize: 11, fontWeight: 500 }}
