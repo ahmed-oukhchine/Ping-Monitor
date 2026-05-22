@@ -90,10 +90,11 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
         setShowBulkDelete(false);
     };
 
-    const timerRef      = useRef(null);
-    const cdownRef      = useRef(null);
-    const inProgressRef = useRef(false);
-    const targetsRef    = useRef(targets);
+    const timerRef       = useRef(null);
+    const cdownRef       = useRef(null);
+    const inProgressRef  = useRef(false);
+    const pingControlRef = useRef({ paused: false, stopped: false });
+    const targetsRef     = useRef(targets);
     targetsRef.current  = targets;
 
     const timeAgoShort = (dateStr) => {
@@ -208,22 +209,29 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
     const pingAll = async (auto = false) => {
         if (inProgressRef.current) return;
         inProgressRef.current = true;
+        pingControlRef.current = { paused: false, stopped: false };
         if (!auto) setPingAllLoading(true);
         try {
             const toPing = targetsRef.current.filter(t => !t.is_paused);
-            for (const target of toPing) {
-                setPinging(p => ({ ...p, [target.id]: true }));
+            for (let i = 0; i < toPing.length; i++) {
+                if (pingControlRef.current.stopped) break;
+                while (pingControlRef.current.paused) {
+                    await new Promise(r => setTimeout(r, 200));
+                    if (pingControlRef.current.stopped) break;
+                }
+                if (pingControlRef.current.stopped) break;
+                setPinging(p => ({ ...p, [toPing[i].id]: true }));
                 try {
-                    const { data } = await axios.post(`/targets/${target.id}/ping`);
+                    const { data } = await axios.post(`/targets/${toPing[i].id}/ping`);
                     setTargets(ts => ts.map(t => {
-                        if (t.id !== target.id) return t;
+                        if (t.id !== toPing[i].id) return t;
                         const total = t.total_pings + 1, failed = t.failed_pings + (data.success ? 0 : 1);
                         return { ...t, last_status: data.success, last_response_time: data.response_time ?? null,
                             last_ping_at: new Date().toISOString(), total_pings: total, failed_pings: failed,
                             uptime_percent: Math.round((total - failed) / total * 100 * 10) / 10,
                             threshold_status: data.threshold_status ?? null };
                     }));
-                } catch {} finally { setPinging(p => ({ ...p, [target.id]: false })); }
+                } catch {} finally { setPinging(p => ({ ...p, [toPing[i].id]: false })); }
             }
         } finally { inProgressRef.current = false; if (!auto) setPingAllLoading(false); }
     };
@@ -397,22 +405,22 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
                             </>
                         )}
                         {!showActions ? (
-                            <button onClick={() => { pingAll(); setAutoRefresh(true); setShowActions(true); }} disabled={pingAllLoading}
+                            <button onClick={() => { pingAll(); setShowActions(true); }} disabled={pingAllLoading}
                                 className="btn-glow btn-prime flex items-center gap-2 px-3 py-1.5 text-xs font-semibold bg-primary text-white rounded-lg hover:brightness-110 transition-all disabled:opacity-50 shadow-[0_0_14px_color-mix(in_oklch,var(--color-primary)_35%,transparent)]">
                                 <i className={`fas ${pingAllLoading ? 'fa-spinner fa-spin' : 'fa-broadcast-tower'} text-[10px]`}></i>
                                 {pingAllLoading ? t('dashboard.checking') : t('dashboard.checkAll')}
                             </button>
                         ) : (
                             <>
-                                <button onClick={() => setAutoRefresh(false)}
+                                <button onClick={() => { pingControlRef.current.paused = true; }}
                                     className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold border border-warning/50 text-warning rounded-lg hover:bg-warning/10 transition-colors">
                                     <i className="fas fa-pause text-[10px]"></i> {t('dashboard.pause')}
                                 </button>
-                                <button onClick={() => setAutoRefresh(true)}
+                                <button onClick={() => { pingControlRef.current.paused = false; }}
                                     className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold border border-success/50 text-success rounded-lg hover:bg-success/10 transition-colors">
                                     <i className="fas fa-play text-[10px]"></i> {t('dashboard.resume')}
                                 </button>
-                                <button onClick={() => { setAutoRefresh(false); setShowActions(false); }}
+                                <button onClick={() => { pingControlRef.current.stopped = true; pingControlRef.current.paused = false; setShowActions(false); }}
                                     className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold border border-error/50 text-error rounded-lg hover:bg-error/10 transition-colors">
                                     <i className="fas fa-stop text-[10px]"></i> {t('dashboard.stop')}
                                 </button>
