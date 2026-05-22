@@ -450,14 +450,17 @@ export default function Reports({ user }) {
                                     <span className="text-[10px] text-base-content/25">{t('reports.sortedAsc')}</span>
                                 </div>
                                 <div className="rounded-xl overflow-hidden py-4 px-2" style={{ background: 'rgba(0,0,0,0.06)' }}>
+                                    {(() => {
+                                        const sortedStats = [...stats].sort((a, b) => (a.uptime_percent ?? 0) - (b.uptime_percent ?? 0));
+                                        return (
                                     <ResponsiveContainer width="100%" height={500}>
-                                        <BarChart data={[...stats].sort((a, b) => (a.uptime_percent ?? 0) - (b.uptime_percent ?? 0))}
+                                        <BarChart data={sortedStats}
                                             margin={{ top: 4, right: 60, left: 8, bottom: 80 }}>
                                             <CartesianGrid strokeDasharray="3 8" stroke="color-mix(in oklch, var(--color-base-content) 10%, transparent)" vertical={false} />
                                             <XAxis type="category" dataKey="target_name" interval={0} angle={-45} textAnchor="end"
                                                 tick={{ fill: 'color-mix(in oklch, var(--color-base-content) 60%, transparent)', fontSize: 11, fontWeight: 500 }}
                                                 tickLine={false} axisLine={{ stroke: 'color-mix(in oklch, var(--color-base-content) 15%, transparent)' }} />
-                                            <YAxis type="number" domain={[90, 100]}
+                                            <YAxis type="number" domain={[0, 100]}
                                                 tick={{ fill: 'color-mix(in oklch, var(--color-base-content) 60%, transparent)', fontSize: 11, fontWeight: 500 }}
                                                 tickLine={false} axisLine={{ stroke: 'color-mix(in oklch, var(--color-base-content) 15%, transparent)' }} unit="%" />
                                                     <Tooltip content={({ active, payload }) => {
@@ -475,13 +478,15 @@ export default function Reports({ user }) {
                                                             </div>
                                                         );
                                                     }} />
-                                                    <Bar dataKey="uptime_percent" radius={[0, 5, 5, 0]} maxBarSize={100}>
-                                                {stats.map((s, i) => (
+                                                    <Bar dataKey="uptime_percent" radius={[5, 5, 0, 0]} maxBarSize={100}>
+                                                {sortedStats.map((s, i) => (
                                                     <Cell key={i} fill={uptimeColor(s.uptime_percent)} fillOpacity={0.85} />
                                                 ))}
                                             </Bar>
                                         </BarChart>
                                     </ResponsiveContainer>
+                                        );
+                                    })()}
                                 </div>
                             </div>
                         )}

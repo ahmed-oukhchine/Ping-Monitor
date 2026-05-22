@@ -328,7 +328,7 @@ export default function Topology() {
     } catch (err) {
       setShowLabelModal(false);
       setPendingConnection(null);
-      toast(err.response?.status === 409 ? 'Connection already exists' : 'Failed to create connection', 'error');
+      toast(err.response?.status === 409 ? t('topology.exists') : t('topology.createFailed'), 'error');
     }
   };
 

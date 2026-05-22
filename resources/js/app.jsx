@@ -117,15 +117,15 @@ function AppContent() {
     useEffect(() => { if (user) fetchTargets(); }, [user]);
 
     useEffect(() => {
-        if (pathname === '/history')    setHistoryMounted(true);
-        if (pathname === '/incidents')  setIncidentsMounted(true);
-        if (pathname === '/monitoring') setMonitoringMounted(true);
-        if (pathname === '/users')      setUsersMounted(true);
-        if (pathname === '/settings')   setSettingsMounted(true);
-        if (pathname === '/audit-log')  setAuditLogMounted(true);
-        if (pathname === '/reports')    setReportsMounted(true);
-        if (pathname === '/maintenance') setMaintenanceMounted(true);
-        if (pathname === '/topology')    setTopologyMounted(true);
+        setHistoryMounted(pathname === '/history');
+        setIncidentsMounted(pathname === '/incidents');
+        setMonitoringMounted(pathname === '/monitoring');
+        setUsersMounted(pathname === '/users');
+        setSettingsMounted(pathname === '/settings');
+        setAuditLogMounted(pathname === '/audit-log');
+        setReportsMounted(pathname === '/reports');
+        setMaintenanceMounted(pathname === '/maintenance');
+        setTopologyMounted(pathname === '/topology');
     }, [pathname]);
 
     if (authLoading) {

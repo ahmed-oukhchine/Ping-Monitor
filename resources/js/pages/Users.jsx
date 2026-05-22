@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
+import { useLang } from '../contexts/LanguageContext';
 import ConfirmModal from '../components/ConfirmModal';
 
 export default function Users() {
     const { user: me } = useAuth();
     const { toast } = useToast();
+    const { t } = useLang();
     const [users, setUsers]       = useState([]);
     const [loading, setLoading]   = useState(true);
     const [showForm, setShowForm] = useState(false);
@@ -44,7 +46,7 @@ export default function Users() {
     const createUser = async (e) => {
         e.preventDefault();
         if (password !== confirmPassword) {
-            setFormError('Passwords do not match.');
+            setFormError(t('users.passwordsDoNotMatch'));
             return;
         }
         setSaving(true);
@@ -58,7 +60,7 @@ export default function Users() {
         } catch (err) {
             setFormError(err.response?.data?.errors
                 ? Object.values(err.response.data.errors).flat().join(' ')
-                : err.response?.data?.message || 'Failed to create user.');
+                : err.response?.data?.message || t('users.failedToCreate'));
         } finally { setSaving(false); }
     };
 
@@ -73,7 +75,7 @@ export default function Users() {
                 setExitingId(null);
             }, 300);
         } catch (err) {
-            setDeleteError(err.response?.data?.message || 'Could not delete user.');
+            setDeleteError(err.response?.data?.message || t('users.couldNotDelete'));
         } finally { setDeleting(null); }
     };
 
@@ -90,14 +92,14 @@ export default function Users() {
             <div className="max-w-3xl mx-auto px-6 py-6">
 
                 <div className="flex items-center justify-between mb-3">
-                    <h1 className="text-sm font-bold text-base-content">Team Members</h1>
+                    <h1 className="text-sm font-bold text-base-content">{t('users.title')}</h1>
                     {!showForm && (
                         <button
                             onClick={() => setShowForm(true)}
                             className="flex items-center gap-1.5 px-2.5 py-1.5 text-[10px] font-semibold border border-primary/40 text-primary rounded-lg hover:bg-primary/10 transition-colors"
                         >
                             <i className="fas fa-plus text-[8px]"></i>
-                            New User
+                            {t('users.newUser')}
                         </button>
                     )}
                 </div>
@@ -107,7 +109,7 @@ export default function Users() {
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
                                 <div className="w-0.5 h-4 rounded-full bg-primary/50 flex-shrink-0"></div>
-                                <h2 className="text-sm font-semibold text-base-content">Create User Account</h2>
+                                <h2 className="text-sm font-semibold text-base-content">{t('users.createUserAccount')}</h2>
                             </div>
                             <button onClick={resetForm} className="w-7 h-7 rounded-lg hover:bg-base-300 flex items-center justify-center text-base-content/40 hover:text-base-content transition-colors">
                                 <i className="fas fa-times text-xs"></i>
@@ -117,7 +119,7 @@ export default function Users() {
                         <form onSubmit={createUser} className="space-y-3">
                             <div className="grid grid-cols-3 gap-3">
                                 <div>
-                                    <label className="block text-xs font-medium text-base-content/60 mb-1">Full Name</label>
+                                    <label className="block text-xs font-medium text-base-content/60 mb-1">{t('users.fullName')}</label>
                                     <input
                                         type="text"
                                         value={name}
@@ -128,7 +130,7 @@ export default function Users() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-medium text-base-content/60 mb-1">Email</label>
+                                    <label className="block text-xs font-medium text-base-content/60 mb-1">{t('users.email')}</label>
                                     <input
                                         type="email"
                                         value={email}
@@ -139,27 +141,27 @@ export default function Users() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-medium text-base-content/60 mb-1">Role</label>
+                                    <label className="block text-xs font-medium text-base-content/60 mb-1">{t('users.role')}</label>
                                     <select
                                         value={role}
                                         onChange={e => setRole(e.target.value)}
                                         required
                                         className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors"
                                     >
-                                        <option value="user">User</option>
-                                        <option value="admin">Administrator</option>
+                                        <option value="user">{t('users.user')}</option>
+                                        <option value="admin">{t('users.administrator')}</option>
                                     </select>
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs font-medium text-base-content/60 mb-1">Password</label>
+                                    <label className="block text-xs font-medium text-base-content/60 mb-1">{t('users.password')}</label>
                                     <div className="relative">
                                         <input
                                             type={showPw ? 'text' : 'password'}
                                             value={password}
                                             onChange={e => setPassword(e.target.value)}
-                                            placeholder="Min. 6 characters"
+                                            placeholder={t('users.minChars')}
                                             required
                                             minLength={6}
                                             className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 pr-9 text-sm text-base-content outline-none focus:border-primary/60 transition-colors"
@@ -175,7 +177,7 @@ export default function Users() {
                                 </div>
                                 <div>
                                     <label className="block text-xs font-medium text-base-content/60 mb-1">
-                                        Confirm Password
+                                        {t('users.confirmPassword')}
                                         {confirmPassword && (
                                             password === confirmPassword
                                                 ? <i className="fas fa-check text-success text-[9px] ml-1.5"></i>
@@ -187,7 +189,7 @@ export default function Users() {
                                             type={showConfirmPw ? 'text' : 'password'}
                                             value={confirmPassword}
                                             onChange={e => setConfirmPassword(e.target.value)}
-                                            placeholder="Repeat password"
+                                            placeholder={t('users.repeatPassword')}
                                             required
                                             className={`w-full bg-base-100 border rounded-lg px-3 py-2 pr-9 text-sm text-base-content outline-none transition-colors ${
                                                 confirmPassword
@@ -222,10 +224,10 @@ export default function Users() {
                                     className="flex items-center gap-2 px-4 py-2 text-xs font-semibold bg-primary text-white rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity shadow-[0_0_14px_color-mix(in_oklch,var(--color-primary)_35%,transparent)]"
                                 >
                                     <i className={`fas ${saving ? 'fa-spinner fa-spin' : 'fa-user-plus'} text-xs`}></i>
-                                    {saving ? 'Creating…' : 'Create User'}
+                                    {saving ? t('users.creating') : t('users.createUser')}
                                 </button>
                                 <button type="button" onClick={resetForm} className="px-4 py-2 text-sm font-medium text-base-content/50 hover:text-base-content transition-colors">
-                                    Cancel
+                                    {t('users.cancel')}
                                 </button>
                             </div>
                         </form>
@@ -251,7 +253,7 @@ export default function Users() {
                             <div>
                                 <div className="flex items-center gap-2 mb-2 px-1">
                                     <div className="w-0.5 h-3 rounded-full bg-primary/40 flex-shrink-0"></div>
-                                    <p className="text-[10px] font-semibold text-base-content/35 uppercase tracking-wider">Administrators</p>
+                                    <p className="text-[10px] font-semibold text-base-content/35 uppercase tracking-wider">{t('users.administrators')}</p>
                                 </div>
                                 <div className="users-list bg-base-200 border border-base-300 rounded-xl overflow-hidden">
                                     {admins.map((u, i) => (
@@ -274,15 +276,15 @@ export default function Users() {
                             <div className="flex items-center gap-2 mb-2 px-1">
                                 <div className="w-0.5 h-3 rounded-full bg-primary/40 flex-shrink-0"></div>
                                 <p className="text-[10px] font-semibold text-base-content/35 uppercase tracking-wider">
-                                    Users
-                                    <span className="ml-2 text-base-content/25 normal-case tracking-normal font-normal">Can view and ping — no CRUD access</span>
+                                    {t('users.users')}
+                                    <span className="ml-2 text-base-content/25 normal-case tracking-normal font-normal">{t('users.memberDesc')}</span>
                                 </p>
                             </div>
                             {usersList.length === 0 ? (
                                 <div className="bg-base-200 border border-base-300 border-dashed rounded-xl flex items-center justify-center py-12 text-base-content/30">
                                     <div className="text-center">
                                         <i className="fas fa-user-plus text-2xl block mb-2 opacity-30"></i>
-                                        <p className="text-sm">No users yet — create one above</p>
+                                        <p className="text-sm">{t('users.noUsersHint')}</p>
                                     </div>
                                 </div>
                             ) : (
@@ -308,8 +310,8 @@ export default function Users() {
 
             {pendingDeleteUser && (
                 <ConfirmModal
-                    title="Delete user?"
-                    message={`Delete user "${pendingDeleteUser.name}" (${pendingDeleteUser.email})? This cannot be undone.`}
+                    title={t('users.deleteUser')}
+                    message={t('users.deleteConfirmMsg', { name: pendingDeleteUser.name, email: pendingDeleteUser.email })}
                     onConfirm={confirmDeleteUser}
                     onClose={() => setPendingDeleteUser(null)}
                 />
@@ -336,6 +338,7 @@ function avatarStyle(name) {
 }
 
 function UserRow({ user: u, isMe, isLast, deleting, isExiting, isNew, onDelete }) {
+    const { t } = useLang();
     const av = avatarStyle(u.name);
     return (
         <div className={`user-row group flex items-center gap-4 px-4 py-3 transition-colors duration-100 hover:bg-base-300/20 ${isExiting ? 'user-row-exit' : ''} ${isNew ? 'user-row-new' : ''} ${!isLast ? 'border-b border-base-300/60' : ''}`}>
@@ -346,12 +349,12 @@ function UserRow({ user: u, isMe, isLast, deleting, isExiting, isNew, onDelete }
             <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold text-base-content">{u.name}</span>
-                    {isMe && <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-base-300 text-base-content/50 font-medium">You</span>}
+                    {isMe && <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-base-300 text-base-content/50 font-medium">{t('users.you')}</span>}
                     <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-semibold border ${
                         u.role === 'admin'
                             ? 'bg-primary/15 text-primary border-primary/25'
                             : 'bg-base-300/60 text-base-content/50 border-base-300'
-                    }`}>{u.role}</span>
+                    }`}>{u.role === 'admin' ? t('users.administrator') : t('users.user')}</span>
                 </div>
                 <div className="text-xs text-base-content/40 mt-0.5">{u.email}</div>
             </div>
@@ -364,7 +367,7 @@ function UserRow({ user: u, isMe, isLast, deleting, isExiting, isNew, onDelete }
                 <button
                     onClick={onDelete}
                     disabled={deleting}
-                    title="Delete user"
+                                                    title={t('users.deleteUser')}
                     className="w-7 h-7 flex items-center justify-center rounded-lg text-base-content/30 hover:text-error hover:bg-error/10 transition-all disabled:opacity-40 opacity-0 group-hover:opacity-100"
                 >
                     {deleting
