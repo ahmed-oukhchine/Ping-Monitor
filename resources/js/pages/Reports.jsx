@@ -450,16 +450,18 @@ export default function Reports({ user }) {
                                     <span className="text-[10px] text-base-content/25">{t('reports.sortedAsc')}</span>
                                 </div>
                                 <div className="rounded-xl overflow-hidden py-4 px-2" style={{ background: 'rgba(0,0,0,0.06)' }}>
-                                    <ResponsiveContainer width="100%" height={Math.max(200, stats.length * 36)}>
-                                        <BarChart data={[...stats].sort((a, b) => (a.uptime_percent ?? 0) - (b.uptime_percent ?? 0))} layout="vertical"
-                                            margin={{ top: 4, right: 60, left: 8, bottom: 4 }}>
-                                            <CartesianGrid strokeDasharray="3 8" stroke="rgba(255,255,255,0.06)" horizontal={false} />
-                                            <XAxis type="number" domain={[90, 100]}
-                                                tick={{ fill: '#c9cdd6', fontSize: 11, fontWeight: 500 }}
-                                                tickLine={false} axisLine={{ stroke: 'rgba(255,255,255,0.12)' }} unit="%" />
-                                            <YAxis type="category" dataKey="target_name" width={130}
-                                                tick={{ fill: '#c9cdd6', fontSize: 12, fontWeight: 500 }}
-                                                tickLine={false} axisLine={false} />
+                                    <div className="overflow-x-auto">
+                                        <div style={{ minWidth: Math.max(600, stats.length * 200) }}>
+                                            <ResponsiveContainer width="100%" height={400}>
+                                                <BarChart data={[...stats].sort((a, b) => (a.uptime_percent ?? 0) - (b.uptime_percent ?? 0))} layout="vertical"
+                                                    margin={{ top: 4, right: 60, left: 8, bottom: 4 }}>
+                                                    <CartesianGrid strokeDasharray="3 8" stroke="rgba(255,255,255,0.06)" horizontal={false} />
+                                                    <XAxis type="number" domain={[90, 100]}
+                                                        tick={{ fill: '#c9cdd6', fontSize: 11, fontWeight: 500 }}
+                                                        tickLine={false} axisLine={{ stroke: 'rgba(255,255,255,0.12)' }} unit="%" />
+                                                    <YAxis type="category" dataKey="target_name" width={130}
+                                                        tick={{ fill: '#c9cdd6', fontSize: 12, fontWeight: 500 }}
+                                                        tickLine={false} axisLine={false} />
                                                     <Tooltip content={({ active, payload }) => {
                                                         if (!active || !payload?.length) return null;
                                                         const d = payload[0].payload;
@@ -482,9 +484,11 @@ export default function Reports({ user }) {
                                             </Bar>
                                         </BarChart>
                                     </ResponsiveContainer>
+                                    </div>
                                 </div>
                             </div>
-                        )}
+                        </div>
+                    )}
 
                     </>
                 )}
