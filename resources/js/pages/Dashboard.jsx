@@ -404,10 +404,13 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
                             </button>
                         ) : (
                             <>
-                                <button onClick={() => setAutoRefresh(p => !p)}
+                                <button onClick={() => setAutoRefresh(false)}
                                     className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold border border-warning/50 text-warning rounded-lg hover:bg-warning/10 transition-colors">
-                                    <i className={`fas ${autoRefresh ? 'fa-pause' : 'fa-play'} text-[10px]`}></i>
-                                    {autoRefresh ? t('dashboard.pause') : t('dashboard.resume')}
+                                    <i className="fas fa-pause text-[10px]"></i> {t('dashboard.pause')}
+                                </button>
+                                <button onClick={() => setAutoRefresh(true)}
+                                    className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold border border-success/50 text-success rounded-lg hover:bg-success/10 transition-colors">
+                                    <i className="fas fa-play text-[10px]"></i> {t('dashboard.resume')}
                                 </button>
                                 <button onClick={() => { setAutoRefresh(false); setShowActions(false); }}
                                     className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold border border-error/50 text-error rounded-lg hover:bg-error/10 transition-colors">
