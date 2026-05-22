@@ -29,6 +29,8 @@ export default function Reports({ user }) {
     const [schedules, setSchedules] = useState([]);
     const [showScheduleForm, setShowScheduleForm] = useState(false);
     const [form, setForm] = useState({ name: '', frequency: 'weekly', recipients: '' });
+    const [page, setPage] = useState(0);
+    const perPage = 10;
 
     const isAdmin = user?.role === 'admin';
 
@@ -52,6 +54,8 @@ export default function Reports({ user }) {
             .then(res => setData(res.data))
             .finally(() => setLoading(false));
     }, [targetId, dateFrom, dateTo]);
+
+    useEffect(() => { setPage(0); }, [data]);
 
     const applyRange = (days) => {
         setDateFrom(fmtDate(new Date(Date.now() - days * 86400000)));
@@ -342,7 +346,10 @@ export default function Reports({ user }) {
                             <div className="flex items-center gap-2 px-5 py-4 border-b border-base-300">
                                 <div className="w-0.5 h-3.5 rounded-full bg-primary/50 flex-shrink-0"></div>
                                 <h2 className="text-xs font-semibold text-base-content/40 uppercase tracking-wider">{t('reports.perTargetBreakdown')}</h2>
-                                <span className="text-[10px] text-base-content/25">{t('reports.nDevices', { n: Math.min(stats.length, 10) })}</span>
+                                <span className="text-[10px] text-base-content/25">{t('reports.nDevices', { n: stats.length })}</span>
+                                {stats.length > perPage && (
+                                    <span className="text-[10px] text-base-content/20 ml-auto">Page {page + 1}/{Math.ceil(stats.length / perPage)}</span>
+                                )}
                             </div>
                             <div className="overflow-x-auto">
                                 <table className="w-full text-sm">
@@ -365,7 +372,7 @@ export default function Reports({ user }) {
                                                 </td>
                                             </tr>
                                         ) : (
-                                            stats.slice(0, 10).map((s, idx) => {
+                                            stats.slice(page * perPage, (page + 1) * perPage).map((s, idx) => {
                                                 const uptime = s.uptime_percent;
                                                 const lat    = s.avg_response_time;
                                                 return (
@@ -421,6 +428,18 @@ export default function Reports({ user }) {
                                     </tbody>
                                 </table>
                             </div>
+                            {stats.length > perPage && (
+                                <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-base-300">
+                                    <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}
+                                        className="px-3 py-1.5 text-xs font-medium rounded-lg border border-base-300 text-base-content/50 hover:text-base-content hover:border-base-content/30 disabled:opacity-30 disabled:pointer-events-none transition-colors">
+                                        <i className="fas fa-chevron-left mr-1"></i> Previous
+                                    </button>
+                                    <button onClick={() => setPage(p => Math.min(Math.ceil(stats.length / perPage) - 1, p + 1))} disabled={page >= Math.ceil(stats.length / perPage) - 1}
+                                        className="px-3 py-1.5 text-xs font-medium rounded-lg border border-base-300 text-base-content/50 hover:text-base-content hover:border-base-content/30 disabled:opacity-30 disabled:pointer-events-none transition-colors">
+                                        Next <i className="fas fa-chevron-right ml-1"></i>
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
                         {stats.length > 1 && (
