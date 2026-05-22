@@ -7,7 +7,7 @@
 @source '../**/*.jsx';
 
 @plugin "daisyui" {
-  themes: dark --default, light;
+  themes: dark --default, light, forest, dracula;
 }
 
 /* ── Dark theme (lighter neutral gray) ── */
