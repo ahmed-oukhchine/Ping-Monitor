@@ -5,17 +5,19 @@ import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, LabelList,
 } from 'recharts';
 
+import { useLang } from '../contexts/LanguageContext';
+
 const shorten  = (s, n = 18) => s.length > n ? s.slice(0, n - 1) + '…' : s;
 const latColor = (ms)  => ms  < 50  ? '#22c55e' : ms  < 150 ? '#f59e0b' : '#ef4444';
 const pctColor = (pct) => pct >= 99 ? '#22c55e' : pct >= 90 ? '#f59e0b' : '#ef4444';
 
-function timeAgo(dateStr) {
+function timeAgo(dateStr, t) {
     if (!dateStr) return null;
     const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
-    if (diff < 60)   return `${diff}s ago`;
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    if (diff < 86400)return `${Math.floor(diff / 3600)}h ago`;
-    return `${Math.floor(diff / 86400)}d ago`;
+    if (diff < 60)   return t ? t('stats.sAgo', { n: diff }) : `${diff}s ago`;
+    if (diff < 3600) return t ? t('stats.mAgo', { n: Math.floor(diff / 60) }) : `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400)return t ? t('stats.hAgo', { n: Math.floor(diff / 3600) }) : `${Math.floor(diff / 3600)}h ago`;
+    return t ? t('stats.dAgo', { n: Math.floor(diff / 86400) }) : `${Math.floor(diff / 86400)}d ago`;
 }
 
 function healthScore(online, total, maintenance, globalUptime, globalLatency) {
@@ -26,12 +28,12 @@ function healthScore(online, total, maintenance, globalUptime, globalLatency) {
     return Math.round(Math.min(100, Math.max(0, onlineScore + uptimeScore + latScore)));
 }
 
-function ScoreRing({ score }) {
+function ScoreRing({ score, t }) {
     const r = 38;
     const circ = 2 * Math.PI * r;
     const dash = circ * (score / 100);
     const color = score >= 90 ? '#22c55e' : score >= 70 ? '#f59e0b' : '#ef4444';
-    const label = score >= 90 ? 'Healthy' : score >= 70 ? 'Degraded' : 'Critical';
+    const label = score >= 90 ? t('stats.healthy') : score >= 70 ? t('stats.degraded') : t('stats.critical');
     return (
         <div className="relative w-24 h-24 flex-shrink-0">
             <svg viewBox="0 0 88 88" className="w-full h-full -rotate-90">
@@ -63,6 +65,7 @@ function StatusDot({ status, paused }) {
 }
 
 export default function Statistics({ targets = [], loading = false }) {
+    const { t } = useLang();
     const [activeTab, setActiveTab] = useState('latency');
     const [tick, setTick] = useState(0);
     useEffect(() => { const id = setInterval(() => setTick(t => t + 1), 1000); return () => clearInterval(id); }, []);
@@ -148,9 +151,9 @@ export default function Statistics({ targets = [], loading = false }) {
         .slice(0, 12);
 
     const tabs = [
-        { id: 'latency', label: 'Avg Latency',  data: byLatency, unit: 'ms' },
-        { id: 'uptime',  label: 'Uptime %',     data: byUptime,  unit: '%'  },
-        { id: 'loss',    label: 'Packet Loss',   data: byLoss,    unit: '%'  },
+        { id: 'latency', labelKey: 'stats.avgLatencyTab', data: byLatency, unit: 'ms' },
+        { id: 'uptime',  labelKey: 'stats.uptimeTab',     data: byUptime,  unit: '%'  },
+        { id: 'loss',    labelKey: 'stats.packetLossTab',  data: byLoss,    unit: '%'  },
     ];
     const tab = tabs.find(t => t.id === activeTab);
 
@@ -164,7 +167,7 @@ export default function Statistics({ targets = [], loading = false }) {
         return (
             <div className="bg-base-300 border border-base-content/15 rounded-xl px-3 py-2 text-xs shadow-xl">
                 <span style={{ color: payload[0].payload.color }} className="font-bold">{payload[0].name}</span>
-                <span className="text-base-content/60 ml-2">{payload[0].value} device{payload[0].value !== 1 ? 's' : ''}</span>
+                <span className="text-base-content/60 ms-2">{payload[0].value} {payload[0].value !== 1 ? t('stats.devices') : t('stats.device')}</span>
             </div>
         );
     };
@@ -185,7 +188,7 @@ export default function Statistics({ targets = [], loading = false }) {
         <div className="min-h-screen bg-base-100 flex items-center justify-center">
             <div className="text-center">
                 <span className="loading loading-spinner loading-lg block mx-auto mb-3 text-primary"></span>
-                <p className="text-sm text-base-content/40">Loading statistics…</p>
+                <p className="text-sm text-base-content/40">{t('stats.loading')}</p>
             </div>
         </div>
     );
@@ -195,14 +198,14 @@ export default function Statistics({ targets = [], loading = false }) {
             <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-5 shadow-[0_0_24px_color-mix(in_oklch,var(--color-primary)_15%,transparent)]">
                 <i className="fas fa-satellite-dish text-primary text-2xl"></i>
             </div>
-            <h2 className="text-base font-bold text-base-content mb-1">No devices monitored yet</h2>
+            <h2 className="text-base font-bold text-base-content mb-1">{t('stats.noDevices')}</h2>
             <p className="text-sm text-base-content/40 mb-6 max-w-xs text-center">
-                Add your first target on the Monitoring page to start collecting data.
+                {t('stats.addTargetHint')}
             </p>
             <Link to="/monitoring"
                 className="flex items-center gap-2 px-4 py-2 text-xs font-semibold bg-primary text-white rounded-lg hover:opacity-90 transition-opacity shadow-[0_0_14px_color-mix(in_oklch,var(--color-primary)_35%,transparent)]"
                 style={{ textDecoration: 'none' }}>
-                <i className="fas fa-plus text-[10px]"></i>Go to Monitoring
+                <i className="fas fa-plus text-[10px]"></i>{t('stats.goToMonitoring')}
             </Link>
         </div>
     );
@@ -215,29 +218,29 @@ export default function Statistics({ targets = [], loading = false }) {
                     <div className="flex items-center gap-3">
                         <div className="w-1 h-7 rounded-full bg-primary flex-shrink-0"></div>
                         <div>
-                            <h1 className="text-base font-bold text-base-content leading-tight">Network Dashboard</h1>
-                            <p className="text-xs text-base-content/40 mt-0.5">{targets.length} device{targets.length !== 1 ? 's' : ''} monitored</p>
+                            <h1 className="text-base font-bold text-base-content leading-tight">{t('stats.networkDashboard')}</h1>
+                            <p className="text-xs text-base-content/40 mt-0.5">{targets.length === 1 ? t('stats.nDevicesMonitored', { n: targets.length }) : t('stats.nDevicesMonitored_plural', { n: targets.length })}</p>
                         </div>
                     </div>
                 </div>
 
                 <div className="anim-fade-up anim-delay-1 bg-base-200 border border-base-300 rounded-xl p-5 flex items-center gap-6">
-                    {score !== null && <ScoreRing score={score} />}
+                    {score !== null && <ScoreRing score={score} t={t} />}
                     <div className="flex-1 min-w-0">
-                        <div className="text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">Network Health Score</div>
+                        <div className="text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">{t('stats.networkHealthScore')}</div>
                         <div className="flex flex-wrap gap-x-6 gap-y-1 text-[11px] text-base-content/50">
-                            <span><span className="font-bold text-success">{online}</span> online</span>
-                            <span><span className={`font-bold ${offline > 0 ? 'text-error' : 'text-base-content/35'}`}>{offline}</span> offline</span>
-                            <span><span className="font-bold text-warning">{maintenance}</span> in maintenance</span>
-                            <span><span className={`font-bold ${uptimeCls}`}>{globalUptime ?? '—'}%</span> avg uptime</span>
-                            <span><span className="font-bold text-primary">{globalLatency ?? '—'} ms</span> avg latency</span>
+                            <span><span className="font-bold text-success">{online}</span> {t('stats.online')}</span>
+                            <span><span className={`font-bold ${offline > 0 ? 'text-error' : 'text-base-content/35'}`}>{offline}</span> {t('stats.offline')}</span>
+                            <span><span className="font-bold text-warning">{maintenance}</span> {t('stats.inMaintenance')}</span>
+                            <span><span className={`font-bold ${uptimeCls}`}>{globalUptime ?? '—'}%</span> {t('stats.avgUptime')}</span>
+                            <span><span className="font-bold text-primary">{globalLatency ?? '—'} ms</span> {t('stats.avgLatency')}</span>
                         </div>
                     </div>
 
                     <div className="flex gap-3 flex-shrink-0">
                         {highestLatency && (
                             <div className="bg-base-300/50 border border-base-300 rounded-xl px-4 py-3 text-center min-w-[110px]">
-                                <div className="text-[10px] text-base-content/40 uppercase tracking-wide mb-1">Highest Latency</div>
+                                <div className="text-[10px] text-base-content/40 uppercase tracking-wide mb-1">{t('stats.highestLatency')}</div>
                                 <div className="text-base font-black tabular-nums" style={{ color: latColor(highestLatency.avg_response_time) }}>
                                     {highestLatency.avg_response_time} ms
                                 </div>
@@ -246,7 +249,7 @@ export default function Statistics({ targets = [], loading = false }) {
                         )}
                         {mostPinged && (
                             <div className="bg-base-300/50 border border-base-300 rounded-xl px-4 py-3 text-center min-w-[110px]">
-                                <div className="text-[10px] text-base-content/40 uppercase tracking-wide mb-1">Most Checked</div>
+                                <div className="text-[10px] text-base-content/40 uppercase tracking-wide mb-1">{t('stats.mostChecked')}</div>
                                 <div className="text-base font-black tabular-nums text-primary">
                                     {mostPinged.total_pings.toLocaleString()}
                                 </div>
@@ -254,16 +257,16 @@ export default function Statistics({ targets = [], loading = false }) {
                             </div>
                         )}
                         <div className="bg-base-300/50 border border-base-300 rounded-xl px-4 py-3 text-center min-w-[110px]">
-                            <div className="text-[10px] text-base-content/40 uppercase tracking-wide mb-1">Total Checks</div>
+                            <div className="text-[10px] text-base-content/40 uppercase tracking-wide mb-1">{t('stats.totalChecks')}</div>
                             <div className="text-base font-black tabular-nums text-base-content">
                                 {totalPings.toLocaleString()}
                             </div>
-                            <div className="text-[10px] text-base-content/50 mt-0.5">{totalFailed.toLocaleString()} failed</div>
+                            <div className="text-[10px] text-base-content/50 mt-0.5">{totalFailed.toLocaleString()} {t('stats.failed')}</div>
                         </div>
                     </div>
                 </div>
 
-                {offline > 0 && (
+                        {offline > 0 && (
                     <div className="banner-enter bg-error/8 border border-error/25 rounded-xl p-4">
                         <div className="flex items-center gap-2 mb-3">
                             <span className="relative flex h-2.5 w-2.5 flex-shrink-0">
@@ -271,19 +274,19 @@ export default function Statistics({ targets = [], loading = false }) {
                                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-error"></span>
                             </span>
                             <span className="text-xs font-bold text-error">
-                                {offline} device{offline !== 1 ? 's' : ''} currently offline
+                                {offline === 1 ? t('stats.nOfflineAlert', { n: offline }) : t('stats.nOfflineAlert_plural', { n: offline })}
                             </span>
                         </div>
                         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-                            {offlineTargets.map(t => (
-                                <div key={t.id} className="flex items-center gap-2 bg-error/10 border border-error/20 rounded-lg px-3 py-2">
+                            {offlineTargets.map(target => (
+                                <div key={target.id} className="flex items-center gap-2 bg-error/10 border border-error/20 rounded-lg px-3 py-2">
                                     <span className="w-1.5 h-1.5 rounded-full bg-error flex-shrink-0"></span>
                                     <div className="min-w-0">
-                                        <div className="text-xs font-semibold text-error/90 truncate">{t.name}</div>
-                                        <div className="text-[10px] text-error/50 font-mono truncate">{t.ip_address}</div>
+                                        <div className="text-xs font-semibold text-error/90 truncate">{target.name}</div>
+                                        <div className="text-[10px] text-error/50 font-mono truncate">{target.ip_address}</div>
                                     </div>
-                                    {t.last_ping_at && (
-                                        <div className="text-[10px] text-error/40 ml-auto flex-shrink-0">{timeAgo(t.last_ping_at)}</div>
+                                    {target.last_ping_at && (
+                                        <div className="text-[10px] text-error/40 ms-auto flex-shrink-0">{timeAgo(target.last_ping_at, t)}</div>
                                     )}
                                 </div>
                             ))}
@@ -301,53 +304,53 @@ export default function Statistics({ targets = [], loading = false }) {
                         </div>
                     </div>
                     <div className="flex items-center gap-3 flex-shrink-0 text-[11px]">
-                        {online      > 0 && <span className="flex items-center gap-1.5 text-success/80"><span className="w-1.5 h-1.5 rounded-full bg-success"></span>{online} online</span>}
-                        {maintenance > 0 && <span className="flex items-center gap-1.5 text-warning/80"><span className="w-1.5 h-1.5 rounded-full bg-warning"></span>{maintenance} maintenance</span>}
-                        {offline     > 0 && <span className="flex items-center gap-1.5 text-error/80"><span className="w-1.5 h-1.5 rounded-full bg-error"></span>{offline} offline</span>}
-                        {unknown     > 0 && <span className="flex items-center gap-1.5 text-base-content/40"><span className="w-1.5 h-1.5 rounded-full bg-base-content/20"></span>{unknown} unknown</span>}
+                        {online      > 0 && <span className="flex items-center gap-1.5 text-success/80"><span className="w-1.5 h-1.5 rounded-full bg-success"></span>{online} {t('stats.onlineLabel')}</span>}
+                        {maintenance > 0 && <span className="flex items-center gap-1.5 text-warning/80"><span className="w-1.5 h-1.5 rounded-full bg-warning"></span>{maintenance} {t('stats.maintenanceLabel')}</span>}
+                        {offline     > 0 && <span className="flex items-center gap-1.5 text-error/80"><span className="w-1.5 h-1.5 rounded-full bg-error"></span>{offline} {t('stats.offlineLabel')}</span>}
+                        {unknown     > 0 && <span className="flex items-center gap-1.5 text-base-content/40"><span className="w-1.5 h-1.5 rounded-full bg-base-content/20"></span>{unknown} {t('stats.unknownLabel')}</span>}
                         <div className="w-px h-3.5 bg-base-300"></div>
                         <span className={`font-bold mono ${offline > 0 ? 'text-error' : parseFloat(globalUptime) >= 99 ? 'text-success' : 'text-warning'}`}>
-                            {globalUptime ?? '—'}% uptime
+                            {t('stats.ntUptime', { n: globalUptime ?? '—' })}
                         </span>
                     </div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-3">
                     {[
-                        { label: 'Total Devices', value: targets.length,
-                          sub: maintenance > 0 ? `${maintenance} in maintenance` : 'All monitored',
+                        { labelKey: 'stats.totalDevices', value: targets.length,
+                          sub: maintenance > 0 ? t('stats.nInMaintenance', { n: maintenance }) : t('stats.allMonitored'),
                           subCls: maintenance > 0 ? 'text-warning/70' : 'text-base-content/25',
                           cls: 'text-base-content', icon: 'fa-server', bg: 'bg-primary/10', ic: 'text-primary', border: 'border-t-primary/60' },
-                        { label: 'Online', value: online,
-                          sub: globalUptime ? `${globalUptime}% fleet uptime` : 'No ping data yet',
+                        { labelKey: 'stats.onlineLabel', value: online,
+                          sub: globalUptime ? t('stats.nFleetUptime', { n: globalUptime }) : t('stats.noPingData'),
                           subCls: 'text-base-content/30',
                           cls: 'text-success', icon: 'fa-check-circle', bg: 'bg-success/10', ic: 'text-success', border: 'border-t-success/60' },
-                        { label: 'Offline', value: offline,
-                          sub: offline > 0 ? 'Requires attention' : 'All clear',
+                        { labelKey: 'stats.offlineLabel', value: offline,
+                          sub: offline > 0 ? t('stats.requiresAttention') : t('stats.allClear'),
                           subCls: offline > 0 ? 'text-error/60' : 'text-base-content/25',
                           cls: offline > 0 ? 'text-error' : 'text-base-content/35',
                           icon: 'fa-times-circle', bg: offline > 0 ? 'bg-error/10' : 'bg-base-300/50', ic: offline > 0 ? 'text-error' : 'text-base-content/25', border: offline > 0 ? 'border-t-error/60' : 'border-t-base-300' },
-                        { label: 'Maintenance', value: maintenance,
-                          sub: maintenance > 0 ? 'Excluded from stats' : 'None paused',
+                        { labelKey: 'stats.maintenanceLabel', value: maintenance,
+                          sub: maintenance > 0 ? t('stats.excludedFromStats') : t('stats.nonePaused'),
                           subCls: maintenance > 0 ? 'text-warning/60' : 'text-base-content/25',
                           cls: maintenance > 0 ? 'text-warning' : 'text-base-content/35',
                           icon: 'fa-pause', bg: 'bg-warning/10', ic: 'text-warning', border: 'border-t-warning/60' },
-                        { label: 'Avg Latency', value: globalLatency ? `${globalLatency} ms` : '—',
-                          sub: globalLatency == null ? 'No data yet' : globalLatency < 50 ? 'Fast' : globalLatency < 150 ? 'Moderate' : 'Slow — check targets',
+                        { labelKey: 'stats.avgLatencyCard', value: globalLatency ? `${globalLatency} ms` : '—',
+                          sub: globalLatency == null ? t('stats.noDataYet') : globalLatency < 50 ? t('stats.fast') : globalLatency < 150 ? t('stats.moderate') : t('stats.slowCheckTargets'),
                           subCls: globalLatency == null ? 'text-base-content/25' : globalLatency < 50 ? 'text-success/60' : globalLatency < 150 ? 'text-warning/60' : 'text-error/60',
                           cls: 'text-primary', icon: 'fa-tachometer-alt', bg: 'bg-primary/10', ic: 'text-primary', border: 'border-t-primary/60' },
-                        { label: 'Fleet Uptime', value: globalUptime ? `${globalUptime}%` : '—',
-                          sub: globalUptime == null ? 'No data yet' : parseFloat(globalUptime) >= 99 ? 'Excellent' : parseFloat(globalUptime) >= 90 ? 'Good' : 'Needs improvement',
+                        { labelKey: 'stats.fleetUptimeCard', value: globalUptime ? `${globalUptime}%` : '—',
+                          sub: globalUptime == null ? t('stats.noDataYet') : parseFloat(globalUptime) >= 99 ? t('stats.excellent') : parseFloat(globalUptime) >= 90 ? t('stats.good') : t('stats.needsImprovement'),
                           subCls: globalUptime == null ? 'text-base-content/25' : parseFloat(globalUptime) >= 99 ? 'text-success/60' : parseFloat(globalUptime) >= 90 ? 'text-warning/60' : 'text-error/60',
                           cls: uptimeCls, icon: 'fa-arrow-up', bg: 'bg-success/10', ic: 'text-success', border: 'border-t-success/60' },
                     ].map((c, i) => (
-                        <div key={c.label} className={`stat-card anim-fade-up anim-delay-${i + 1} bg-base-200 border border-base-300 border-t-2 ${c.border} rounded-xl p-4 flex items-center gap-3`}>
+                        <div key={c.labelKey} className={`stat-card anim-fade-up anim-delay-${i + 1} bg-base-200 border border-base-300 border-t-2 ${c.border} rounded-xl p-4 flex items-center gap-3`}>
                             <div className={`w-10 h-10 rounded-xl ${c.bg} flex items-center justify-center flex-shrink-0`}>
                                 <i className={`fas ${c.icon} ${c.ic} text-lg`}></i>
                             </div>
                             <div className="min-w-0 flex-1">
                                 <div className={`text-2xl font-bold tabular-nums mono leading-none ${c.cls}`}>{c.value}</div>
-                                <div className="text-xs text-base-content/45 mt-0.5 font-medium leading-tight">{c.label}</div>
+                                <div className="text-xs text-base-content/45 mt-0.5 font-medium leading-tight">{t(c.labelKey)}</div>
                                 {c.sub && <div className={`text-[10px] mt-0.5 leading-tight ${c.subCls}`}>{c.sub}</div>}
                             </div>
                         </div>
@@ -358,10 +361,10 @@ export default function Statistics({ targets = [], loading = false }) {
                     <div className="bg-base-200 border border-base-300 rounded-xl p-5">
                         <div className="flex items-center gap-2 mb-4">
                             <div className="w-0.5 h-3.5 rounded-full bg-primary/50 flex-shrink-0"></div>
-                            <h2 className="text-xs font-semibold text-base-content/40 uppercase tracking-wider">Status Distribution</h2>
+                            <h2 className="text-xs font-semibold text-base-content/40 uppercase tracking-wider">{t('stats.statusDistribution')}</h2>
                         </div>
                         {pieData.length === 0 ? (
-                            <div className="flex items-center justify-center h-36 text-base-content/30 text-sm">No data yet</div>
+                            <div className="flex items-center justify-center h-36 text-base-content/30 text-sm">{t('stats.noDataYet')}</div>
                         ) : (
                             <div className="flex items-center gap-8">
                                 <ResponsiveContainer width={160} height={160}>
@@ -378,7 +381,7 @@ export default function Statistics({ targets = [], loading = false }) {
                                     {pieData.map(d => (
                                         <div key={d.name} className="flex items-center gap-3">
                                             <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }}></span>
-                                            <span className="text-sm text-base-content/60 flex-1">{d.name}</span>
+                                            <span className="text-sm text-base-content/60 flex-1">{t('stats.' + d.name.toLowerCase() + 'Label')}</span>
                                             <span className="text-sm font-bold mono tabular-nums" style={{ color: d.color }}>{d.value}</span>
                                             <span className="text-[10px] text-base-content/30 w-8 text-right">
                                                 {Math.round(d.value / targets.length * 100)}%
@@ -393,19 +396,19 @@ export default function Statistics({ targets = [], loading = false }) {
                     <div className="bg-base-200 border border-base-300 rounded-xl p-5">
                         <div className="flex items-center gap-2 mb-4">
                             <div className="w-0.5 h-3.5 rounded-full bg-primary/50 flex-shrink-0"></div>
-                            <h2 className="text-xs font-semibold text-base-content/40 uppercase tracking-wider">Fleet Health</h2>
+                            <h2 className="text-xs font-semibold text-base-content/40 uppercase tracking-wider">{t('stats.fleetHealth')}</h2>
                         </div>
                         <div className="space-y-3">
                             {[
-                                { label: 'Average Latency',     value: globalLatency ? `${globalLatency} ms` : '—', cls: 'text-primary' },
-                                { label: 'Average Uptime',      value: globalUptime  ? `${globalUptime}%`    : '—', cls: uptimeCls },
-                                { label: 'In Maintenance',      value: maintenance,   cls: maintenance > 0 ? 'text-warning'         : 'text-base-content/35' },
-                                { label: 'Unknown Status',      value: unknown,       cls: unknown > 0     ? 'text-base-content/60' : 'text-base-content/35' },
-                                { label: 'Total Ping Checks',   value: totalPings.toLocaleString(),  cls: 'text-base-content' },
-                                { label: 'Total Failed Checks', value: totalFailed.toLocaleString(), cls: totalFailed > 0 ? 'text-error' : 'text-base-content/35' },
+                                { labelKey: 'stats.averageLatency',     value: globalLatency ? `${globalLatency} ms` : '—', cls: 'text-primary' },
+                                { labelKey: 'stats.averageUptime',      value: globalUptime  ? `${globalUptime}%`    : '—', cls: uptimeCls },
+                                { labelKey: 'stats.inMaintenanceLabel', value: maintenance,   cls: maintenance > 0 ? 'text-warning'         : 'text-base-content/35' },
+                                { labelKey: 'stats.unknownStatus',      value: unknown,       cls: unknown > 0     ? 'text-base-content/60' : 'text-base-content/35' },
+                                { labelKey: 'stats.totalPingChecks',   value: totalPings.toLocaleString(),  cls: 'text-base-content' },
+                                { labelKey: 'stats.totalFailedChecks', value: totalFailed.toLocaleString(), cls: totalFailed > 0 ? 'text-error' : 'text-base-content/35' },
                             ].map(m => (
-                                <div key={m.label} className="flex items-center justify-between gap-4 border-b border-base-300/50 pb-2.5 last:border-0 last:pb-0">
-                                    <span className="text-sm text-base-content/50">{m.label}</span>
+                                <div key={m.labelKey} className="flex items-center justify-between gap-4 border-b border-base-300/50 pb-2.5 last:border-0 last:pb-0">
+                                    <span className="text-sm text-base-content/50">{t(m.labelKey)}</span>
                                     <span className={`text-sm font-bold mono tabular-nums ${m.cls}`}>{m.value}</span>
                                 </div>
                             ))}
@@ -418,11 +421,11 @@ export default function Statistics({ targets = [], loading = false }) {
                     <div className="bg-base-200 border border-base-300 rounded-xl p-5">
                         <div className="flex items-center gap-2 mb-4">
                             <div className="w-0.5 h-3.5 rounded-full bg-error/60 flex-shrink-0"></div>
-                            <h2 className="text-xs font-semibold text-base-content/40 uppercase tracking-wider">Worst Performers</h2>
-                            <span className="text-[10px] text-base-content/25 ml-1">by uptime</span>
+                            <h2 className="text-xs font-semibold text-base-content/40 uppercase tracking-wider">{t('stats.worstPerformers')}</h2>
+                            <span className="text-[10px] text-base-content/25 ms-1">{t('stats.byUptime')}</span>
                         </div>
                         {worstPerformers.length === 0 ? (
-                            <div className="flex items-center justify-center h-28 text-base-content/30 text-sm">No ping data yet</div>
+                            <div className="flex items-center justify-center h-28 text-base-content/30 text-sm">{t('stats.noPingDataYet')}</div>
                         ) : (
                             <div className="space-y-1">
                                 {worstPerformers.map((t, i) => (
@@ -452,11 +455,11 @@ export default function Statistics({ targets = [], loading = false }) {
                     <div className="bg-base-200 border border-base-300 rounded-xl p-5">
                         <div className="flex items-center gap-2 mb-4">
                             <div className="w-0.5 h-3.5 rounded-full bg-success/60 flex-shrink-0"></div>
-                            <h2 className="text-xs font-semibold text-base-content/40 uppercase tracking-wider">Top Performers</h2>
-                            <span className="text-[10px] text-base-content/25 ml-1">most reliable</span>
+                            <h2 className="text-xs font-semibold text-base-content/40 uppercase tracking-wider">{t('stats.topPerformers')}</h2>
+                            <span className="text-[10px] text-base-content/25 ms-1">{t('stats.mostReliable')}</span>
                         </div>
                         {bestPerformers.length === 0 ? (
-                            <div className="flex items-center justify-center h-28 text-base-content/30 text-sm">Need more ping data</div>
+                            <div className="flex items-center justify-center h-28 text-base-content/30 text-sm">{t('stats.needMorePingData')}</div>
                         ) : (
                             <div className="space-y-2">
                                 {bestPerformers.map((t, i) => (
@@ -493,7 +496,7 @@ export default function Statistics({ targets = [], loading = false }) {
                     <div className="flex items-center justify-between mb-5">
                         <div className="flex items-center gap-2">
                             <div className="w-0.5 h-3.5 rounded-full bg-primary/50 flex-shrink-0"></div>
-                            <h2 className="text-xs font-semibold text-base-content/40 uppercase tracking-wider">Per-Device Breakdown</h2>
+                            <h2 className="text-xs font-semibold text-base-content/40 uppercase tracking-wider">{t('stats.perDeviceBreakdown')}</h2>
                         </div>
                         <div className="flex items-center gap-0.5 bg-base-300/60 rounded-lg p-0.5">
                             {tabs.map(t => (
@@ -503,14 +506,14 @@ export default function Statistics({ targets = [], loading = false }) {
                                             ? 'bg-primary/15 text-primary shadow-sm'
                                             : 'text-base-content/45 hover:text-base-content'
                                     }`}>
-                                    {t.label}
+                                    {t(t.labelKey)}
                                 </button>
                             ))}
                         </div>
                     </div>
                     {tab.data.length === 0 ? (
                         <div className="flex items-center justify-center h-48 text-base-content/30 text-sm">
-                            No data yet — run some pings first
+                            {t('stats.noDataRunPings')}
                         </div>
                     ) : (
                         <div className="rounded-xl overflow-hidden py-4 px-2" style={{ background: C.bg }}>
