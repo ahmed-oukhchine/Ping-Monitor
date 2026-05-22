@@ -8,7 +8,6 @@ const sections = [
   { id: 'password',    label: 'changePassword', icon: 'fa-lock',         descKey: 'passwordDesc' },
   { id: 'appearance',  label: 'appearance',   icon: 'fa-palette',        descKey: 'appearanceDesc' },
   { id: 'alerts',      label: 'alertDefaults', icon: 'fa-bell',          descKey: 'alertDefaultsDesc' },
-  { id: 'notify',      label: 'notifications', icon: 'fa-envelope',      descKey: 'notificationsDesc' },
   { id: 'snmp',        label: 'snmp',          icon: 'fa-network-wired', descKey: 'snmpDesc' },
   { id: 'system',      label: 'system',        icon: 'fa-sliders-h',     descKey: 'systemDesc' },
 ];
@@ -404,17 +403,6 @@ export default function Settings({ themePref, onCycleTheme }) {
                     </div>
                   </div>
                 )}
-              </Card>
-            )}
-
-            {active === 'notify' && (
-              <Card id="notify">
-                <SectionTitle label={t('settings.notifications')} desc="Email server and notification preferences" />
-
-                <div className="flex items-center justify-center py-10 text-base-content/30">
-                  <i className="fas fa-wrench text-lg mr-2"></i>
-                  <span className="text-xs">Coming soon</span>
-                </div>
               </Card>
             )}
 
