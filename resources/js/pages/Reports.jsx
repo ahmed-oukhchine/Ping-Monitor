@@ -451,7 +451,7 @@ export default function Reports({ user }) {
                                 </div>
                                 <div className="rounded-xl overflow-hidden py-4 px-2" style={{ background: 'rgba(0,0,0,0.06)' }}>
                                     <div className="overflow-x-auto">
-                                        <div style={{ minWidth: Math.max(600, stats.length * 200) }}>
+                                        <div style={{ minWidth: Math.max(600, stats.length * 300) }}>
                                             <ResponsiveContainer width="100%" height={320}>
                                                 <BarChart data={[...stats].sort((a, b) => (a.uptime_percent ?? 0) - (b.uptime_percent ?? 0))}
                                                     margin={{ top: 4, right: 60, left: 8, bottom: 80 }}>
@@ -477,7 +477,7 @@ export default function Reports({ user }) {
                                                             </div>
                                                         );
                                                     }} />
-                                                    <Bar dataKey="uptime_percent" radius={[0, 5, 5, 0]} maxBarSize={60}>
+                                                    <Bar dataKey="uptime_percent" radius={[0, 5, 5, 0]} maxBarSize={100}>
                                                 {stats.map((s, i) => (
                                                     <Cell key={i} fill={uptimeColor(s.uptime_percent)} fillOpacity={0.85} />
                                                 ))}
