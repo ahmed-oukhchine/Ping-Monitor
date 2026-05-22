@@ -342,7 +342,7 @@ export default function Reports({ user }) {
                             <div className="flex items-center gap-2 px-5 py-4 border-b border-base-300">
                                 <div className="w-0.5 h-3.5 rounded-full bg-primary/50 flex-shrink-0"></div>
                                 <h2 className="text-xs font-semibold text-base-content/40 uppercase tracking-wider">{t('reports.perTargetBreakdown')}</h2>
-                                <span className="text-[10px] text-base-content/25">{t('reports.nDevices', { n: stats.length })}</span>
+                                <span className="text-[10px] text-base-content/25">{t('reports.nDevices', { n: Math.min(stats.length, 10) })}</span>
                             </div>
                             <div className="overflow-x-auto">
                                 <table className="w-full text-sm">
@@ -365,7 +365,7 @@ export default function Reports({ user }) {
                                                 </td>
                                             </tr>
                                         ) : (
-                                            stats.map((s, idx) => {
+                                            stats.slice(0, 10).map((s, idx) => {
                                                 const uptime = s.uptime_percent;
                                                 const lat    = s.avg_response_time;
                                                 return (
