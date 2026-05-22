@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLang } from '../contexts/LanguageContext';
 
-const themeIcons = { light: 'fa-sun', dark: 'fa-moon', system: 'fa-desktop' };
+const themeIcons = { light: 'fa-sun', dark: 'fa-moon', forest: 'fa-tree', dracula: 'fa-mask', system: 'fa-desktop' };
 
 const sections = [
   {
@@ -198,7 +198,7 @@ export default function Sidebar({ open, onToggle, onLogout, onCycleTheme, themeP
 
             <div className="flex items-center justify-center">
               {(() => {
-                const modes = ['light', 'dark', 'system'];
+                const modes = ['light', 'dark', 'forest', 'dracula', 'system'];
                 const next = modes[(modes.indexOf(themePref) + 1) % modes.length];
                 return (
                   <button onClick={() => onCycleTheme(next)}

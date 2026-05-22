@@ -13,7 +13,7 @@ const sections = [
   { id: 'system',      label: 'system',        icon: 'fa-sliders-h',     descKey: 'systemDesc' },
 ];
 
-export default function Settings() {
+export default function Settings({ themePref, onCycleTheme }) {
   const { user, setUser } = useAuth();
   const { lang, setLang, t } = useLang();
   const [active, setActive] = useState('profile');
@@ -281,11 +281,11 @@ export default function Settings() {
 
             {active === 'appearance' && (
               <Card id="appearance">
-                <SectionTitle label={t('settings.appearance')} desc="Customize the look and feel of the application" />
+                <SectionTitle label={t('settings.appearance')} desc={t('settings.appearanceDesc')} />
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-medium text-base-content/60 mb-2">Language / Langue</label>
+                    <label className="block text-xs font-medium text-base-content/60 mb-2">{t('settings.languageSection')}</label>
                     <div className="flex items-center gap-2 bg-base-100 border border-base-300 rounded-xl p-1 w-fit">
                       {[
                         { code: 'en', label: 'English', flag: '🇬🇧' },
@@ -316,16 +316,22 @@ export default function Settings() {
                   <hr className="border-base-300" />
 
                   <div>
-                    <label className="block text-xs font-medium text-base-content/60 mb-2">Theme</label>
-                    <div className="flex items-center gap-2">
-                      {['light', 'dark', 'forest', 'dracula'].map(theme => (
-                        <button key={theme}
-                          className="px-4 py-2 rounded-lg text-sm font-medium border border-base-300 bg-base-100 text-base-content/55 hover:border-primary/40 hover:text-base-content transition-all capitalize">
-                          {theme}
-                        </button>
-                      ))}
+                    <label className="block text-xs font-medium text-base-content/60 mb-2">{t('settings.theme')}</label>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {['light', 'dark', 'forest', 'dracula', 'system'].map(theme => {
+                        const act = themePref === theme;
+                        return (
+                          <button key={theme} onClick={() => onCycleTheme(theme)}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all capitalize ${
+                              act
+                                ? 'bg-primary text-white border-primary shadow-md shadow-primary/30'
+                                : 'border-base-300 bg-base-100 text-base-content/55 hover:border-primary/40 hover:text-base-content'
+                            }`}>
+                            {t('sidebar.' + theme)}
+                          </button>
+                        );
+                      })}
                     </div>
-                    <p className="text-[10px] text-base-content/30 mt-2">Theme switching coming soon</p>
                   </div>
                 </div>
               </Card>

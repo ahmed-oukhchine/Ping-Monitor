@@ -197,7 +197,7 @@ function AppContent() {
                 )}
                 {settingsMounted && (
                     <div className="page-slot" style={{ display: onSettings ? 'block' : 'none' }}>
-                        <Settings />
+                        <Settings themePref={themePref} onCycleTheme={setTheme} />
                     </div>
                 )}
                 {auditLogMounted && (
