@@ -451,7 +451,7 @@ export default function Reports({ user }) {
                                 </div>
                                 <div className="rounded-xl overflow-hidden py-4 px-2" style={{ background: 'rgba(0,0,0,0.06)' }}>
                                     <div className="overflow-x-auto">
-                                        <div style={{ minWidth: Math.max(600, stats.length * 120) }}>
+                                        <div style={{ minWidth: Math.max(600, stats.length * 200) }}>
                                             <ResponsiveContainer width="100%" height={320}>
                                                 <BarChart data={[...stats].sort((a, b) => (a.uptime_percent ?? 0) - (b.uptime_percent ?? 0))}
                                                     margin={{ top: 4, right: 60, left: 8, bottom: 80 }}>
@@ -463,21 +463,21 @@ export default function Reports({ user }) {
                                                         tick={{ fill: '#c9cdd6', fontSize: 11, fontWeight: 500 }}
                                                         tickLine={false} axisLine={{ stroke: 'rgba(255,255,255,0.12)' }} unit="%" />
                                                     <Tooltip content={({ active, payload }) => {
-                                                if (!active || !payload?.length) return null;
-                                                const d = payload[0].payload;
-                                                return (
-                                                    <div className="bg-base-300 border border-base-content/15 rounded-xl px-3 py-2 text-xs shadow-xl">
-                                                        <div className="text-base-content/60 mb-1">{d.target_name}</div>
-                                                        <div className="font-bold" style={{ color: uptimeColor(d.uptime_percent) }}>
-                                                            {d.uptime_percent != null ? `${d.uptime_percent}%` : '—'} uptime
-                                                        </div>
-                                                        {d.avg_response_time != null && (
-                                                            <div className="text-base-content/40">{d.avg_response_time} ms avg</div>
-                                                        )}
-                                                    </div>
-                                                );
-                                            }} />
-                                            <Bar dataKey="uptime_percent" radius={[0, 5, 5, 0]} maxBarSize={22}>
+                                                        if (!active || !payload?.length) return null;
+                                                        const d = payload[0].payload;
+                                                        return (
+                                                            <div className="bg-base-300 border border-base-content/15 rounded-xl px-3 py-2 text-xs shadow-xl">
+                                                                <div className="text-base-content/60 mb-1">{d.target_name}</div>
+                                                                <div className="font-bold" style={{ color: uptimeColor(d.uptime_percent) }}>
+                                                                    {d.uptime_percent != null ? `${d.uptime_percent}%` : '—'} uptime
+                                                                </div>
+                                                                {d.avg_response_time != null && (
+                                                                    <div className="text-base-content/40">{d.avg_response_time} ms avg</div>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    }} />
+                                                    <Bar dataKey="uptime_percent" radius={[0, 5, 5, 0]} maxBarSize={60}>
                                                 {stats.map((s, i) => (
                                                     <Cell key={i} fill={uptimeColor(s.uptime_percent)} fillOpacity={0.85} />
                                                 ))}
