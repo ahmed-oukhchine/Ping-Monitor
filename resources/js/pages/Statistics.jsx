@@ -428,21 +428,21 @@ export default function Statistics({ targets = [], loading = false }) {
                             <div className="flex items-center justify-center h-28 text-base-content/30 text-sm">{t('stats.noPingDataYet')}</div>
                         ) : (
                             <div className="space-y-1">
-                                {worstPerformers.map((t, i) => (
-                                    <div key={t.id} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-base-300/30 transition-colors">
+                                {worstPerformers.map((wp, i) => (
+                                    <div key={wp.id} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-base-300/30 transition-colors">
                                         <span className="text-[11px] font-bold text-base-content/20 w-4 flex-shrink-0">#{i + 1}</span>
-                                        <StatusDot status={t.last_status} paused={t.is_paused} />
+                                        <StatusDot status={wp.last_status} paused={wp.is_paused} />
                                         <div className="min-w-0 flex-1">
-                                            <div className="text-sm font-semibold text-base-content truncate">{t.name}</div>
-                                            <div className="text-[10px] text-base-content/35 font-mono">{t.ip_address}</div>
+                                            <div className="text-sm font-semibold text-base-content truncate">{wp.name}</div>
+                                            <div className="text-[10px] text-base-content/35 font-mono">{wp.ip_address}</div>
                                         </div>
                                         <div className="text-right flex-shrink-0 space-y-0.5">
-                                            <div className="text-sm font-bold tabular-nums" style={{ color: pctColor(t.uptime_percent ?? 0) }}>
-                                                {t.uptime_percent != null ? `${t.uptime_percent}%` : '—'}
+                                            <div className="text-sm font-bold tabular-nums" style={{ color: pctColor(wp.uptime_percent ?? 0) }}>
+                                                {wp.uptime_percent != null ? `${wp.uptime_percent}%` : '—'}
                                             </div>
-                                            {t.avg_response_time != null && (
+                                            {wp.avg_response_time != null && (
                                                 <div className="text-[10px] text-base-content/35 tabular-nums">
-                                                    {t.avg_response_time} ms
+                                                    {wp.avg_response_time} ms
                                                 </div>
                                             )}
                                         </div>
@@ -462,8 +462,8 @@ export default function Statistics({ targets = [], loading = false }) {
                             <div className="flex items-center justify-center h-28 text-base-content/30 text-sm">{t('stats.needMorePingData')}</div>
                         ) : (
                             <div className="space-y-2">
-                                {bestPerformers.map((t, i) => (
-                                    <div key={t.id} className={`flex items-center gap-3 rounded-xl px-3 py-3 border transition-colors ${
+                                {bestPerformers.map((bp, i) => (
+                                    <div key={bp.id} className={`flex items-center gap-3 rounded-xl px-3 py-3 border transition-colors ${
                                         i === 0
                                             ? 'bg-success/8 border-success/20'
                                             : 'bg-base-300/20 border-base-300/50'
@@ -474,14 +474,14 @@ export default function Statistics({ targets = [], loading = false }) {
                                             {i === 0 ? '★' : `#${i + 1}`}
                                         </div>
                                         <div className="min-w-0 flex-1">
-                                            <div className="text-sm font-semibold text-base-content truncate">{t.name}</div>
-                                            <div className="text-[10px] text-base-content/35 font-mono">{t.ip_address}</div>
+                                            <div className="text-sm font-semibold text-base-content truncate">{bp.name}</div>
+                                            <div className="text-[10px] text-base-content/35 font-mono">{bp.ip_address}</div>
                                         </div>
                                         <div className="text-right flex-shrink-0">
-                                            <div className="text-sm font-bold text-success tabular-nums">{t.uptime_percent}%</div>
-                                            {t.avg_response_time != null && (
-                                                <div className="text-[10px] tabular-nums" style={{ color: latColor(t.avg_response_time) }}>
-                                                    {t.avg_response_time} ms
+                                            <div className="text-sm font-bold text-success tabular-nums">{bp.uptime_percent}%</div>
+                                            {bp.avg_response_time != null && (
+                                                <div className="text-[10px] tabular-nums" style={{ color: latColor(bp.avg_response_time) }}>
+                                                    {bp.avg_response_time} ms
                                                 </div>
                                             )}
                                         </div>
@@ -499,14 +499,14 @@ export default function Statistics({ targets = [], loading = false }) {
                             <h2 className="text-xs font-semibold text-base-content/40 uppercase tracking-wider">{t('stats.perDeviceBreakdown')}</h2>
                         </div>
                         <div className="flex items-center gap-0.5 bg-base-300/60 rounded-lg p-0.5">
-                            {tabs.map(t => (
-                                <button key={t.id} onClick={() => setActiveTab(t.id)}
+                            {tabs.map(tabItem => (
+                                <button key={tabItem.id} onClick={() => setActiveTab(tabItem.id)}
                                     className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${
-                                        activeTab === t.id
+                                        activeTab === tabItem.id
                                             ? 'bg-primary/15 text-primary shadow-sm'
                                             : 'text-base-content/45 hover:text-base-content'
                                     }`}>
-                                    {t(t.labelKey)}
+                                    {t(tabItem.labelKey)}
                                 </button>
                             ))}
                         </div>
