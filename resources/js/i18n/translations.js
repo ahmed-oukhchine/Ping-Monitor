@@ -16,6 +16,7 @@ const translations = {
   'sidebar.light': { en: 'Light', fr: 'Clair', ar: 'فاتح' },
   'sidebar.dark': { en: 'Dark', fr: 'Sombre', ar: 'داكن' },
   'sidebar.system': { en: 'System', fr: 'Système', ar: 'النظام' },
+  'sidebar.switchTo': { en: 'Switch to {mode}', fr: 'Passer à {mode}', ar: 'التبديل إلى {mode}' },
   'sidebar.language': { en: 'Language', fr: 'Langue', ar: 'اللغة' },
   'sidebar.sectionOverview': { en: 'Overview', fr: 'Aperçu', ar: 'نظرة عامة' },
   'sidebar.sectionData': { en: 'Data & Alerts', fr: 'Données et alertes', ar: 'البيانات والتنبيهات' },

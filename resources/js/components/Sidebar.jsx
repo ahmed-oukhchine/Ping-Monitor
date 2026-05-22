@@ -196,18 +196,18 @@ export default function Sidebar({ open, onToggle, onLogout, onCycleTheme, themeP
               </div>
             </div>
 
-            <div className="flex items-center justify-center gap-[1px]">
-              {['light', 'dark', 'system'].map(mode => (
-                <button key={mode} onClick={() => onCycleTheme(mode)}
-                  className={`w-[15px] h-[18px] flex items-center justify-center rounded-md text-[7px] transition-all ${
-                    themePref === mode
-                      ? 'bg-primary/15 text-primary'
-                      : 'text-base-content/25 hover:text-base-content hover:bg-base-300/50'
-                  }`}
-                  title={mode.charAt(0).toUpperCase() + mode.slice(1)}>
-                  <i className={`fas ${themeIcons[mode]}`}></i>
-                </button>
-              ))}
+            <div className="flex items-center justify-center">
+              {(() => {
+                const modes = ['light', 'dark', 'system'];
+                const next = modes[(modes.indexOf(themePref) + 1) % modes.length];
+                return (
+                  <button onClick={() => onCycleTheme(next)}
+                    className="w-7 h-7 flex items-center justify-center rounded-xl text-xs transition-all text-base-content/40 hover:bg-base-300/60 hover:text-base-content"
+                    title={t('sidebar.switchTo', { mode: t('sidebar.' + next) })}>
+                    <i className={`fas ${themeIcons[themePref]} text-sm`}></i>
+                  </button>
+                );
+              })()}
             </div>
 
             <button onClick={onLogout}
