@@ -17,6 +17,13 @@ export default function Settings({ themePref, onCycleTheme }) {
   const { lang, setLang, t } = useLang();
   const [active, setActive] = useState('profile');
   const [animKey, setAnimKey] = useState(0);
+  const onWheel = (field, min, max) => e => {
+    const step = e.deltaY < 0 ? 1 : -1;
+    const cur = Number(e.target.value) || 0;
+    const next = Math.max(min, Math.min(max, cur + step));
+    setAlertDefaults(p => ({ ...p, [field]: next }));
+    e.preventDefault();
+  };
 
   /* ── Profile state ── */
   const [name, setName] = useState(user?.name || '');
@@ -347,12 +354,14 @@ export default function Settings({ themePref, onCycleTheme }) {
                         <label className="block text-xs font-medium text-base-content/60 mb-1">Warning threshold (ms)</label>
                         <input type="number" value={alertDefaults.alert_default_warn_ms}
                           onChange={e => setAlertDefaults(p => ({ ...p, alert_default_warn_ms: e.target.value === '' ? '' : Number(e.target.value) }))}
+                          onWheel={onWheel('alert_default_warn_ms', 0, 100000)}
                           className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors" />
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-base-content/60 mb-1">Critical threshold (ms)</label>
                         <input type="number" value={alertDefaults.alert_default_critical_ms}
                           onChange={e => setAlertDefaults(p => ({ ...p, alert_default_critical_ms: e.target.value === '' ? '' : Number(e.target.value) }))}
+                          onWheel={onWheel('alert_default_critical_ms', 0, 100000)}
                           className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors" />
                       </div>
                     </div>
@@ -370,12 +379,14 @@ export default function Settings({ themePref, onCycleTheme }) {
                         <label className="block text-xs font-medium text-base-content/60 mb-1">Consecutive failures</label>
                         <input type="number" min={1} max={100} value={alertDefaults.alert_default_consecutive}
                           onChange={e => setAlertDefaults(p => ({ ...p, alert_default_consecutive: e.target.value === '' ? '' : Number(e.target.value) }))}
+                          onWheel={onWheel('alert_default_consecutive', 1, 100)}
                           className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors" />
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-base-content/60 mb-1">Cooldown (minutes)</label>
                         <input type="number" min={0} max={1440} value={alertDefaults.alert_default_cooldown}
                           onChange={e => setAlertDefaults(p => ({ ...p, alert_default_cooldown: e.target.value === '' ? '' : Number(e.target.value) }))}
+                          onWheel={onWheel('alert_default_cooldown', 0, 1440)}
                           className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors" />
                       </div>
                     </div>
@@ -474,6 +485,7 @@ export default function Settings({ themePref, onCycleTheme }) {
                       <label className="block text-xs font-medium text-base-content/60 mb-1">Data retention (days)</label>
                       <input type="number" min={1} max={3650} value={alertDefaults.data_retention_days}
                         onChange={e => setAlertDefaults(p => ({ ...p, data_retention_days: e.target.value === '' ? '' : Number(e.target.value) }))}
+                        onWheel={onWheel('data_retention_days', 1, 3650)}
                         className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors" />
                       <p className="text-[10px] text-base-content/30 mt-1">Ping history older than this will be automatically pruned</p>
                     </div>
