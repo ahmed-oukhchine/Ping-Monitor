@@ -78,22 +78,6 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
         clearSelection();
     };
 
-    const allPause = () => {
-        const ids = targets.filter(t => !t.is_paused).map(t => t.id);
-        if (!ids.length) return;
-        Promise.all(ids.map(id => axios.post(`/targets/${id}/pause`)))
-            .then(() => { toast(t('dashboard.pausedAll'), 'success'); fetchTargets(); })
-            .catch(() => toast(t('dashboard.failedToPause'), 'error'));
-    };
-
-    const allResume = () => {
-        const ids = targets.filter(t => t.is_paused).map(t => t.id);
-        if (!ids.length) return;
-        Promise.all(ids.map(id => axios.post(`/targets/${id}/resume`)))
-            .then(() => { toast(t('dashboard.resumedAll'), 'success'); fetchTargets(); })
-            .catch(() => toast(t('dashboard.failedToResume'), 'error'));
-    };
-
     const confirmBulkDelete = async () => {
         try {
             await Promise.all([...selectedIds].map(id => axios.delete(`/targets/${id}`)));
@@ -413,22 +397,19 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
                             </>
                         )}
                         {!showActions ? (
-                            <button onClick={() => { pingAll(); setShowActions(true); }} disabled={pingAllLoading}
+                            <button onClick={() => { pingAll(); setAutoRefresh(true); setShowActions(true); }} disabled={pingAllLoading}
                                 className="btn-glow btn-prime flex items-center gap-2 px-3 py-1.5 text-xs font-semibold bg-primary text-white rounded-lg hover:brightness-110 transition-all disabled:opacity-50 shadow-[0_0_14px_color-mix(in_oklch,var(--color-primary)_35%,transparent)]">
                                 <i className={`fas ${pingAllLoading ? 'fa-spinner fa-spin' : 'fa-broadcast-tower'} text-[10px]`}></i>
                                 {pingAllLoading ? t('dashboard.checking') : t('dashboard.checkAll')}
                             </button>
                         ) : (
                             <>
-                                <button onClick={() => {
-                                    const allPaused = targets.every(t => t.is_paused);
-                                    allPaused ? allResume() : allPause();
-                                }}
+                                <button onClick={() => setAutoRefresh(p => !p)}
                                     className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold border border-warning/50 text-warning rounded-lg hover:bg-warning/10 transition-colors">
-                                    <i className={`fas ${targets.every(t => t.is_paused) ? 'fa-play' : 'fa-pause'} text-[10px]`}></i>
-                                    {targets.every(t => t.is_paused) ? t('dashboard.resumeAll') : t('dashboard.pauseAll')}
+                                    <i className={`fas ${autoRefresh ? 'fa-pause' : 'fa-play'} text-[10px]`}></i>
+                                    {autoRefresh ? t('dashboard.pause') : t('dashboard.resume')}
                                 </button>
-                                <button onClick={() => setShowActions(false)}
+                                <button onClick={() => { setAutoRefresh(false); setShowActions(false); }}
                                     className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold border border-error/50 text-error rounded-lg hover:bg-error/10 transition-colors">
                                     <i className="fas fa-stop text-[10px]"></i> {t('dashboard.stop')}
                                 </button>
