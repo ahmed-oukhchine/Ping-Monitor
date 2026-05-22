@@ -346,13 +346,13 @@ export default function Settings({ themePref, onCycleTheme }) {
                       <div>
                         <label className="block text-xs font-medium text-base-content/60 mb-1">Warning threshold (ms)</label>
                         <input type="number" value={alertDefaults.alert_default_warn_ms}
-                          onChange={e => setAlertDefaults(p => ({ ...p, alert_default_warn_ms: e.target.value }))}
+                          onChange={e => setAlertDefaults(p => ({ ...p, alert_default_warn_ms: e.target.value === '' ? '' : Number(e.target.value) }))}
                           className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors" />
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-base-content/60 mb-1">Critical threshold (ms)</label>
                         <input type="number" value={alertDefaults.alert_default_critical_ms}
-                          onChange={e => setAlertDefaults(p => ({ ...p, alert_default_critical_ms: e.target.value }))}
+                          onChange={e => setAlertDefaults(p => ({ ...p, alert_default_critical_ms: e.target.value === '' ? '' : Number(e.target.value) }))}
                           className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors" />
                       </div>
                     </div>
@@ -369,13 +369,13 @@ export default function Settings({ themePref, onCycleTheme }) {
                       <div>
                         <label className="block text-xs font-medium text-base-content/60 mb-1">Consecutive failures</label>
                         <input type="number" min={1} max={100} value={alertDefaults.alert_default_consecutive}
-                          onChange={e => setAlertDefaults(p => ({ ...p, alert_default_consecutive: e.target.value }))}
+                          onChange={e => setAlertDefaults(p => ({ ...p, alert_default_consecutive: e.target.value === '' ? '' : Number(e.target.value) }))}
                           className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors" />
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-base-content/60 mb-1">Cooldown (minutes)</label>
                         <input type="number" min={0} max={1440} value={alertDefaults.alert_default_cooldown}
-                          onChange={e => setAlertDefaults(p => ({ ...p, alert_default_cooldown: e.target.value }))}
+                          onChange={e => setAlertDefaults(p => ({ ...p, alert_default_cooldown: e.target.value === '' ? '' : Number(e.target.value) }))}
                           className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors" />
                       </div>
                     </div>
@@ -473,7 +473,7 @@ export default function Settings({ themePref, onCycleTheme }) {
                     <div>
                       <label className="block text-xs font-medium text-base-content/60 mb-1">Data retention (days)</label>
                       <input type="number" min={1} max={3650} value={alertDefaults.data_retention_days}
-                        onChange={e => setAlertDefaults(p => ({ ...p, data_retention_days: e.target.value }))}
+                        onChange={e => setAlertDefaults(p => ({ ...p, data_retention_days: e.target.value === '' ? '' : Number(e.target.value) }))}
                         className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors" />
                       <p className="text-[10px] text-base-content/30 mt-1">Ping history older than this will be automatically pruned</p>
                     </div>
