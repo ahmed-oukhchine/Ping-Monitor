@@ -39,6 +39,6 @@ class User extends Authenticatable
 
     public function isConfigManager(): bool
     {
-        return in_array($this->role, ['admin', 'config_manager']);
+        return $this->role === 'config_manager';
     }
 }

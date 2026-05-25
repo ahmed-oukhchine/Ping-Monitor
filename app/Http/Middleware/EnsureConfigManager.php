@@ -11,7 +11,7 @@ class EnsureConfigManager
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::check() || !Auth::user()->isConfigManager()) {
+        if (!Auth::check() || Auth::user()->role !== 'config_manager') {
             return response()->json(['message' => 'Forbidden'], 403);
         }
         return $next($request);
