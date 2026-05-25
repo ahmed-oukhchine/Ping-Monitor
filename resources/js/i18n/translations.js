@@ -466,6 +466,7 @@ const translations = {
   'users.createUserAccount': { en: 'Create User Account', fr: 'Créer un compte', ar: 'إنشاء حساب مستخدم' },
   'users.fullName': { en: 'Full Name', fr: 'Nom complet', ar: 'الاسم الكامل' },
   'users.administrator': { en: 'Administrator', fr: 'Administrateur', ar: 'مشرف' },
+  'users.configManager': { en: 'Config Manager', fr: 'Gestionnaire de configs', ar: 'مدير التكوينات' },
   'users.administrators': { en: 'Administrators', fr: 'Administrateurs', ar: 'المشرفون' },
   'users.users': { en: 'Users', fr: 'Utilisateurs', ar: 'المستخدمون' },
   'users.password': { en: 'Password', fr: 'Mot de passe', ar: 'كلمة المرور' },

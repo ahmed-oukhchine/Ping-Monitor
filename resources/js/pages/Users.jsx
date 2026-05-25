@@ -149,6 +149,7 @@ export default function Users() {
                                         className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors"
                                     >
                                         <option value="user">{t('users.user')}</option>
+                                        <option value="config_manager">{t('users.configManager')}</option>
                                         <option value="admin">{t('users.administrator')}</option>
                                     </select>
                                 </div>
@@ -353,8 +354,10 @@ function UserRow({ user: u, isMe, isLast, deleting, isExiting, isNew, onDelete }
                     <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-semibold border ${
                         u.role === 'admin'
                             ? 'bg-primary/15 text-primary border-primary/25'
+                            : u.role === 'config_manager'
+                            ? 'bg-warning/15 text-warning border-warning/25'
                             : 'bg-base-300/60 text-base-content/50 border-base-300'
-                    }`}>{u.role === 'admin' ? t('users.administrator') : t('users.user')}</span>
+                    }`}>{u.role === 'admin' ? t('users.administrator') : u.role === 'config_manager' ? t('users.configManager') : t('users.user')}</span>
                 </div>
                 <div className="text-xs text-base-content/40 mt-0.5">{u.email}</div>
             </div>
@@ -363,7 +366,7 @@ function UserRow({ user: u, isMe, isLast, deleting, isExiting, isNew, onDelete }
                     {new Date(u.created_at).toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' })}
                 </div>
             </div>
-            {u.role !== 'admin' && !isMe && (
+            {u.role !== 'admin' && u.role !== 'config_manager' && !isMe && (
                 <button
                     onClick={onDelete}
                     disabled={deleting}

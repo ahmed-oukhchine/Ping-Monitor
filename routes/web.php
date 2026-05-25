@@ -52,12 +52,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/topology', [TopologyController::class, 'index']);
     Route::post('/api/topology/positions', [TopologyController::class, 'savePositions']);
 
-    Route::get('/api/switch-configs',                      [SwitchConfigController::class, 'index']);
-    Route::get('/api/switch-configs/{switchConfig}/versions', [SwitchConfigController::class, 'versions']);
-    Route::get('/api/switch-configs/{switchConfig}',       [SwitchConfigController::class, 'show']);
-    Route::post('/api/switch-configs',                     [SwitchConfigController::class, 'store']);
-    Route::put('/api/switch-configs/{switchConfig}',       [SwitchConfigController::class, 'update']);
-    Route::delete('/api/switch-configs/{switchConfig}',    [SwitchConfigController::class, 'destroy']);
+    Route::middleware(EnsureConfigManager::class)->group(function () {
+        Route::get('/api/switch-configs',                      [SwitchConfigController::class, 'index']);
+        Route::get('/api/switch-configs/{switchConfig}/versions', [SwitchConfigController::class, 'versions']);
+        Route::get('/api/switch-configs/{switchConfig}',       [SwitchConfigController::class, 'show']);
+        Route::post('/api/switch-configs',                     [SwitchConfigController::class, 'store']);
+        Route::put('/api/switch-configs/{switchConfig}',       [SwitchConfigController::class, 'update']);
+        Route::delete('/api/switch-configs/{switchConfig}',    [SwitchConfigController::class, 'destroy']);
+    });
     Route::get('/api/settings', [SettingsController::class, 'index']);
     Route::put('/api/settings', [SettingsController::class, 'update']);
 
