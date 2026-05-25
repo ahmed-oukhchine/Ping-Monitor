@@ -2,10 +2,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useLang } from '../contexts/LanguageContext';
 import { useToast } from '../contexts/ToastContext';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function SwitchConfigs() {
     const { t } = useLang();
     const { toast } = useToast();
+    const { user } = useAuth();
+    const canManage = user?.role === 'config_manager';
     const [configs, setConfigs] = useState([]);
     const [targets, setTargets] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -114,7 +117,7 @@ export default function SwitchConfigs() {
                         <h1 className="text-sm font-bold text-base-content">{t('configs.title')}</h1>
                         <p className="text-xs text-base-content/40 mt-0.5">{t('configs.subtitle')}</p>
                     </div>
-                    {!showForm && (
+                    {canManage && !showForm && (
                         <button onClick={() => { resetForm(); setShowForm(true); }}
                             className="flex items-center gap-1.5 px-2.5 py-1.5 text-[10px] font-semibold border border-primary/40 text-primary rounded-lg hover:bg-primary/10 transition-colors">
                             <i className="fas fa-plus text-[8px]"></i>
@@ -123,7 +126,7 @@ export default function SwitchConfigs() {
                     )}
                 </div>
 
-                {showForm && (
+                {canManage && showForm && (
                     <div className="form-enter modal-glass border border-base-300 rounded-xl p-5 mb-5">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
@@ -229,7 +232,7 @@ export default function SwitchConfigs() {
                                             <th className="text-start px-4 py-2.5 hidden sm:table-cell">{t('configs.model')}</th>
                                             <th className="text-center px-4 py-2.5">#</th>
                                             <th className="text-end px-4 py-2.5 hidden md:table-cell">{t('configs.lastUpdated')}</th>
-                                            <th className="text-end px-4 py-2.5">{t('configs.actions')}</th>
+                                            {canManage && <th className="text-end px-4 py-2.5">{t('configs.actions')}</th>}
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -255,6 +258,7 @@ export default function SwitchConfigs() {
                                                 <td className="px-4 py-3 text-base-content/40 hidden md:table-cell text-end">
                                                     {new Date(c.updated_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
                                                 </td>
+                                                {canManage && (
                                                 <td className="px-4 py-3 text-end">
                                                     <button onClick={e => { e.stopPropagation(); handleDelete(c); }} disabled={deleting === c.id}
                                                         className="w-7 h-7 flex items-center justify-center rounded-lg text-base-content/30 hover:text-error hover:bg-error/10 transition-all disabled:opacity-40">
@@ -263,6 +267,7 @@ export default function SwitchConfigs() {
                                                             : <i className="fas fa-trash text-[10px]"></i>}
                                                     </button>
                                                 </td>
+                                                )}
                                             </tr>
                                         ))}
                                     </tbody>
@@ -280,14 +285,23 @@ export default function SwitchConfigs() {
                                         <span className="text-sm font-bold text-base-content">{selected.hostname}</span>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <button onClick={openEdit}
-                                            className="w-7 h-7 flex items-center justify-center rounded-lg text-base-content/40 hover:text-primary hover:bg-primary/10 transition-all">
-                                            <i className="fas fa-pen text-[10px]"></i>
-                                        </button>
-                                        <button onClick={() => handleDelete(selected)}
-                                            className="w-7 h-7 flex items-center justify-center rounded-lg text-base-content/40 hover:text-error hover:bg-error/10 transition-all">
-                                            <i className="fas fa-trash text-[10px]"></i>
-                                        </button>
+                                        <a href={`/api/switch-configs/${selected.id}/export-pdf`} target="_blank" rel="noopener noreferrer"
+                                            className="w-7 h-7 flex items-center justify-center rounded-lg text-base-content/40 hover:text-primary hover:bg-primary/10 transition-all"
+                                            title={t('configs.exportPdf')}>
+                                            <i className="fas fa-file-pdf text-[10px]"></i>
+                                        </a>
+                                        {canManage && (
+                                            <>
+                                                <button onClick={openEdit}
+                                                    className="w-7 h-7 flex items-center justify-center rounded-lg text-base-content/40 hover:text-primary hover:bg-primary/10 transition-all">
+                                                    <i className="fas fa-pen text-[10px]"></i>
+                                                </button>
+                                                <button onClick={() => handleDelete(selected)}
+                                                    className="w-7 h-7 flex items-center justify-center rounded-lg text-base-content/40 hover:text-error hover:bg-error/10 transition-all">
+                                                    <i className="fas fa-trash text-[10px]"></i>
+                                                </button>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="flex gap-4 px-4 pb-2">

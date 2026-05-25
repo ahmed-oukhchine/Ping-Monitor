@@ -25,7 +25,7 @@ const sections = [
     labelKey: 'Management',
     items: [
       { to: '/reports',    labelKey: 'reports',    icon: 'fa-file-alt',           admin: false },
-      { to: '/switch-configs', labelKey: 'switchConfigs', icon: 'fa-cogs',       admin: false, configMgr: true },
+      { to: '/switch-configs', labelKey: 'switchConfigs', icon: 'fa-cogs',       admin: false },
       { to: '/maintenance', labelKey: 'maintenance', icon: 'fa-calendar-alt',     admin: false },
     ],
   },
@@ -50,7 +50,6 @@ export default function Sidebar({ open, onToggle, onLogout, onCycleTheme, themeP
   const { user } = useAuth();
   const { t } = useLang();
   const isAdmin = user?.role === 'admin';
-  const isConfigManager = user?.role === 'config_manager';
 
   const linkClass = (active) =>
     `relative flex items-center rounded-xl text-sm font-medium transition-all duration-150 ${
@@ -95,7 +94,7 @@ export default function Sidebar({ open, onToggle, onLogout, onCycleTheme, themeP
             <div className="space-y-3">
               {sections.map((section) => {
                 if (section.admin && !isAdmin) return null;
-                const visible = section.items.filter(i => (!i.admin || isAdmin) && (!i.configMgr || isConfigManager));
+                const visible = section.items.filter(i => !i.admin || isAdmin);
                 if (!visible.length) return null;
                 return (
                   <div key={section.labelKey}>
@@ -131,7 +130,7 @@ export default function Sidebar({ open, onToggle, onLogout, onCycleTheme, themeP
             </div>
           ) : (
             <div className="space-y-0.5">
-              {sections.flatMap(s => s.items).filter(i => (!i.admin || isAdmin) && (!i.configMgr || isConfigManager)).map((item) => {
+              {sections.flatMap(s => s.items).filter(i => !i.admin || isAdmin).map((item) => {
                 const active = pathname === item.to;
                 const badge = item.to === '/monitoring' ? offlineCount : null;
                 return (

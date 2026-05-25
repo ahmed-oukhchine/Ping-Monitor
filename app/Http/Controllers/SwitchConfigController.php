@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\SwitchConfig;
 use App\Models\AuditLog;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -157,5 +158,30 @@ class SwitchConfigController extends Controller
         $switchConfig->delete();
         AuditLog::log('deleted', 'switch_config', $switchConfig->id, $data, null);
         return response()->json(['deleted' => true]);
+    }
+
+    public function exportPdf(SwitchConfig $switchConfig)
+    {
+        $switchConfig->load(['target:id,name,ip_address', 'creator:id,name']);
+
+        $data = [
+            'hostname'      => $switchConfig->hostname,
+            'vendor'        => $switchConfig->vendor,
+            'model'         => $switchConfig->model,
+            'os_version'    => $switchConfig->os_version,
+            'serial_number' => $switchConfig->serial_number,
+            'version'       => $switchConfig->version,
+            'config_text'   => $switchConfig->config_text,
+            'target'        => $switchConfig->target,
+            'created_by'    => $switchConfig->creator->name ?? '—',
+            'created_at'    => $switchConfig->created_at,
+        ];
+
+        $filename = 'config-' . str_replace(['/', '\\', ' '], '_', $switchConfig->hostname) . '-v' . $switchConfig->version . '.pdf';
+
+        $pdf = Pdf::loadView('pdf.switch-config', compact('data'));
+        $pdf->setPaper('a4', 'portrait');
+
+        return $pdf->download($filename);
     }
 }

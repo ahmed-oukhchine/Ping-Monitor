@@ -596,6 +596,7 @@ const translations = {
   'configs.saveFailed': { en: 'Failed to save configuration', fr: 'Échec de l\'enregistrement', ar: 'فشل حفظ التكوين' },
   'configs.deleteFailed': { en: 'Failed to delete configuration', fr: 'Échec de la suppression', ar: 'فشل حذف التكوين' },
   'configs.confirmDelete': { en: 'Delete this configuration? This cannot be undone.', fr: 'Supprimer cette configuration ? Action irréversible.', ar: 'حذف هذا التكوين؟ لا يمكن التراجع.' },
+  'configs.exportPdf': { en: 'Export PDF', fr: 'Exporter PDF', ar: 'تصدير PDF' },
   'error.pageCrashed': { en: 'Page crashed', fr: 'Page plantée', ar: 'تعطلت الصفحة' },
   'error.reloadPage': { en: 'Reload page', fr: 'Recharger la page', ar: 'إعادة تحميل الصفحة' },
   'error.couldNotLoad': { en: 'Could not load details', fr: 'Impossible de charger les détails', ar: 'تعذر تحميل التفاصيل' },
