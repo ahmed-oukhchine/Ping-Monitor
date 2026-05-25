@@ -50,4 +50,9 @@ class Target extends Model
     {
         return $this->belongsToMany(Target::class, 'target_dependencies', 'depends_on_target_id', 'target_id');
     }
+
+    public function switchConfigs()
+    {
+        return $this->hasMany(SwitchConfig::class);
+    }
 }

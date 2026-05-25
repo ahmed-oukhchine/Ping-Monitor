@@ -12,6 +12,7 @@ use App\Http\Controllers\TopologyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DiscoveryController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\SwitchConfigController;
 use App\Http\Middleware\EnsureAdmin;
 use Illuminate\Support\Facades\Route;
 
@@ -50,6 +51,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/targets/template', [PingController::class, 'downloadTemplate']);
     Route::get('/api/topology', [TopologyController::class, 'index']);
     Route::post('/api/topology/positions', [TopologyController::class, 'savePositions']);
+
+    Route::get('/api/switch-configs',                      [SwitchConfigController::class, 'index']);
+    Route::get('/api/switch-configs/{switchConfig}/versions', [SwitchConfigController::class, 'versions']);
+    Route::get('/api/switch-configs/{switchConfig}',       [SwitchConfigController::class, 'show']);
+    Route::post('/api/switch-configs',                     [SwitchConfigController::class, 'store']);
+    Route::put('/api/switch-configs/{switchConfig}',       [SwitchConfigController::class, 'update']);
+    Route::delete('/api/switch-configs/{switchConfig}',    [SwitchConfigController::class, 'destroy']);
     Route::get('/api/settings', [SettingsController::class, 'index']);
     Route::put('/api/settings', [SettingsController::class, 'update']);
 

@@ -25,6 +25,7 @@ const sections = [
     labelKey: 'Management',
     items: [
       { to: '/reports',    labelKey: 'reports',    icon: 'fa-file-alt',           admin: false },
+      { to: '/switch-configs', labelKey: 'switchConfigs', icon: 'fa-cogs',       admin: false },
       { to: '/maintenance', labelKey: 'maintenance', icon: 'fa-calendar-alt',     admin: false },
     ],
   },

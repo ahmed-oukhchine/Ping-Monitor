@@ -12,6 +12,7 @@ const AuditLog = React.lazy(() => import('./pages/AuditLog'));
 const Reports = React.lazy(() => import('./pages/Reports'));
 const Maintenance = React.lazy(() => import('./pages/Maintenance'));
 const Topology = React.lazy(() => import('./pages/Topology'));
+const SwitchConfigs = React.lazy(() => import('./pages/SwitchConfigs'));
 const Login = React.lazy(() => import('./pages/Login'));
 import Sidebar from './components/Sidebar';
 import { LangContext } from './contexts/LanguageContext';
@@ -58,6 +59,7 @@ function AppContent() {
     const [reportsMounted,    setReportsMounted]    = useState(false);
     const [maintenanceMounted, setMaintenanceMounted] = useState(false);
     const [topologyMounted, setTopologyMounted]       = useState(false);
+    const [switchConfigsMounted, setSwitchConfigsMounted] = useState(false);
     const [sidebarOpen, setSidebarOpen]             = useState(true);
 
     const [targets, setTargets]             = useState([]);
@@ -126,6 +128,7 @@ function AppContent() {
         setReportsMounted(pathname === '/reports');
         setMaintenanceMounted(pathname === '/maintenance');
         setTopologyMounted(pathname === '/topology');
+        setSwitchConfigsMounted(pathname === '/switch-configs');
     }, [pathname]);
 
     if (authLoading) {
@@ -150,6 +153,7 @@ function AppContent() {
     const onReports    = pathname === '/reports';
     const onMaintenance = pathname === '/maintenance';
     const onTopology    = pathname === '/topology';
+    const onSwitchConfigs = pathname === '/switch-configs';
 
     return (
         <div className="flex min-h-screen bg-base-100">
@@ -218,6 +222,11 @@ function AppContent() {
                 {topologyMounted && (
                     <div className="page-slot" style={{ display: onTopology ? 'block' : 'none' }}>
                         <Topology />
+                    </div>
+                )}
+                {switchConfigsMounted && (
+                    <div className="page-slot" style={{ display: onSwitchConfigs ? 'block' : 'none' }}>
+                        <SwitchConfigs />
                     </div>
                 )}
 
