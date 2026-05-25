@@ -60,7 +60,7 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware(EnsureConfigManager::class)->group(function () {
         Route::post('/api/switch-configs',                     [SwitchConfigController::class, 'store']);
-        Route::put('/api/switch-configs/{switchConfig}',       [SwitchConfigController::class, 'update']);
+        Route::post('/api/switch-configs/{switchConfig}/versions', [SwitchConfigController::class, 'newVersion']);
         Route::delete('/api/switch-configs/{switchConfig}',    [SwitchConfigController::class, 'destroy']);
     });
     Route::get('/api/settings', [SettingsController::class, 'index']);

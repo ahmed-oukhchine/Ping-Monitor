@@ -116,7 +116,7 @@ class SwitchConfigController extends Controller
         ], 201);
     }
 
-    public function update(Request $request, SwitchConfig $switchConfig)
+    public function newVersion(Request $request, SwitchConfig $switchConfig)
     {
         $data = $request->validate([
             'target_id'     => 'nullable|exists:targets,id',

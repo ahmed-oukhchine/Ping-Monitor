@@ -95,7 +95,7 @@ class UserController extends Controller
         if ($user->id === Auth::id()) {
             return response()->json(['message' => 'You cannot delete your own account'], 422);
         }
-        if ($user->role === 'admin') {
+        if ($user->isAdmin()) {
             return response()->json(['message' => 'Admin accounts cannot be deleted'], 422);
         }
 

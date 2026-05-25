@@ -80,7 +80,7 @@ export default function SwitchConfigs() {
                 config_text: form.config_text || null,
             };
             if (editing) {
-                const { data } = await axios.put(`/api/switch-configs/${editing.id}`, payload);
+                const { data } = await axios.post(`/api/switch-configs/${editing.id}/versions`, payload);
                 toast(t('configs.updated'), 'success');
                 await fetchConfigs();
                 await openDetail(data);
@@ -114,12 +114,9 @@ export default function SwitchConfigs() {
         } finally { setDeleting(null); }
     };
 
-    const loadVersion = async (v) => {
-        try {
-            const { data } = await axios.get(`/api/switch-configs/${v.id}`);
-            setSelected(data);
-            setTab('config');
-        } catch {}
+    const loadVersion = (v) => {
+        setSelected(prev => prev ? { ...prev, ...v } : v);
+        setTab('config');
     };
 
     return (
