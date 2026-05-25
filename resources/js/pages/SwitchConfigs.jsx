@@ -70,7 +70,15 @@ export default function SwitchConfigs() {
         e.preventDefault();
         setSaving(true);
         try {
-            const payload = { ...form, target_id: form.target_id || null };
+            const payload = {
+                hostname: form.hostname,
+                vendor: form.vendor || null,
+                model: form.model || null,
+                os_version: form.os_version || null,
+                serial_number: form.serial_number || null,
+                target_id: form.target_id || null,
+                config_text: form.config_text || null,
+            };
             if (editing) {
                 const { data } = await axios.put(`/api/switch-configs/${editing.id}`, payload);
                 toast(t('configs.updated'), 'success');
@@ -84,7 +92,12 @@ export default function SwitchConfigs() {
             }
             resetForm();
         } catch (err) {
-            toast(err.response?.data?.message || t('configs.saveFailed'), 'error');
+            if (err.response?.data?.errors) {
+                const first = Object.values(err.response.data.errors).flat()[0];
+                toast(first || t('configs.saveFailed'), 'error');
+            } else {
+                toast(err.response?.data?.message || err.message || t('configs.saveFailed'), 'error');
+            }
         } finally { setSaving(false); }
     };
 
