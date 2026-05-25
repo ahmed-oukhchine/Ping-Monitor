@@ -16,6 +16,8 @@
         "vite": "^7.0.7"
     },
     "dependencies": {
+        "@fontsource/inter": "^5.2.8",
+        "@fortawesome/fontawesome-free": "^7.2.0",
         "@vitejs/plugin-react": "^4.7.0",
         "@xyflow/react": "^12.10.2",
         "daisyui": "^5.5.19",
