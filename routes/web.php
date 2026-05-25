@@ -14,6 +14,7 @@ use App\Http\Controllers\DiscoveryController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SwitchConfigController;
 use App\Http\Middleware\EnsureAdmin;
+use App\Http\Middleware\EnsureConfigManager;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login',  [LoginController::class, 'store']);
