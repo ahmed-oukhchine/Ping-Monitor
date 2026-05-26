@@ -205,7 +205,7 @@ class PingController extends Controller
 
         $filename = 'ping-history-' . now()->format('Y-m-d') . '.pdf';
 
-        ini_set('memory_limit', '256M');
+        ini_set('memory_limit', '512M');
         $pdf = Pdf::loadView('pdf.history', compact('records', 'total', 'successCount', 'failCount', 'successRate', 'filters'));
         $pdf->setPaper('a4', 'landscape');
 

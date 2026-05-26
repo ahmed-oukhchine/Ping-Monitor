@@ -187,7 +187,7 @@ class SwitchConfigController extends Controller
 
         $filename = 'config-' . str_replace(['/', '\\', ' '], '_', $switchConfig->hostname) . '-v' . $switchConfig->version . '.pdf';
 
-        ini_set('memory_limit', '256M');
+        ini_set('memory_limit', '512M');
         $pdf = Pdf::loadView('pdf.switch-config', compact('data'));
         $pdf->setPaper('a4', 'portrait');
 
