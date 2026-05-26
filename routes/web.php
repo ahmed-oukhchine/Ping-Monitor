@@ -13,6 +13,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DiscoveryController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SwitchConfigController;
+use App\Http\Controllers\VlanController;
 use App\Http\Middleware\EnsureAdmin;
 use App\Http\Middleware\EnsureConfigManager;
 use Illuminate\Support\Facades\Route;
@@ -56,6 +57,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/switch-configs/{switchConfig}',       [SwitchConfigController::class, 'show']);
     Route::get('/api/switch-configs/{switchConfig}/versions', [SwitchConfigController::class, 'versions']);
     Route::get('/api/switch-configs/{switchConfig}/export-pdf', [SwitchConfigController::class, 'exportPdf']);
+    Route::get('/api/vlans', [VlanController::class, 'index']);
 
     Route::middleware(EnsureConfigManager::class)->group(function () {
         Route::post('/api/switch-configs',                     [SwitchConfigController::class, 'store']);
@@ -93,6 +95,10 @@ Route::middleware('auth')->group(function () {
         Route::put('/api/topology/{networkTopology}', [TopologyController::class, 'update']);
         Route::delete('/api/topology/{networkTopology}', [TopologyController::class, 'destroy']);
         Route::post('/api/topology/positions', [TopologyController::class, 'savePositions']);
+
+        Route::post('/api/vlans',              [VlanController::class, 'store']);
+        Route::put('/api/vlans/{vlan}',        [VlanController::class, 'update']);
+        Route::delete('/api/vlans/{vlan}',     [VlanController::class, 'destroy']);
     });
 
     Route::get('/api/dashboards', [DashboardController::class, 'index']);

@@ -13,6 +13,7 @@ const Reports = React.lazy(() => import('./pages/Reports'));
 const Maintenance = React.lazy(() => import('./pages/Maintenance'));
 const Topology = React.lazy(() => import('./pages/Topology'));
 const SwitchConfigs = React.lazy(() => import('./pages/SwitchConfigs'));
+const Vlans = React.lazy(() => import('./pages/Vlans'));
 const Login = React.lazy(() => import('./pages/Login'));
 import Sidebar from './components/Sidebar';
 import { LangContext } from './contexts/LanguageContext';
@@ -60,6 +61,7 @@ function AppContent() {
     const [maintenanceMounted, setMaintenanceMounted] = useState(false);
     const [topologyMounted, setTopologyMounted]       = useState(false);
     const [switchConfigsMounted, setSwitchConfigsMounted] = useState(false);
+    const [vlansMounted, setVlansMounted] = useState(false);
     const [sidebarOpen, setSidebarOpen]             = useState(true);
 
     const [targets, setTargets]             = useState([]);
@@ -129,6 +131,7 @@ function AppContent() {
         setMaintenanceMounted(pathname === '/maintenance');
         setTopologyMounted(pathname === '/topology');
         setSwitchConfigsMounted(pathname === '/switch-configs');
+        setVlansMounted(pathname === '/vlans');
     }, [pathname]);
 
     if (authLoading) {
@@ -154,6 +157,7 @@ function AppContent() {
     const onMaintenance = pathname === '/maintenance';
     const onTopology    = pathname === '/topology';
     const onSwitchConfigs = pathname === '/switch-configs';
+    const onVlans = pathname === '/vlans';
 
     return (
         <div className="flex min-h-screen bg-base-100">
@@ -227,6 +231,11 @@ function AppContent() {
                 {switchConfigsMounted && (
                     <div className="page-slot" style={{ display: onSwitchConfigs ? 'block' : 'none' }}>
                         <SwitchConfigs />
+                    </div>
+                )}
+                {vlansMounted && (
+                    <div className="page-slot" style={{ display: onVlans ? 'block' : 'none' }}>
+                        <Vlans />
                     </div>
                 )}
 
