@@ -20,7 +20,7 @@ export default function SwitchConfigs() {
     const [saving, setSaving] = useState(false);
     const [deleting, setDeleting] = useState(null);
 
-    const [form, setForm] = useState({ hostname: '', vendor: '', model: '', os_version: '', serial_number: '', target_id: '', config_text: '' });
+    const [form, setForm] = useState({ hostname: '', vendor: '', model: '', os_version: '', serial_number: '', ports_count: '', target_id: '', config_text: '' });
     const [targetSearch, setTargetSearch] = useState('');
     const [showTargetDropdown, setShowTargetDropdown] = useState(false);
     const targetFiltered = targets.filter(tg =>
@@ -52,7 +52,7 @@ export default function SwitchConfigs() {
     };
 
     const resetForm = () => {
-        setForm({ hostname: '', vendor: '', model: '', os_version: '', serial_number: '', target_id: '', config_text: '' });
+        setForm({ hostname: '', vendor: '', model: '', os_version: '', serial_number: '', ports_count: '', target_id: '', config_text: '' });
         setTargetSearch('');
         setEditing(null);
         setShowForm(false);
@@ -68,6 +68,7 @@ export default function SwitchConfigs() {
             model: selected.model || '',
             os_version: selected.os_version || '',
             serial_number: selected.serial_number || '',
+            ports_count: selected.ports_count || '',
             target_id: selected.target?.id || '',
             config_text: selected.config_text || '',
         });
@@ -84,6 +85,7 @@ export default function SwitchConfigs() {
                 model: form.model || null,
                 os_version: form.os_version || null,
                 serial_number: form.serial_number || null,
+                ports_count: form.ports_count ? parseInt(form.ports_count, 10) : null,
                 target_id: form.target_id || null,
                 config_text: form.config_text || null,
             };
@@ -192,9 +194,17 @@ export default function SwitchConfigs() {
                                         placeholder="e.g. FOC1234ABCD"
                                         className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors" />
                                 </div>
-                                <div className="relative">
-                                    <label className="block text-xs font-medium text-base-content/60 mb-1">{t('configs.target')}</label>
-                                    <input type="text" value={targetSearch}
+                                <div>
+                                    <label className="block text-xs font-medium text-base-content/60 mb-1">{t('configs.portsCount')}</label>
+                                    <input type="number" min="0" max="65535" value={form.ports_count} onChange={e => setForm(f => ({ ...f, ports_count: e.target.value }))}
+                                        placeholder="e.g. 48"
+                                        className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors" />
+                                </div>
+                            </div>
+
+                            <div className="relative">
+                                <label className="block text-xs font-medium text-base-content/60 mb-1">{t('configs.target')}</label>
+                                <input type="text" value={targetSearch}
                                         onChange={e => { setTargetSearch(e.target.value); setShowTargetDropdown(true); }}
                                         onFocus={() => setShowTargetDropdown(true)}
                                         onBlur={() => setTimeout(() => setShowTargetDropdown(false), 200)}
@@ -213,7 +223,6 @@ export default function SwitchConfigs() {
                                         </div>
                                     )}
                                 </div>
-                            </div>
 
                             <div>
                                 <label className="block text-xs font-medium text-base-content/60 mb-1">{t('configs.configText')}</label>
@@ -367,6 +376,10 @@ export default function SwitchConfigs() {
                                         <div className="bg-base-100 rounded-lg px-3 py-2">
                                             <span className="text-base-content/40">{t('configs.serialNumber')}</span>
                                             <p className="font-medium text-base-content">{selected.serial_number || '—'}</p>
+                                        </div>
+                                        <div className="bg-base-100 rounded-lg px-3 py-2">
+                                            <span className="text-base-content/40">{t('configs.portsCount')}</span>
+                                            <p className="font-medium text-base-content">{selected.ports_count ?? '—'}</p>
                                         </div>
                                         <div className="bg-base-100 rounded-lg px-3 py-2">
                                             <span className="text-base-content/40">{t('configs.version')}</span>

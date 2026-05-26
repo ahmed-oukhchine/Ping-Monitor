@@ -29,6 +29,7 @@ class SwitchConfigController extends Controller
                 'model'        => $c->model,
                 'os_version'   => $c->os_version,
                 'serial_number'=> $c->serial_number,
+                'ports_count'  => $c->ports_count,
                 'version'      => $c->version,
                 'config_text'  => $c->config_text,
                 'target'       => $c->target ? ['id' => $c->target->id, 'name' => $c->target->name] : null,
@@ -50,6 +51,7 @@ class SwitchConfigController extends Controller
             'model'        => $switchConfig->model,
             'os_version'   => $switchConfig->os_version,
             'serial_number'=> $switchConfig->serial_number,
+            'ports_count'  => $switchConfig->ports_count,
             'version'      => $switchConfig->version,
             'config_text'  => $switchConfig->config_text,
             'target'       => $switchConfig->target ? ['id' => $switchConfig->target->id, 'name' => $switchConfig->target->name] : null,
@@ -73,6 +75,7 @@ class SwitchConfigController extends Controller
                 'model'       => $v->model,
                 'os_version'  => $v->os_version,
                 'serial_number' => $v->serial_number,
+                'ports_count'   => $v->ports_count,
                 'created_by'  => $v->creator->name ?? null,
                 'created_at'  => $v->created_at,
             ]);
@@ -89,6 +92,7 @@ class SwitchConfigController extends Controller
             'model'         => 'nullable|string|max:100',
             'os_version'    => 'nullable|string|max:100',
             'serial_number' => 'nullable|string|max:100',
+            'ports_count'   => 'nullable|integer|min:0|max:65535',
             'config_text'   => 'nullable|string',
         ]);
 
@@ -107,6 +111,7 @@ class SwitchConfigController extends Controller
             'model'        => $config->model,
             'os_version'   => $config->os_version,
             'serial_number'=> $config->serial_number,
+            'ports_count'  => $config->ports_count,
             'version'      => $config->version,
             'config_text'  => $config->config_text,
             'target'       => $config->target ? ['id' => $config->target->id, 'name' => $config->target->name] : null,
@@ -125,6 +130,7 @@ class SwitchConfigController extends Controller
             'model'         => 'nullable|string|max:100',
             'os_version'    => 'nullable|string|max:100',
             'serial_number' => 'nullable|string|max:100',
+            'ports_count'   => 'nullable|integer|min:0|max:65535',
             'config_text'   => 'nullable|string',
         ]);
 
@@ -143,6 +149,7 @@ class SwitchConfigController extends Controller
             'model'        => $config->model,
             'os_version'   => $config->os_version,
             'serial_number'=> $config->serial_number,
+            'ports_count'  => $config->ports_count,
             'version'      => $config->version,
             'config_text'  => $config->config_text,
             'target'       => $config->target ? ['id' => $config->target->id, 'name' => $config->target->name] : null,
@@ -170,6 +177,7 @@ class SwitchConfigController extends Controller
             'model'         => $switchConfig->model,
             'os_version'    => $switchConfig->os_version,
             'serial_number' => $switchConfig->serial_number,
+            'ports_count'   => $switchConfig->ports_count,
             'version'       => $switchConfig->version,
             'config_text'   => $switchConfig->config_text,
             'target'        => $switchConfig->target,

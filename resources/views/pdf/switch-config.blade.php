@@ -25,6 +25,7 @@
         <tr><td>Model</td><td>{{ $data['model'] ?? '—' }}</td></tr>
         <tr><td>OS Version</td><td>{{ $data['os_version'] ?? '—' }}</td></tr>
         <tr><td>Serial Number</td><td>{{ $data['serial_number'] ?? '—' }}</td></tr>
+        <tr><td>Ports</td><td>{{ $data['ports_count'] ?? '—' }}</td></tr>
         @if ($data['target'])
         <tr><td>Monitored Target</td><td>{{ $data['target']['name'] }} ({{ $data['target']['ip_address'] }})</td></tr>
         @endif

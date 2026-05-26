@@ -10,7 +10,7 @@ class SwitchConfig extends Model
 
     protected $fillable = [
         'target_id', 'hostname', 'vendor', 'model', 'os_version',
-        'serial_number', 'config_text', 'version', 'created_by',
+        'serial_number', 'ports_count', 'config_text', 'version', 'created_by',
     ];
 
     protected $casts = [

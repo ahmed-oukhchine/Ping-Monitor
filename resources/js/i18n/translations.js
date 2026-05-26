@@ -577,6 +577,7 @@ const translations = {
   'configs.model': { en: 'Model', fr: 'Modèle', ar: 'الطراز' },
   'configs.osVersion': { en: 'OS Version', fr: 'Version OS', ar: 'إصدار النظام' },
   'configs.serialNumber': { en: 'Serial Number', fr: 'Numéro de série', ar: 'الرقم التسلسلي' },
+  'configs.portsCount': { en: 'Ports', fr: 'Ports', ar: 'المنافذ' },
   'configs.version': { en: 'Version', fr: 'Version', ar: 'الإصدار' },
   'configs.target': { en: 'Monitored Target', fr: 'Cible surveillée', ar: 'الهدف المراقب' },
   'configs.lastUpdated': { en: 'Last Updated', fr: 'Dernière mise à jour', ar: 'آخر تحديث' },
