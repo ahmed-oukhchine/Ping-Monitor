@@ -46,7 +46,7 @@ export default function Vlans() {
         e.preventDefault();
         const payload = { ...form, vlan_id: Number(form.vlan_id) };
         try {
-            if (editing) {
+            if (editing && editing !== 'new') {
                 await axios.put(`/api/vlans/${editing.id}`, payload);
                 toast(t('vlans.updated'), 'success');
             } else {
