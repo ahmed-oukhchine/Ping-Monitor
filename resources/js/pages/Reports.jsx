@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell, AreaChart, Area } from 'recharts';
+import { ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, AreaChart, Area } from 'recharts';
 import { useLang } from '../contexts/LanguageContext';
 import { useToast } from '../contexts/ToastContext';
 import ConfirmModal from '../components/ConfirmModal';
@@ -442,53 +442,6 @@ export default function Reports({ user }) {
                             )}
                         </div>
 
-                        {stats.length > 1 && (
-                            <div className="anim-fade-up anim-delay-7 bg-base-200 border border-base-300 rounded-xl p-5">
-                                <div className="flex items-center gap-2 mb-5">
-                                    <div className="w-0.5 h-3.5 rounded-full bg-error/60 flex-shrink-0"></div>
-                                    <h2 className="text-xs font-semibold text-base-content/40 uppercase tracking-wider">{t('reports.uptimeByTarget')}</h2>
-                                    <span className="text-[10px] text-base-content/25">{t('reports.sortedAsc')}</span>
-                                </div>
-                                <div className="rounded-xl overflow-hidden py-4 px-2" style={{ background: 'rgba(0,0,0,0.06)' }}>
-                                    {(() => {
-                                        const sortedStats = [...stats].sort((a, b) => (a.uptime_percent ?? 0) - (b.uptime_percent ?? 0));
-                                        return (
-                                    <ResponsiveContainer width="100%" height={500}>
-                                        <BarChart data={sortedStats}
-                                            margin={{ top: 4, right: 60, left: 8, bottom: 80 }}>
-                                            <CartesianGrid strokeDasharray="3 8" stroke="color-mix(in oklch, var(--color-base-content) 10%, transparent)" vertical={false} />
-                                            <XAxis type="category" dataKey="target_name" interval={0} angle={-45} textAnchor="end"
-                                                tick={{ fill: 'color-mix(in oklch, var(--color-base-content) 60%, transparent)', fontSize: 11, fontWeight: 500 }}
-                                                tickLine={false} axisLine={{ stroke: 'color-mix(in oklch, var(--color-base-content) 15%, transparent)' }} />
-                                            <YAxis type="number" domain={[0, 100]}
-                                                tick={{ fill: 'color-mix(in oklch, var(--color-base-content) 60%, transparent)', fontSize: 11, fontWeight: 500 }}
-                                                tickLine={false} axisLine={{ stroke: 'color-mix(in oklch, var(--color-base-content) 15%, transparent)' }} unit="%" />
-                                                    <Tooltip content={({ active, payload }) => {
-                                                        if (!active || !payload?.length) return null;
-                                                        const d = payload[0].payload;
-                                                        return (
-                                                            <div className="bg-base-300 border border-base-content/15 rounded-xl px-3 py-2 text-xs shadow-xl">
-                                                                <div className="text-base-content/60 mb-1">{d.target_name}</div>
-                                                                <div className="font-bold" style={{ color: uptimeColor(d.uptime_percent) }}>
-                                                                    {d.uptime_percent != null ? `${d.uptime_percent}%` : '—'} uptime
-                                                                </div>
-                                                                {d.avg_response_time != null && (
-                                                                    <div className="text-base-content/40">{d.avg_response_time} ms avg</div>
-                                                                )}
-                                                            </div>
-                                                        );
-                                                    }} />
-                                                    <Bar dataKey="uptime_percent" radius={[5, 5, 0, 0]} maxBarSize={100}>
-                                                {sortedStats.map((s, i) => (
-                                                    <Cell key={i} fill={uptimeColor(s.uptime_percent)} fillOpacity={0.85} />
-                                                ))}
-                                            </Bar>
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                        );
-                                    })()}
-                                </div>
-                            </div>
                         )}
 
                     </>
