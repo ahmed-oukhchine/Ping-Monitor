@@ -449,40 +449,20 @@ export default function Reports({ user }) {
                                     <h2 className="text-xs font-semibold text-base-content/40 uppercase tracking-wider">{t('reports.uptimeByTarget')}</h2>
                                     <span className="text-[10px] text-base-content/25">{t('reports.sortedAsc')}</span>
                                 </div>
-                                {(() => {
-                                    const sortedStats = [...stats].sort((a, b) => (a.uptime_percent ?? 0) - (b.uptime_percent ?? 0));
-                                    const MAX_VISIBLE = 15;
-                                    let chartData = [];
-                                    let otherCount = 0;
-                                    if (sortedStats.length > MAX_VISIBLE) {
-                                        chartData = sortedStats.slice(0, MAX_VISIBLE - 1);
-                                        const rest = sortedStats.slice(MAX_VISIBLE - 1);
-                                        otherCount = rest.length;
-                                        const avgUptime = Math.round(rest.reduce((s, t) => s + (t.uptime_percent ?? 0), 0) / rest.length * 10) / 10;
-                                        chartData.push({
-                                            target_name: `Other (${rest.length} targets)`,
-                                            target_id: null,
-                                            uptime_percent: avgUptime || 0,
-                                            avg_response_time: null,
-                                            isOther: true,
-                                        });
-                                    } else {
-                                        chartData = sortedStats;
-                                    }
-                                    return (
-                                        <div className={`rounded-xl overflow-hidden py-4 px-2 ${chartData.length > 10 ? 'overflow-x-auto' : ''}`}
-                                            style={{ background: 'rgba(0,0,0,0.06)', minHeight: 520 }}>
-                                            <div style={chartData.length > 10 ? { minWidth: chartData.length * 60 } : {}}>
-                                            <ResponsiveContainer width={chartData.length > 10 ? chartData.length * 60 : '100%'} height={500}>
-                                                <BarChart data={chartData}
-                                                    margin={{ top: 4, right: 12, left: 8, bottom: chartData.length > 10 ? 100 : 80 }}>
-                                                    <CartesianGrid strokeDasharray="3 8" stroke="color-mix(in oklch, var(--color-base-content) 10%, transparent)" vertical={false} />
-                                                    <XAxis type="category" dataKey="target_name" interval={0} angle={chartData.length > 10 ? -50 : -45} textAnchor="end"
-                                                        tick={{ fill: 'color-mix(in oklch, var(--color-base-content) 60%, transparent)', fontSize: chartData.length > 10 ? 10 : 11, fontWeight: 500 }}
-                                                        tickLine={false} axisLine={{ stroke: 'color-mix(in oklch, var(--color-base-content) 15%, transparent)' }} />
-                                                    <YAxis type="number" domain={[0, 100]}
-                                                        tick={{ fill: 'color-mix(in oklch, var(--color-base-content) 60%, transparent)', fontSize: 11, fontWeight: 500 }}
-                                                        tickLine={false} axisLine={{ stroke: 'color-mix(in oklch, var(--color-base-content) 15%, transparent)' }} unit="%" />
+                                <div className="rounded-xl overflow-hidden py-4 px-2" style={{ background: 'rgba(0,0,0,0.06)' }}>
+                                    {(() => {
+                                        const sortedStats = [...stats].sort((a, b) => (a.uptime_percent ?? 0) - (b.uptime_percent ?? 0));
+                                        return (
+                                    <ResponsiveContainer width="100%" height={500}>
+                                        <BarChart data={sortedStats}
+                                            margin={{ top: 4, right: 60, left: 8, bottom: 80 }}>
+                                            <CartesianGrid strokeDasharray="3 8" stroke="color-mix(in oklch, var(--color-base-content) 10%, transparent)" vertical={false} />
+                                            <XAxis type="category" dataKey="target_name" interval={0} angle={-45} textAnchor="end"
+                                                tick={{ fill: 'color-mix(in oklch, var(--color-base-content) 60%, transparent)', fontSize: 11, fontWeight: 500 }}
+                                                tickLine={false} axisLine={{ stroke: 'color-mix(in oklch, var(--color-base-content) 15%, transparent)' }} />
+                                            <YAxis type="number" domain={[0, 100]}
+                                                tick={{ fill: 'color-mix(in oklch, var(--color-base-content) 60%, transparent)', fontSize: 11, fontWeight: 500 }}
+                                                tickLine={false} axisLine={{ stroke: 'color-mix(in oklch, var(--color-base-content) 15%, transparent)' }} unit="%" />
                                                     <Tooltip content={({ active, payload }) => {
                                                         if (!active || !payload?.length) return null;
                                                         const d = payload[0].payload;
@@ -492,26 +472,22 @@ export default function Reports({ user }) {
                                                                 <div className="font-bold" style={{ color: uptimeColor(d.uptime_percent) }}>
                                                                     {d.uptime_percent != null ? `${d.uptime_percent}%` : '—'} uptime
                                                                 </div>
-                                                                {d.isOther && (
-                                                                    <div className="text-base-content/40 mt-1">{d.target_name}</div>
-                                                                )}
-                                                                {!d.isOther && d.avg_response_time != null && (
+                                                                {d.avg_response_time != null && (
                                                                     <div className="text-base-content/40">{d.avg_response_time} ms avg</div>
                                                                 )}
                                                             </div>
                                                         );
                                                     }} />
-                                                    <Bar dataKey="uptime_percent" radius={[5, 5, 0, 0]} maxBarSize={60}>
-                                                        {chartData.map((s, i) => (
-                                                            <Cell key={i} fill={s.isOther ? 'color-mix(in oklch, var(--color-base-content) 30%, transparent)' : uptimeColor(s.uptime_percent)} fillOpacity={0.85} />
-                                                        ))}
-                                                    </Bar>
-                                                </BarChart>
-                                            </ResponsiveContainer>
-                                            </div>
-                                        </div>
-                                    );
-                                })()}
+                                                    <Bar dataKey="uptime_percent" radius={[5, 5, 0, 0]} maxBarSize={100}>
+                                                {sortedStats.map((s, i) => (
+                                                    <Cell key={i} fill={uptimeColor(s.uptime_percent)} fillOpacity={0.85} />
+                                                ))}
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                        );
+                                    })()}
+                                </div>
                             </div>
                         )}
 
