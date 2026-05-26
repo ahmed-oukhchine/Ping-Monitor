@@ -21,6 +21,12 @@ export default function SwitchConfigs() {
     const [deleting, setDeleting] = useState(null);
 
     const [form, setForm] = useState({ hostname: '', vendor: '', model: '', os_version: '', serial_number: '', target_id: '', config_text: '' });
+    const [targetSearch, setTargetSearch] = useState('');
+    const [showTargetDropdown, setShowTargetDropdown] = useState(false);
+    const targetFiltered = targets.filter(tg =>
+        tg.name.toLowerCase().includes(targetSearch.toLowerCase()) ||
+        tg.ip_address.toLowerCase().includes(targetSearch.toLowerCase())
+    ).slice(0, 20);
 
     const fetchConfigs = useCallback(async () => {
         try {
@@ -47,6 +53,7 @@ export default function SwitchConfigs() {
 
     const resetForm = () => {
         setForm({ hostname: '', vendor: '', model: '', os_version: '', serial_number: '', target_id: '', config_text: '' });
+        setTargetSearch('');
         setEditing(null);
         setShowForm(false);
     };
@@ -54,6 +61,7 @@ export default function SwitchConfigs() {
     const openEdit = () => {
         if (!selected) return;
         setEditing(selected);
+        setTargetSearch(selected.target ? `${selected.target.name} (${selected.target.ip_address})` : '');
         setForm({
             hostname: selected.hostname,
             vendor: selected.vendor || '',
@@ -184,15 +192,26 @@ export default function SwitchConfigs() {
                                         placeholder="e.g. FOC1234ABCD"
                                         className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors" />
                                 </div>
-                                <div>
+                                <div className="relative">
                                     <label className="block text-xs font-medium text-base-content/60 mb-1">{t('configs.target')}</label>
-                                    <select value={form.target_id} onChange={e => setForm(f => ({ ...f, target_id: e.target.value }))}
-                                        className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors">
-                                        <option value="">—</option>
-                                        {targets.map(tg => (
-                                            <option key={tg.id} value={tg.id}>{tg.name} ({tg.ip_address})</option>
-                                        ))}
-                                    </select>
+                                    <input type="text" value={targetSearch}
+                                        onChange={e => { setTargetSearch(e.target.value); setShowTargetDropdown(true); }}
+                                        onFocus={() => setShowTargetDropdown(true)}
+                                        onBlur={() => setTimeout(() => setShowTargetDropdown(false), 200)}
+                                        placeholder={t('configs.targetPlaceholder') || 'Search by name or IP...'}
+                                        className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors" />
+                                    {showTargetDropdown && targetSearch && (
+                                        <div className="absolute z-10 mt-1 w-full bg-base-100 border border-base-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                            {targetFiltered.length === 0 ? (
+                                                <div className="px-3 py-2 text-xs text-base-content/40">{t('configs.noTargets') || 'No targets found'}</div>
+                                            ) : targetFiltered.map(tg => (
+                                                <div key={tg.id} onMouseDown={() => { setForm(f => ({ ...f, target_id: tg.id })); setTargetSearch(`${tg.name} (${tg.ip_address})`); setShowTargetDropdown(false); }}
+                                                    className={`px-3 py-2 text-xs cursor-pointer transition-colors hover:bg-primary/10 ${form.target_id === tg.id ? 'bg-primary/5 text-primary font-semibold' : 'text-base-content'}`}>
+                                                    {tg.name} <span className="text-base-content/40">({tg.ip_address})</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
