@@ -8,7 +8,7 @@ export default function Vlans() {
     const { t } = useLang();
     const { toast } = useToast();
     const { user } = useAuth();
-    const isAdmin = user?.role === 'admin' || user?.role === 'config_manager';
+    const canManage = user?.role === 'config_manager';
     const [vlans, setVlans] = useState([]);
     const [loading, setLoading] = useState(true);
     const [editing, setEditing] = useState(null);
@@ -82,7 +82,7 @@ export default function Vlans() {
                         <h1 className="text-sm font-bold text-base-content">{t('vlans.title')}</h1>
                         <p className="text-xs text-base-content/40 mt-0.5">{t('vlans.subtitle')}</p>
                     </div>
-                    {isAdmin && !editing && (
+                    {canManage && !editing && (
                         <button onClick={() => { resetForm(); setEditing('new'); }}
                             className="flex items-center gap-1.5 px-2.5 py-1.5 text-[10px] font-semibold border border-primary/40 text-primary rounded-lg hover:bg-primary/10 transition-colors">
                             <i className="fas fa-plus text-[8px]"></i>
@@ -91,7 +91,7 @@ export default function Vlans() {
                     )}
                 </div>
 
-                {isAdmin && editing === 'new' && (
+                {canManage && editing === 'new' && (
                     <div className="form-enter modal-glass border border-base-300 rounded-xl p-5 mb-5">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
@@ -127,7 +127,7 @@ export default function Vlans() {
                                     <th className="text-start px-4 py-2.5">{t('vlans.name')}</th>
                                     <th className="text-start px-4 py-2.5 hidden sm:table-cell">{t('vlans.subnet')}</th>
                                     <th className="text-start px-4 py-2.5 hidden md:table-cell">{t('vlans.description')}</th>
-                                    {isAdmin && <th className="text-end px-4 py-2.5">{t('vlans.actions')}</th>}
+                                    {canManage && <th className="text-end px-4 py-2.5">{t('vlans.actions')}</th>}
                                 </tr>
                             </thead>
                             <tbody>
@@ -145,7 +145,7 @@ export default function Vlans() {
                                         </td>
                                         <td className="px-4 py-3 text-base-content/60 hidden sm:table-cell font-mono">{v.subnet || '—'}</td>
                                         <td className="px-4 py-3 text-base-content/60 hidden md:table-cell">{v.description || '—'}</td>
-                                        {isAdmin && (
+                                        {canManage && (
                                         <td className="px-4 py-3 text-end">
                                             <div className="flex items-center justify-end gap-1">
                                                 <button onClick={() => openEdit(v)}
@@ -166,7 +166,7 @@ export default function Vlans() {
                     </div>
                 )}
 
-                {isAdmin && editing && editing !== 'new' && (
+                {canManage && editing && editing !== 'new' && (
                     <div className="form-enter modal-glass border border-base-300 rounded-xl p-5 mt-5">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
