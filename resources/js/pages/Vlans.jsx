@@ -8,7 +8,7 @@ export default function Vlans() {
     const { t } = useLang();
     const { toast } = useToast();
     const { user } = useAuth();
-    const isAdmin = user?.role === 'admin';
+    const isAdmin = user?.role === 'admin' || user?.role === 'config_manager';
     const [vlans, setVlans] = useState([]);
     const [loading, setLoading] = useState(true);
     const [editing, setEditing] = useState(null);

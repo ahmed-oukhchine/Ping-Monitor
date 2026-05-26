@@ -32,7 +32,7 @@ export default function Reports({ user }) {
     const [page, setPage] = useState(0);
     const perPage = 10;
 
-    const isAdmin = user?.role === 'admin';
+    const isAdmin = user?.role === 'admin' || user?.role === 'config_manager';
 
     useEffect(() => {
         if (isAdmin) {

@@ -145,7 +145,7 @@ export default function Topology() {
   const { t } = useLang();
   const { user } = useAuth();
   const { toast } = useToast();
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.role === 'admin' || user?.role === 'config_manager';
   const flowRef = useRef(null);
   const rfInstance = useRef(null);
 

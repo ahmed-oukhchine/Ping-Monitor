@@ -11,7 +11,7 @@ class EnsureAdmin
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::check() || !Auth::user()->isAdmin()) {
+        if (!Auth::check() || !(Auth::user()->isAdmin() || Auth::user()->isConfigManager())) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
         return $next($request);

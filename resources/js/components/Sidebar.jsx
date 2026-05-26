@@ -50,7 +50,7 @@ export default function Sidebar({ open, onToggle, onLogout, onCycleTheme, themeP
   const { pathname } = useLocation();
   const { user } = useAuth();
   const { t } = useLang();
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.role === 'admin' || user?.role === 'config_manager';
 
   const linkClass = (active) =>
     `relative flex items-center rounded-xl text-sm font-medium transition-all duration-150 ${

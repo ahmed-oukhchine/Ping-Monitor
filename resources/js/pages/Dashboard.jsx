@@ -25,7 +25,7 @@ function readLS(key, fallback) {
 
 export default function Dashboard({ targets, setTargets, fetchTargets, loading, sidebarOpen = true }) {
     const { user } = useAuth();
-    const isAdmin = user?.role === 'admin';
+    const isAdmin = user?.role === 'admin' || user?.role === 'config_manager';
 
     const [groups, setGroups]                 = useState([]);
     const [selectedGroup, setSelectedGroup]   = useState(null);
