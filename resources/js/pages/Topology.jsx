@@ -174,6 +174,8 @@ export default function Topology() {
   const [hiddenTargets, setHiddenTargets] = useState(new Set());
   const [hiddenGroupIds, setHiddenGroupIds] = useState(new Set());
   const [showTargetFilter, setShowTargetFilter] = useState(false);
+  const [showMiniMap, setShowMiniMap] = useState(true);
+  const [showGrid, setShowGrid] = useState(true);
   const [selectedInMonitoring, setSelectedInMonitoring] = useState(new Set());
 
   useEffect(() => {
@@ -579,11 +581,20 @@ export default function Topology() {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-base-300 text-base-content/50 hover:text-base-content hover:bg-base-200 transition-all">
             <i className="fas fa-download text-[10px]"></i> Export
           </button>
-          <button onClick={() => { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-base-300 text-base-content/50 hover:text-base-content hover:bg-base-200 transition-all">
-            <i className="fas fa-expand text-[10px]"></i> Fullscreen
-          </button>
           <div className="w-px h-5 bg-base-300 mx-1"></div>
+          <button onClick={() => setShowMiniMap(o => !o)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+              showMiniMap ? 'bg-primary/10 border-primary/30 text-primary' : 'border-base-300 text-base-content/50 hover:text-base-content hover:bg-base-200'
+            }`}>
+            <i className="fas fa-map text-[10px]"></i> MiniMap
+          </button>
+          <button onClick={() => setShowGrid(o => !o)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+              showGrid ? 'bg-primary/10 border-primary/30 text-primary' : 'border-base-300 text-base-content/50 hover:text-base-content hover:bg-base-200'
+            }`}>
+            <i className="fas fa-th text-[10px]"></i> Grid
+          </button>
+
           <button onClick={() => setLayoutLocked(o => !o)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
               layoutLocked ? 'bg-warning/10 border-warning/30 text-warning' : 'border-base-300 text-base-content/50 hover:text-base-content hover:bg-base-200'
@@ -666,9 +677,9 @@ export default function Topology() {
               nodesDraggable={!layoutLocked}
               nodesConnectable={isAdmin && !layoutLocked}
             >
-              <Background color="#94a3b8" gap={20} size={0.5} />
+              {showGrid && <Background color="#94a3b8" gap={20} size={0.5} />}
               <Controls showInteractive={false} className="!bg-base-100 !border-base-300 !rounded-lg !shadow-md !text-base-content/60" />
-              <MiniMap
+              {showMiniMap && <MiniMap
                 nodeColor={(n) => {
                   const d = n.data;
                   if (d?.isPaused) return '#f59e0b';
@@ -677,8 +688,8 @@ export default function Topology() {
                   return '#d1d5db';
                 }}
                 maskColor="rgba(0,0,0,0.1)"
-                className="!bg-base-100 !border !border-base-300 !rounded-lg !shadow-md"
-              />
+                className="!bg-base-100 !border !base-300 !rounded-lg !shadow-md"
+              />}
             </ReactFlow>
           </div>
 

@@ -132,13 +132,13 @@ export default function Statistics({ targets = [], loading = false }) {
     const byLatency = [...targets]
         .filter(t => t.avg_response_time != null)
         .sort((a, b) => b.avg_response_time - a.avg_response_time)
-        .slice(0, 12)
+        .slice(0, 10)
         .map(t => ({ name: shorten(t.name, 16), value: t.avg_response_time, color: latColor(t.avg_response_time) }));
 
     const byUptime = [...targets]
         .filter(t => t.uptime_percent != null)
-        .sort((a, b) => a.uptime_percent - b.uptime_percent)
-        .slice(0, 12)
+        .sort((a, b) => b.uptime_percent - a.uptime_percent)
+        .slice(0, 10)
         .map(t => ({ name: shorten(t.name, 16), value: t.uptime_percent, color: pctColor(t.uptime_percent) }));
 
     const byLoss = [...targets]
@@ -148,7 +148,7 @@ export default function Statistics({ targets = [], loading = false }) {
             return { name: shorten(t.name, 16), value: loss, color: loss === 0 ? '#22c55e' : loss <= 25 ? '#f59e0b' : '#ef4444' };
         })
         .sort((a, b) => b.value - a.value)
-        .slice(0, 12);
+        .slice(0, 10);
 
     const tabs = [
         { id: 'latency', labelKey: 'stats.avgLatencyTab', data: byLatency, unit: 'ms' },
