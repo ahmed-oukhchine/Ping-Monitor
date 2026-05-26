@@ -442,8 +442,6 @@ export default function Reports({ user }) {
                             )}
                         </div>
 
-                        )}
-
                     </>
                 )}
             </div>
