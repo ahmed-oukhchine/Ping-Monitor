@@ -27,7 +27,7 @@
                                     ● &nbsp;Offline Alert
                                 </td>
                                 <td align="right" valign="middle" style="color:rgba(255,255,255,0.7);font-size:11px;">
-                                    ArgusNet
+                                    SIREN
                                 </td>
                             </tr>
                         </table>
@@ -127,7 +127,7 @@
                                         <rect x="26" y="7" width="4" height="25" rx="1.5" fill="white"/>
                                         <circle cx="30" cy="30" r="3" fill="#22c55e" stroke="#2563eb" stroke-width="1.5"/>
                                     </svg>
-                                    <span style="color:#555;font-size:11px;vertical-align:middle;">ArgusNet</span>
+                                    <span style="color:#555;font-size:11px;vertical-align:middle;">SIREN</span>
                                 </td>
                                 <td align="right" valign="middle">
                                     <span style="color:#333;font-size:10px;">Network Monitoring Platform</span>

@@ -525,7 +525,7 @@ class PingController extends Controller
             }
             $target->update(['alerted_at' => now()]);
         } catch (\Exception $e) {
-            \Log::error("ArgusNet alert failed for target {$target->id}: {$e->getMessage()}");
+            \Log::error("SIREN alert failed for target {$target->id}: {$e->getMessage()}");
         }
     }
 

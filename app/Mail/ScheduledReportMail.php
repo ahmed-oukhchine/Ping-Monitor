@@ -21,7 +21,7 @@ class ScheduledReportMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "[ArgusNet] {$this->report->name} — SLA Report",
+            subject: "[SIREN] {$this->report->name} — SLA Report",
         );
     }
 

@@ -74,7 +74,7 @@ function AppContent() {
     }, [pathname]);
 
     const [themePref, setThemePref] = useState(
-        () => localStorage.getItem('argusnet_theme') || 'system'
+        () => localStorage.getItem('siren_theme') || 'system'
     );
 
     const getResolved = (pref) => {
@@ -87,7 +87,7 @@ function AppContent() {
     useEffect(() => {
         const resolved = getResolved(themePref);
         document.documentElement.setAttribute('data-theme', resolved);
-        localStorage.setItem('argusnet_theme', themePref);
+        localStorage.setItem('siren_theme', themePref);
     }, [themePref]);
 
     useEffect(() => {

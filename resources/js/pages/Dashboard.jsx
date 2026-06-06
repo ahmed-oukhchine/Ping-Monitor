@@ -14,9 +14,9 @@ import { useLang } from '../contexts/LanguageContext';
 import ImportModal from '../components/ImportModal';
 import DiscoverModal from '../components/DiscoverModal';
 
-const LS_AUTO     = 'argusnet_auto';
-const LS_INTERVAL = 'argusnet_interval';
-const LS_NEXT     = 'argusnet_next_ping';
+const LS_AUTO     = 'siren_auto';
+const LS_INTERVAL = 'siren_interval';
+const LS_NEXT     = 'siren_next_ping';
 
 function readLS(key, fallback) {
     try { const v = localStorage.getItem(key); return v !== null ? JSON.parse(v) : fallback; }

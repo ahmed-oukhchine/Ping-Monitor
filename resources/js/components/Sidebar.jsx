@@ -83,7 +83,7 @@ export default function Sidebar({ open, onToggle, onLogout, onCycleTheme, themeP
             </div>
             {open && (
               <div className="leading-none text-start ms-3">
-                <div className="text-sm font-bold text-base-content tracking-wide">ArgusNet</div>
+                <div className="text-sm font-bold text-base-content tracking-wide">SIREN</div>
                 <div className="text-[10px] text-base-content/40 mt-0.5">{t('sidebar.networkMonitor')}</div>
               </div>
             )}

@@ -26,7 +26,7 @@
                     </tr>
                     <tr>
                         <td style="padding: 16px 32px; background: #1e1e2e; text-align: center; border-top: 1px solid #374151;">
-                            <p style="color: #6b7280; font-size: 11px; margin: 0;">ArgusNet — Network Monitor</p>
+                            <p style="color: #6b7280; font-size: 11px; margin: 0;">SIREN — Network Monitor</p>
                         </td>
                     </tr>
                 </table>

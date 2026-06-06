@@ -72,7 +72,7 @@
     </table>
 
     <div class="footer">
-        ArgusNet — Network Monitor | Page {PAGE_NUM} of {PAGE_COUNT}
+        SIREN — Network Monitor | Page {PAGE_NUM} of {PAGE_COUNT}
     </div>
 </body>
 </html>

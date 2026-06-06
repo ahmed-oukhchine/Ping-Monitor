@@ -4,7 +4,7 @@ import translations from '../i18n/translations';
 const LangContext = createContext();
 
 function getInitial() {
-    try { return localStorage.getItem('argusnet_lang') || 'en'; } catch { return 'en'; }
+    try { return localStorage.getItem('siren_lang') || 'en'; } catch { return 'en'; }
 }
 
 export function LanguageProvider({ children }) {
@@ -13,7 +13,7 @@ export function LanguageProvider({ children }) {
 
     const setLang = useCallback((l) => {
         setLangState(l);
-        try { localStorage.setItem('argusnet_lang', l); } catch {}
+        try { localStorage.setItem('siren_lang', l); } catch {}
     }, []);
 
     const isRTL = rtlLangs.includes(lang);

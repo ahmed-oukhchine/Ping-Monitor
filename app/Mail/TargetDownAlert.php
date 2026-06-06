@@ -29,7 +29,7 @@ class TargetDownAlert extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "[ArgusNet] Alert: {$this->target->name} is offline",
+            subject: "[SIREN] Alert: {$this->target->name} is offline",
         );
     }
 

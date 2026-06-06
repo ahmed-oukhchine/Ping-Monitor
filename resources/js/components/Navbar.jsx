@@ -24,7 +24,7 @@ export default function Navbar() {
                         <i className="fas fa-satellite-dish text-primary text-sm"></i>
                     </div>
                     <div className="leading-none">
-                        <div className="text-sm font-bold text-base-content tracking-wide">ArgusNet</div>
+                        <div className="text-sm font-bold text-base-content tracking-wide">SIREN</div>
                         <div className="text-[10px] text-base-content/40 mt-0.5">Network Monitor</div>
                     </div>
                 </Link>

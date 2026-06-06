@@ -23,7 +23,7 @@
 </style>
 </head>
 <body>
-    <h1>ArgusNet — SLA Report</h1>
+    <h1>SIREN — SLA Report</h1>
     <p class="sub">{{ $period }} | Generated {{ now()->format('M d, Y H:i') }}</p>
 
     <div class="summary">
@@ -76,7 +76,7 @@
     </table>
 
     <div class="footer">
-        ArgusNet — Network Monitor | Generated automatically
+        SIREN — Network Monitor | Generated automatically
     </div>
 </body>
 </html>

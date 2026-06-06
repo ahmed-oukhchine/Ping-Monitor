@@ -58,7 +58,7 @@ class PingService
 
         $identifier = rand(1, 0xFFFF);
         $sequence   = 1;
-        $payload    = 'PingMonitor1234567890';
+        $payload    = 'SIREN1234567890';
 
         $packet   = pack('CCnnn', 8, 0, 0, $identifier, $sequence) . $payload;
         $checksum = $this->icmpChecksum($packet);

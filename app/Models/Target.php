@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Target extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'name', 'ip_address', 'location', 'notes',
         'warn_ms', 'critical_ms', 'is_paused',
