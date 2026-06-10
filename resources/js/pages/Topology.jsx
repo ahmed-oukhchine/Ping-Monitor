@@ -622,17 +622,40 @@ export default function Topology() {
             <div className="max-h-52 overflow-y-auto space-y-0.5">
               {(() => {
                 const q = filterSearch.toLowerCase().trim();
-                const filtered = q
+                const targets = q
                   ? topologyData.targets.filter(t => t.name.toLowerCase().includes(q) || t.ip_address.toLowerCase().includes(q))
                   : topologyData.targets;
-                return filtered.map(t => (
-                  <label key={t.id} className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-base-300/50 cursor-pointer text-[11px]">
-                    <input type="checkbox" checked={!hiddenTargets.has(t.id)} onChange={() => toggleTarget(t.id)}
-                      className="checkbox checkbox-xs checkbox-primary" />
-                    <span className={`flex-1 truncate ${hiddenTargets.has(t.id) ? 'line-through text-base-content/30' : 'text-base-content'}`}>{t.name}</span>
-                    <span className={`w-1.5 h-1.5 rounded-full ${t.last_status === true ? 'bg-success' : t.last_status === false ? 'bg-error' : 'bg-base-300'}`}></span>
-                  </label>
-                ));
+                const visible = targets.filter(t => !hiddenTargets.has(t.id));
+                const hidden = targets.filter(t => hiddenTargets.has(t.id));
+                return (
+                  <>
+                    {visible.length > 0 && (
+                      <div className="text-[8px] font-semibold text-success/60 uppercase tracking-wider px-2 py-1">Visible ({visible.length})</div>
+                    )}
+                    {visible.map(t => (
+                      <label key={t.id} className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-base-300/50 cursor-pointer text-[11px]">
+                        <input type="checkbox" checked={true} onChange={() => toggleTarget(t.id)}
+                          className="checkbox checkbox-xs checkbox-primary" />
+                        <span className={`flex-1 truncate text-base-content`}>{t.name}</span>
+                        <span className={`w-1.5 h-1.5 rounded-full ${t.last_status === true ? 'bg-success' : t.last_status === false ? 'bg-error' : 'bg-base-300'}`}></span>
+                      </label>
+                    ))}
+                    {hidden.length > 0 && visible.length > 0 && (
+                      <div className="border-t border-base-300/50 my-1"></div>
+                    )}
+                    {hidden.length > 0 && (
+                      <div className="text-[8px] font-semibold text-base-content/30 uppercase tracking-wider px-2 py-1">Hidden ({hidden.length})</div>
+                    )}
+                    {hidden.map(t => (
+                      <label key={t.id} className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-base-300/50 cursor-pointer text-[11px]">
+                        <input type="checkbox" checked={false} onChange={() => toggleTarget(t.id)}
+                          className="checkbox checkbox-xs checkbox-primary" />
+                        <span className={`flex-1 truncate line-through text-base-content/30`}>{t.name}</span>
+                        <span className={`w-1.5 h-1.5 rounded-full ${t.last_status === true ? 'bg-success' : t.last_status === false ? 'bg-error' : 'bg-base-300'}`}></span>
+                      </label>
+                    ))}
+                  </>
+                );
               })()}
             </div>
           </div>
