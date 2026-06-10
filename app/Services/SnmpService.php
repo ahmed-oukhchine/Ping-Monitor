@@ -35,16 +35,90 @@ class SnmpService
         }
     }
 
-    public function walk(Target $target, string $oid, int $timeout = 3): array|false
+    public function walk(Target $target, string $oid, int $timeout = 5): array|false
     {
         if (!$target->snmp_enabled || !$target->snmp_community) {
             return false;
         }
+
+        $snmpwalk = 'C:\usr\bin\snmpwalk.exe';
+        if (file_exists($snmpwalk)) {
+            return $this->walkViaCli($target, $oid, $timeout, $snmpwalk);
+        }
+
+        return $this->walkViaPhp($target, $oid, $timeout);
+    }
+
+    private function walkViaCli(Target $target, string $oid, int $timeout, string $binary): array|false
+    {
+        $ip   = $target->ip_address;
+        $comm = $target->snmp_community;
+        $o    = $oid;
+        $v    = $target->snmp_version === '1' ? '1' : '2c';
+
+        $cmd = sprintf('"%s" -v %s -c %s -OQn -t %d %s %s',
+            $binary, $v, $comm, $timeout, $ip, $o);
+
+        $lines = [];
+        $code  = 0;
+        exec($cmd, $lines, $code);
+
+        if (empty($lines)) {
+            return false;
+        }
+
+        $results = [];
+        $prefix  = rtrim($oid, '.') . '.';
+        $buffer  = '';
+        $bufferKey = null;
+
+        foreach ($lines as $line) {
+            $line = rtrim($line);
+            if ($line === '') continue;
+
+            if (preg_match('/^(\.\S+)/', $line, $m)) {
+                if ($bufferKey !== null) {
+                    $results[$bufferKey] = $this->decodeHexValue($buffer);
+                }
+                $buffer = $line;
+                $bufferKey = str_starts_with($m[1], $prefix) ? $m[1] : null;
+            } elseif ($bufferKey !== null) {
+                $buffer .= ' ' . trim($line);
+            }
+        }
+
+        if ($bufferKey !== null) {
+            $results[$bufferKey] = $this->decodeHexValue($buffer);
+        }
+
+        return empty($results) ? false : $results;
+    }
+
+    private function decodeHexValue(string $raw): string
+    {
+        if (preg_match('/=\s*"(.*?)"\s*$/s', $raw, $m)) {
+            $hex = trim($m[1]);
+            $bytes = '';
+            foreach (explode(' ', $hex) as $h) {
+                if (strlen($h) === 2 && ctype_xdigit($h)) {
+                    $bytes .= chr(hexdec($h));
+                }
+            }
+            return rtrim($bytes, "\0");
+        }
+        if (preg_match('/=\s*(.+)$/s', $raw, $m)) {
+            return rtrim(trim($m[1]), "\0");
+        }
+        return '';
+    }
+
+    private function walkViaPhp(Target $target, string $oid, int $timeout): array|false
+    {
         try {
             $result = @snmp2_real_walk($target->ip_address, $target->snmp_community, $oid, $timeout);
             return $result === false ? false : $result;
         } catch (\Throwable $e) {
-            Log::warning("SNMP walk failed for {$target->ip_address}/{$oid}: {$e->getMessage()}");
+            Log::warning("SNMP PHP walk failed for {$target->ip_address}/{$oid}: {$e->getMessage()}");
             return false;
         }
     }
@@ -121,10 +195,24 @@ class SnmpService
     private function parseSnmpValue(mixed $value): string
     {
         if ($value === false || $value === null) return '';
-        if (is_array($value)) {
-            $v = reset($value);
-            return is_string($v) ? trim($v) : (string) $v;
+        $s = trim((string) (is_array($value) ? reset($value) : $value));
+        if (preg_match('/^STRING:\s*(.+)$/i', $s, $m)) {
+            return rtrim(trim($m[1]), "\0");
         }
-        return trim((string) $value);
+        if (preg_match('/^INTEGER:\s*(.+)$/i', $s, $m)) {
+            $v = trim($m[1]);
+            if (preg_match('/\((\d+)\)/', $v, $d)) return $d[1];
+            if (preg_match('/^(\d+)/', $v, $d)) return $d[1];
+            return $v;
+        }
+        if (preg_match('/^Hex-STRING:\s*(.+)$/i', $s, $m)) {
+            $hex = trim($m[1]);
+            $bytes = '';
+            foreach (explode(' ', $hex) as $h) {
+                $bytes .= chr(hexdec($h));
+            }
+            return rtrim($bytes, "\0");
+        }
+        return rtrim($s, "\0");
     }
 }

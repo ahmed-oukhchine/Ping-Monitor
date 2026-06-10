@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useLang } from '../contexts/LanguageContext';
 
@@ -20,6 +20,8 @@ export default function Incidents() {
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo]     = useState('');
     const [page, setPage]         = useState(1);
+    const [showExport, setShowExport] = useState(false);
+    const exportRef = useRef(null);
 
     useEffect(() => {
         setLoading(true);
@@ -35,9 +37,23 @@ export default function Incidents() {
             .finally(() => setLoading(false));
     }, [targetId, dateFrom, dateTo, page]);
 
+    useEffect(() => {
+        const handleClick = (e) => { if (exportRef.current && !exportRef.current.contains(e.target)) setShowExport(false); };
+        document.addEventListener('mousedown', handleClick);
+        return () => document.removeEventListener('mousedown', handleClick);
+    }, []);
+
     const resetPage  = () => setPage(1);
     const clearFilters = () => { setTargetId(''); setDateFrom(''); setDateTo(''); setPage(1); };
     const activeCount  = [targetId, dateFrom, dateTo].filter(Boolean).length;
+
+    const exportUrl = (path) => {
+        const params = new URLSearchParams();
+        if (targetId)  params.set('target_id', targetId);
+        if (dateFrom)  params.set('date_from', dateFrom);
+        if (dateTo)    params.set('date_to', dateTo);
+        window.location.href = `${path}?${params.toString()}`;
+    };
 
     return (
         <div className="min-h-screen bg-base-100">
@@ -64,14 +80,43 @@ export default function Incidents() {
                             </div>
                         )}
                     </div>
-                    {activeCount > 0 && (
-                        <button onClick={clearFilters}
-                            className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-base-content/50 hover:text-error hover:bg-error/10 transition-all">
-                            <i className="fas fa-times text-[8px]"></i>
-                            {t('history.clear')}
-                            <span className="min-w-[14px] h-3.5 rounded-full bg-primary text-white text-[8px] font-bold flex items-center justify-center px-1">{activeCount}</span>
-                        </button>
-                    )}
+                    <div className="flex items-center gap-2">
+                        <div className="relative" ref={exportRef}>
+                            <button onClick={() => setShowExport(o => !o)}
+                                className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-[10px] font-semibold border border-base-300 text-base-content/70 hover:text-base-content hover:bg-base-200 transition-all">
+                                <i className="fas fa-download text-[8px]"></i>
+                                {t('incidents.export')}
+                                <i className="fas fa-chevron-down text-[6px] ml-0.5"></i>
+                            </button>
+                            {showExport && (
+                                <div className="absolute right-0 top-full mt-1 w-36 bg-base-200 border border-base-300 rounded-xl shadow-lg z-50 overflow-hidden anim-fade-up">
+                                    <button onClick={() => { exportUrl('/api/incidents/export'); setShowExport(false); }}
+                                        className="flex items-center gap-2 w-full px-3 py-2 text-xs text-base-content hover:bg-base-300 transition-colors">
+                                        <i className="fas fa-file-csv text-primary text-[10px] w-4 text-center"></i>
+                                        CSV
+                                    </button>
+                                    <button onClick={() => { exportUrl('/api/incidents/export-xls'); setShowExport(false); }}
+                                        className="flex items-center gap-2 w-full px-3 py-2 text-xs text-base-content hover:bg-base-300 transition-colors">
+                                        <i className="fas fa-file-excel text-[#21a366] text-[10px] w-4 text-center"></i>
+                                        Excel
+                                    </button>
+                                    <button onClick={() => { exportUrl('/api/incidents/export-pdf'); setShowExport(false); }}
+                                        className="flex items-center gap-2 w-full px-3 py-2 text-xs text-base-content hover:bg-base-300 transition-colors">
+                                        <i className="fas fa-file-pdf text-error text-[10px] w-4 text-center"></i>
+                                        PDF
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                        {activeCount > 0 && (
+                            <button onClick={clearFilters}
+                                className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-base-content/50 hover:text-error hover:bg-error/10 transition-all">
+                                <i className="fas fa-times text-[8px]"></i>
+                                {t('history.clear')}
+                                <span className="min-w-[14px] h-3.5 rounded-full bg-primary text-white text-[8px] font-bold flex items-center justify-center px-1">{activeCount}</span>
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 <div className="anim-fade-up anim-delay-1 bg-base-200 border border-base-300 rounded-xl px-4 py-3 mb-4 flex items-center flex-wrap gap-x-4 gap-y-2.5">

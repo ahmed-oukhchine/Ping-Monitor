@@ -7,6 +7,7 @@ use App\Models\AuditLog;
 use App\Models\Group;
 use App\Models\PingHistory;
 use App\Models\Setting;
+use Shuchkin\SimpleXLSX;
 use App\Models\Target;
 use App\Services\PingService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -212,6 +213,63 @@ class PingController extends Controller
         return $pdf->download($filename);
     }
 
+    public function exportXls(Request $request)
+    {
+        $targetId = $request->input('target_id');
+        $status   = $request->input('status');
+        $dateFrom = $request->input('date_from');
+        $dateTo   = $request->input('date_to');
+        $latency  = $request->input('latency');
+
+        $applyFilters = function ($q) use ($targetId, $status, $dateFrom, $dateTo, $latency) {
+            return $q
+                ->when($targetId,             fn($q) => $q->where('target_id', $targetId))
+                ->when($status === 'online',  fn($q) => $q->where('is_success', true))
+                ->when($status === 'offline', fn($q) => $q->where('is_success', false))
+                ->when($dateFrom,             fn($q) => $q->whereDate('created_at', '>=', $dateFrom))
+                ->when($dateTo,               fn($q) => $q->whereDate('created_at', '<=', $dateTo))
+                ->when($latency === 'fast',   fn($q) => $q->where('response_time', '<', 50))
+                ->when($latency === 'medium', fn($q) => $q->whereBetween('response_time', [50, 150]))
+                ->when($latency === 'slow',   fn($q) => $q->where('response_time', '>', 150));
+        };
+
+        $records = $applyFilters(PingHistory::with('target:id,name,ip_address'))
+            ->orderBy('created_at', 'desc')
+            ->limit(5000)
+            ->get();
+
+        $filename = 'ping-history-' . now()->format('Y-m-d') . '.xls';
+
+        $headers = [
+            'Content-Type'        => 'application/vnd.ms-excel',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            'Cache-Control'       => 'no-cache, no-store',
+            'Pragma'              => 'no-cache',
+        ];
+
+        $callback = function () use ($records) {
+            echo '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
+            echo '<head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>History</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->';
+            echo '<style>td,th{padding:4px 8px;border:1px solid #ccc}th{background:#2563eb;color:#fff}</style></head><body>';
+            echo '<table><thead><tr>';
+            echo '<th>Time</th><th>Target</th><th>IP Address</th><th>Status</th><th>Latency (ms)</th><th>Error</th>';
+            echo '</tr></thead><tbody>';
+            foreach ($records as $r) {
+                echo '<tr>';
+                echo '<td>' . $r->created_at->format('Y-m-d H:i:s') . '</td>';
+                echo '<td>' . htmlspecialchars($r->target?->name ?? '') . '</td>';
+                echo '<td>' . htmlspecialchars($r->target?->ip_address ?? '') . '</td>';
+                echo '<td>' . ($r->is_success ? 'Online' : 'Offline') . '</td>';
+                echo '<td>' . ($r->response_time ?? '') . '</td>';
+                echo '<td>' . htmlspecialchars($r->error_message ?? '') . '</td>';
+                echo '</tr>';
+            }
+            echo '</tbody></table></body></html>';
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
     public function apiIncidents(Request $request)
     {
         $targetId = $request->input('target_id');
@@ -222,6 +280,136 @@ class PingController extends Controller
 
         $targets = Target::orderBy('name')->get(['id', 'name']);
 
+        $incidents = $this->buildIncidents($targetId, $dateFrom, $dateTo);
+
+        $total = count($incidents);
+        $items = array_values(array_slice($incidents, ($page - 1) * $perPage, $perPage));
+
+        return response()->json([
+            'data'    => $items,
+            'meta'    => [
+                'current_page' => $page,
+                'last_page'    => max(1, (int) ceil($total / $perPage)),
+                'per_page'     => $perPage,
+                'total'        => $total,
+                'ongoing'      => count(array_filter($incidents, fn($i) => $i['ongoing'])),
+            ],
+            'targets' => $targets,
+        ]);
+    }
+
+    public function exportIncidentsCsv(Request $request)
+    {
+        $targetId = $request->input('target_id');
+        $dateFrom = $request->input('date_from');
+        $dateTo   = $request->input('date_to');
+
+        $incidents = $this->buildIncidents($targetId, $dateFrom, $dateTo);
+
+        $filename = 'incidents-' . now()->format('Y-m-d') . '.csv';
+
+        $headers = [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            'Cache-Control'       => 'no-cache, no-store',
+            'Pragma'              => 'no-cache',
+        ];
+
+        $callback = function () use ($incidents) {
+            $handle = fopen('php://output', 'w');
+            fputs($handle, "\xEF\xBB\xBF");
+            fputcsv($handle, ['Status', 'Target', 'IP Address', 'Started', 'Ended', 'Duration (s)', 'Failed Pings']);
+
+            foreach ($incidents as $inc) {
+                fputcsv($handle, [
+                    $inc['ongoing'] ? 'Ongoing' : 'Resolved',
+                    $inc['target_name'],
+                    $inc['target_ip'],
+                    '="' . $inc['started_at']->format('Y-m-d H:i:s') . '"',
+                    $inc['ended_at'] ? '="' . $inc['ended_at']->format('Y-m-d H:i:s') . '"' : '',
+                    $inc['ongoing'] ? '' : $inc['duration_sec'],
+                    $inc['ping_count'],
+                ]);
+            }
+
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function exportIncidentsPdf(Request $request)
+    {
+        $targetId = $request->input('target_id');
+        $dateFrom = $request->input('date_from');
+        $dateTo   = $request->input('date_to');
+
+        $incidents = $this->buildIncidents($targetId, $dateFrom, $dateTo);
+
+        $total   = count($incidents);
+        $ongoing = count(array_filter($incidents, fn($i) => $i['ongoing']));
+        $resolved = $total - $ongoing;
+
+        $targetName = $targetId ? Target::find($targetId)?->name : null;
+
+        $filters = [
+            'target'    => $targetName,
+            'date_from' => $dateFrom,
+            'date_to'   => $dateTo,
+        ];
+
+        $filename = 'incidents-' . now()->format('Y-m-d') . '.pdf';
+
+        ini_set('memory_limit', '512M');
+        $pdf = Pdf::loadView('pdf.incidents', compact('incidents', 'total', 'ongoing', 'resolved', 'filters'));
+        $pdf->setPaper('a4', 'landscape');
+
+        return $pdf->download($filename);
+    }
+
+    public function exportIncidentsXls(Request $request)
+    {
+        $targetId = $request->input('target_id');
+        $dateFrom = $request->input('date_from');
+        $dateTo   = $request->input('date_to');
+
+        $incidents = $this->buildIncidents($targetId, $dateFrom, $dateTo);
+
+        $filename = 'incidents-' . now()->format('Y-m-d') . '.xls';
+
+        $headers = [
+            'Content-Type'        => 'application/vnd.ms-excel',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            'Cache-Control'       => 'no-cache, no-store',
+            'Pragma'              => 'no-cache',
+        ];
+
+        $callback = function () use ($incidents) {
+            echo '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
+            echo '<head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Incidents</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->';
+            echo '<style>td,th{padding:4px 8px;border:1px solid #ccc}th{background:#2563eb;color:#fff}</style></head><body>';
+            echo '<table><thead><tr>';
+            echo '<th>Status</th><th>Target</th><th>IP Address</th><th>Started</th><th>Ended</th><th>Duration (s)</th><th>Failed Pings</th>';
+            echo '</tr></thead><tbody>';
+            foreach ($incidents as $inc) {
+                echo '<tr>';
+                echo '<td>' . ($inc['ongoing'] ? 'Ongoing' : 'Resolved') . '</td>';
+                echo '<td>' . htmlspecialchars($inc['target_name']) . '</td>';
+                echo '<td>' . htmlspecialchars($inc['target_ip']) . '</td>';
+                echo '<td>' . $inc['started_at']->format('Y-m-d H:i:s') . '</td>';
+                echo '<td>' . ($inc['ended_at'] ? $inc['ended_at']->format('Y-m-d H:i:s') : '—') . '</td>';
+                echo '<td>' . ($inc['ongoing'] ? '—' : $inc['duration_sec']) . '</td>';
+                echo '<td>' . $inc['ping_count'] . '</td>';
+                echo '</tr>';
+            }
+            echo '</tbody></table></body></html>';
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    private function buildIncidents($targetId, $dateFrom, $dateTo)
+    {
         $query = PingHistory::with('target:id,name,ip_address')
             ->when($targetId, fn($q) => $q->where('target_id', $targetId))
             ->when($dateFrom, fn($q) => $q->whereDate('created_at', '>=', $dateFrom))
@@ -278,20 +466,7 @@ class PingController extends Controller
 
         usort($incidents, fn($a, $b) => $b['started_at'] <=> $a['started_at']);
 
-        $total = count($incidents);
-        $items = array_values(array_slice($incidents, ($page - 1) * $perPage, $perPage));
-
-        return response()->json([
-            'data'    => $items,
-            'meta'    => [
-                'current_page' => $page,
-                'last_page'    => max(1, (int) ceil($total / $perPage)),
-                'per_page'     => $perPage,
-                'total'        => $total,
-                'ongoing'      => count(array_filter($incidents, fn($i) => $i['ongoing'])),
-            ],
-            'targets' => $targets,
-        ]);
+        return $incidents;
     }
 
     public function apiChartData(Target $target)
@@ -529,35 +704,113 @@ class PingController extends Controller
         }
     }
 
-    public function downloadTemplate()
+    public function downloadTemplate(Request $request)
     {
+        $format = $request->input('format', 'csv');
+
+        if ($format === 'xls') {
+            $filename = 'targets_import_template.xls';
+
+            $headers = [
+                'Content-Type'        => 'application/vnd.ms-excel',
+                'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+                'Cache-Control'       => 'no-cache, no-store',
+                'Pragma'              => 'no-cache',
+            ];
+
+            $callback = function () {
+                echo '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
+                echo '<head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Template</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->';
+                echo '<style>td,th{padding:4px 8px;border:1px solid #ccc}th{background:#2563eb;color:#fff;font-weight:bold}td{color:#888;font-style:italic}</style></head><body>';
+                echo '<table><thead><tr>';
+                echo '<th>name</th><th>ip_address</th><th>location</th><th>groups</th><th>alert_email</th><th>warn_ms</th><th>critical_ms</th><th>snmp_enabled</th><th>snmp_community</th>';
+                echo '</tr></thead><tbody>';
+                echo '<tr>';
+                echo '<td>Core Router</td><td>192.168.1.1</td><td>Data Center A</td><td>Production</td><td>admin@example.com</td><td>100</td><td>300</td><td>TRUE</td><td>public</td>';
+                echo '</tr>';
+                echo '<tr>';
+                echo '<td>Backup Switch</td><td>10.0.0.1</td><td>Data Center B</td><td>Backup</td><td></td><td></td><td></td><td>FALSE</td><td></td>';
+                echo '</tr>';
+                echo '</tbody></table></body></html>';
+            };
+
+            return response()->stream($callback, 200, $headers);
+        }
+
         $path = storage_path('app/templates/targets_template.csv');
         return response()->download($path, 'targets_import_template.csv');
     }
 
     public function importCsv(Request $request)
     {
-        $request->validate(['file' => 'required|file|mimes:csv,txt|max:2048']);
+        $request->validate(['file' => 'required|file|mimes:csv,txt,xlsx,xls|max:5120']);
 
-        $handle = fopen($request->file('file')->getRealPath(), 'r');
-        $header = fgetcsv($handle);
+        $file = $request->file('file');
+        $ext  = strtolower($file->getClientOriginalExtension());
 
         $expected = ['name', 'ip_address', 'location', 'groups', 'alert_email', 'warn_ms', 'critical_ms', 'snmp_enabled', 'snmp_community'];
-        $header = array_map('trim', $header);
 
         $imported = 0;
-        $errors = [];
+        $errors   = [];
+        $rows     = [];
 
-        while (($row = fgetcsv($handle)) !== false) {
-            $data = array_combine($header, $row);
+        if (in_array($ext, ['csv', 'txt'])) {
+            $handle = fopen($file->getRealPath(), 'r');
+            $header = fgetcsv($handle);
+            $header = array_map('trim', $header);
 
+            while (($row = fgetcsv($handle)) !== false) {
+                if (count($header) !== count($row)) {
+                    $errors[] = 'Row ' . ($imported + 2) . ': column count mismatch';
+                    continue;
+                }
+                $rows[] = array_combine($header, $row);
+                $imported++;
+            }
+            fclose($handle);
+        } elseif (in_array($ext, ['xlsx', 'xls'])) {
+            if ($ext === 'xls') {
+                $xlsx = SimpleXLSX::parse($file->getRealPath());
+            } else {
+                $xlsx = SimpleXLSX::parse($file->getRealPath());
+            }
+            if (!$xlsx) {
+                return response()->json([
+                    'imported' => 0,
+                    'errors'   => [SimpleXLSX::parseError()],
+                    'message'  => 'Failed to parse Excel file',
+                ]);
+            }
+            $sheet  = $xlsx->rows();
+            if (empty($sheet)) {
+                return response()->json([
+                    'imported' => 0,
+                    'errors'   => ['Empty file'],
+                    'message'  => 'No data found in Excel file',
+                ]);
+            }
+            $header = array_map('trim', $sheet[0]);
+            for ($i = 1; $i < count($sheet); $i++) {
+                $row = $sheet[$i];
+                if (count($header) !== count($row)) {
+                    $errors[] = 'Row ' . ($i + 1) . ': column count mismatch';
+                    continue;
+                }
+                $rows[] = array_combine($header, $row);
+                $imported++;
+            }
+        }
+
+        $imported = 0;
+
+        foreach ($rows as $idx => $data) {
             $validator = validator($data, [
                 'name'       => 'required|string|max:100',
                 'ip_address' => 'required|string|max:100',
             ]);
 
             if ($validator->fails()) {
-                $errors[] = 'Row ' . ($imported + 2) . ': ' . implode(', ', $validator->errors()->all());
+                $errors[] = 'Row ' . ($idx + 2) . ': ' . implode(', ', $validator->errors()->all());
                 continue;
             }
 
@@ -588,8 +841,6 @@ class PingController extends Controller
             AuditLog::log('created', 'Target', $target->id, null, $target->toArray());
             $imported++;
         }
-
-        fclose($handle);
 
         return response()->json([
             'imported' => $imported,

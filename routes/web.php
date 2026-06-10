@@ -27,8 +27,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/history',                     [PingController::class, 'apiHistory']);
     Route::get('/api/history/export',              [PingController::class, 'exportCsv']);
     Route::get('/api/history/export-pdf',           [PingController::class, 'exportPdf']);
+    Route::get('/api/history/export-xls',           [PingController::class, 'exportXls']);
 
     Route::get('/api/incidents',                   [PingController::class, 'apiIncidents']);
+    Route::get('/api/incidents/export',            [PingController::class, 'exportIncidentsCsv']);
+    Route::get('/api/incidents/export-pdf',         [PingController::class, 'exportIncidentsPdf']);
+    Route::get('/api/incidents/export-xls',         [PingController::class, 'exportIncidentsXls']);
     Route::get('/api/targets/{target}/chart-data', [PingController::class, 'apiChartData']);
     Route::get('/api/groups',                      [GroupController::class, 'index']);
 

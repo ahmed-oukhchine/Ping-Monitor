@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { useLang } from '../contexts/LanguageContext';
 
@@ -14,6 +14,8 @@ export default function History() {
     const [page, setPage]         = useState(1);
     const [autoRefresh, setAutoRefresh] = useState(false);
     const [detailRecord, setDetailRecord] = useState(null);
+    const [showExport, setShowExport] = useState(false);
+    const exportRef = useRef(null);
 
     const fetchData = useCallback(() => {
         setLoading(true);
@@ -38,6 +40,12 @@ export default function History() {
         const id = setInterval(fetchData, 15000);
         return () => clearInterval(id);
     }, [autoRefresh, fetchData]);
+
+    useEffect(() => {
+        const handleClick = (e) => { if (exportRef.current && !exportRef.current.contains(e.target)) setShowExport(false); };
+        document.addEventListener('mousedown', handleClick);
+        return () => document.removeEventListener('mousedown', handleClick);
+    }, []);
 
     const resetPage = () => setPage(1);
 
@@ -106,16 +114,33 @@ export default function History() {
                             <i className={`fas ${autoRefresh ? 'fa-sync fa-spin' : 'fa-sync'} text-[8px]`}></i>
                             Auto
                         </button>
-                        <button onClick={() => exportUrl('/api/history/export')} title={t('history.exportCsv')}
-                            className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold border border-primary/30 text-primary hover:bg-primary/10 transition-all">
-                            <i className="fas fa-file-csv text-[8px]"></i>
-                            CSV
-                        </button>
-                        <button onClick={() => exportUrl('/api/history/export-pdf')} title={t('history.exportPdf')}
-                            className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold border border-error/30 text-error hover:bg-error/10 transition-all">
-                            <i className="fas fa-file-pdf text-[8px]"></i>
-                            PDF
-                        </button>
+                        <div className="relative" ref={exportRef}>
+                            <button onClick={() => setShowExport(o => !o)}
+                                className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-[10px] font-semibold border border-base-300 text-base-content/70 hover:text-base-content hover:bg-base-200 transition-all">
+                                <i className="fas fa-download text-[8px]"></i>
+                                {t('history.export')}
+                                <i className="fas fa-chevron-down text-[6px] ml-0.5"></i>
+                            </button>
+                            {showExport && (
+                                <div className="absolute right-0 top-full mt-1 w-36 bg-base-200 border border-base-300 rounded-xl shadow-lg z-50 overflow-hidden anim-fade-up">
+                                    <button onClick={() => { exportUrl('/api/history/export'); setShowExport(false); }}
+                                        className="flex items-center gap-2 w-full px-3 py-2 text-xs text-base-content hover:bg-base-300 transition-colors">
+                                        <i className="fas fa-file-csv text-primary text-[10px] w-4 text-center"></i>
+                                        CSV
+                                    </button>
+                                    <button onClick={() => { exportUrl('/api/history/export-xls'); setShowExport(false); }}
+                                        className="flex items-center gap-2 w-full px-3 py-2 text-xs text-base-content hover:bg-base-300 transition-colors">
+                                        <i className="fas fa-file-excel text-[#21a366] text-[10px] w-4 text-center"></i>
+                                        Excel
+                                    </button>
+                                    <button onClick={() => { exportUrl('/api/history/export-pdf'); setShowExport(false); }}
+                                        className="flex items-center gap-2 w-full px-3 py-2 text-xs text-base-content hover:bg-base-300 transition-colors">
+                                        <i className="fas fa-file-pdf text-error text-[10px] w-4 text-center"></i>
+                                        PDF
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -144,7 +169,8 @@ export default function History() {
                                 const h = r.response_time != null ? Math.min(100, (r.response_time / max) * 100) : 0;
                                 return (
                                     <div key={r.id} title={`${r.target?.name}: ${r.response_time ?? '—'}ms`}
-                                        className={`flex-1 rounded-t transition-all hover:opacity-80 ${r.is_success ? 'bg-primary/40' : 'bg-error/50'}`}
+                                        onClick={() => setDetailRecord(r)}
+                                        className={`flex-1 rounded-t transition-all hover:opacity-80 cursor-pointer ${r.is_success ? 'bg-primary/40' : 'bg-error/50'}`}
                                         style={{ height: `${h}%`, minHeight: r.is_success ? 2 : 4 }}>
                                     </div>
                                 );

@@ -271,6 +271,8 @@ const translations = {
   'history.firstPage': { en: 'First page', fr: 'Première page', ar: 'الصفحة الأولى' },
   'history.lastPage': { en: 'Last page', fr: 'Dernière page', ar: 'الصفحة الأخيرة' },
   'history.exportPdf': { en: 'Export PDF', fr: 'Exporter PDF', ar: 'تصدير PDF' },
+  'history.exportXls': { en: 'Export Excel', fr: 'Exporter Excel', ar: 'تصدير Excel' },
+  'history.export': { en: 'Export', fr: 'Exporter', ar: 'تصدير' },
   /* ── Incidents ── */
   'incidents.title': { en: 'Downtime Incidents', fr: 'Incidents', ar: 'حوادث التوقف' },
   'incidents.nTotal': { en: '{n} total', fr: '{n} total', ar: '{n} إجمالي' },
@@ -293,6 +295,10 @@ const translations = {
   'incidents.notRecovered': { en: 'Not recovered', fr: 'Non rétabli', ar: 'لم يتم الاسترداد' },
   'incidents.noIncidents': { en: 'No incidents found', fr: 'Aucun incident trouvé', ar: 'لم يتم العثور على حوادث' },
   'incidents.allOnline': { en: 'All devices have been online', fr: 'Tous les appareils étaient en ligne', ar: 'جميع الأجهزة كانت متصلة' },
+  'incidents.exportCsv': { en: 'Export CSV', fr: 'Exporter CSV', ar: 'تصدير CSV' },
+  'incidents.exportPdf': { en: 'Export PDF', fr: 'Exporter PDF', ar: 'تصدير PDF' },
+  'incidents.exportXls': { en: 'Export Excel', fr: 'Exporter Excel', ar: 'تصدير Excel' },
+  'incidents.export': { en: 'Export', fr: 'Exporter', ar: 'تصدير' },
   /* ── Statistics ── */
   'statsPage.title': { en: 'Fleet Statistics', fr: 'Statistiques de la flotte', ar: 'إحصائيات الأسطول' },
   'statsPage.healthy': { en: 'Healthy', fr: 'Sain', ar: 'سليم' },

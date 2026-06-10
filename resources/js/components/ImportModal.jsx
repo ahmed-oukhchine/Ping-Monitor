@@ -6,6 +6,7 @@ export default function ImportModal({ onClose, onImported }) {
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState(null);
     const [error, setError] = useState(null);
+    const [showTemplateMenu, setShowTemplateMenu] = useState(false);
     const inputRef = useRef(null);
 
     const handleUpload = () => {
@@ -23,8 +24,9 @@ export default function ImportModal({ onClose, onImported }) {
             .finally(() => setLoading(false));
     };
 
-    const downloadTemplate = () => {
-        window.open('/api/targets/template', '_blank');
+    const downloadTemplate = (format) => {
+        window.open(`/api/targets/template?format=${format}`, '_blank');
+        setShowTemplateMenu(false);
     };
 
     return (
@@ -46,24 +48,48 @@ export default function ImportModal({ onClose, onImported }) {
                 <div className="px-5 py-4 space-y-4">
                     {!result ? (
                         <>
-                            <p className="text-[11px] text-base-content/50">Upload a CSV file with your targets. <button onClick={downloadTemplate}
-                                className="text-primary hover:underline font-medium">Download template</button></p>
+                            <p className="text-[11px] text-base-content/50">Upload a CSV or Excel file with your targets.</p>
+                            <div className="relative">
+                                <button onClick={() => setShowTemplateMenu(o => !o)}
+                                    className="flex items-center gap-1 text-[11px] text-primary hover:underline font-medium">
+                                    <i className="fas fa-download text-[9px]"></i>
+                                    Download template
+                                    <i className="fas fa-chevron-down text-[6px] ml-0.5"></i>
+                                </button>
+                                {showTemplateMenu && (
+                                    <div className="absolute left-0 top-full mt-1 w-40 bg-base-200 border border-base-300 rounded-xl shadow-lg z-50 overflow-hidden anim-fade-up"
+                                        onMouseLeave={() => setShowTemplateMenu(false)}>
+                                        <button onClick={() => downloadTemplate('csv')}
+                                            className="flex items-center gap-2 w-full px-3 py-2 text-xs text-base-content hover:bg-base-300 transition-colors">
+                                            <i className="fas fa-file-csv text-primary text-[10px] w-4 text-center"></i>
+                                            CSV Template
+                                        </button>
+                                        <button onClick={() => downloadTemplate('xls')}
+                                            className="flex items-center gap-2 w-full px-3 py-2 text-xs text-base-content hover:bg-base-300 transition-colors">
+                                            <i className="fas fa-file-excel text-[#21a366] text-[10px] w-4 text-center"></i>
+                                            Excel Template
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
 
                             <div onClick={() => inputRef.current?.click()}
                                 className="border-2 border-dashed border-base-300 rounded-xl p-6 text-center cursor-pointer hover:border-primary/40 transition-colors">
                                 {file ? (
                                     <div className="flex items-center justify-center gap-2">
-                                        <i className="fas fa-file-csv text-primary text-lg"></i>
+                                        {file.name.match(/\.xlsx?$/i)
+                                            ? <i className="fas fa-file-excel text-[#21a366] text-lg"></i>
+                                            : <i className="fas fa-file-csv text-primary text-lg"></i>}
                                         <span className="text-xs font-medium text-base-content">{file.name}</span>
                                         <span className="text-[10px] text-base-content/40">({(file.size / 1024).toFixed(1)} KB)</span>
                                     </div>
                                 ) : (
                                     <div>
                                         <i className="fas fa-cloud-upload-alt text-2xl text-base-content/20 mb-2"></i>
-                                        <p className="text-xs text-base-content/40">Click to select a CSV file</p>
+                                        <p className="text-xs text-base-content/40">Click to select a CSV or Excel file</p>
                                     </div>
                                 )}
-                                <input ref={inputRef} type="file" accept=".csv,.txt" className="hidden"
+                                <input ref={inputRef} type="file" accept=".csv,.txt,.xlsx,.xls" className="hidden"
                                     onChange={e => setFile(e.target.files[0])} />
                             </div>
 
