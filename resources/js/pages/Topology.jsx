@@ -610,8 +610,8 @@ export default function Topology() {
 
       {/* ── target filter dropdown ── */}
       {showTargetFilter && (
-        <div className="relative z-10">
-          <div className="absolute left-6 top-0 bg-base-200 border border-base-300 rounded-xl p-3 shadow-xl w-64 max-h-80 overflow-y-auto">
+        <div className="fixed inset-0 z-10" onClick={() => setShowTargetFilter(false)}>
+          <div className="absolute left-6 top-20 bg-base-200 border border-base-300 rounded-xl p-3 shadow-xl w-64 max-h-80 overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="text-[9px] font-semibold text-base-content/40 uppercase tracking-wider mb-2">Toggle Targets</div>
             <div className="relative mb-2">
               <i className="fas fa-search absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-base-content/20"></i>
