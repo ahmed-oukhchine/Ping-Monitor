@@ -25,28 +25,31 @@ class SnmpPoll extends Command
 
         foreach ($targets as $target) {
             $results = $snmp->pollInterfaces($target);
-            if (empty($results)) continue;
+            if (!empty($results)) {
+                foreach ($results as $index => $data) {
+                    $iface = NetworkInterface::where('target_id', $target->id)
+                        ->where('snmp_index', $index)
+                        ->first();
+                    if (!$iface) continue;
 
-            foreach ($results as $index => $data) {
-                $iface = NetworkInterface::where('target_id', $target->id)
-                    ->where('snmp_index', $index)
-                    ->first();
-                if (!$iface) continue;
+                    $iface->update([
+                        'is_up'          => $data['is_up'],
+                        'in_octets'      => $data['in_octets'],
+                        'out_octets'     => $data['out_octets'],
+                        'last_polled_at' => $now,
+                    ]);
 
-                $iface->update([
-                    'is_up'          => $data['is_up'],
-                    'in_octets'      => $data['in_octets'],
-                    'out_octets'     => $data['out_octets'],
-                    'last_polled_at' => $now,
-                ]);
-
-                BandwidthHistory::create([
-                    'network_interface_id' => $iface->id,
-                    'in_octets'            => $data['in_octets'],
-                    'out_octets'           => $data['out_octets'],
-                    'created_at'           => $now,
-                ]);
+                    BandwidthHistory::create([
+                        'network_interface_id' => $iface->id,
+                        'in_octets'            => $data['in_octets'],
+                        'out_octets'           => $data['out_octets'],
+                        'created_at'           => $now,
+                    ]);
+                }
             }
+
+            $system = $snmp->pollSystem($target);
+            $target->update(array_merge($system, ['system_polled_at' => $now]));
         }
     }
 }

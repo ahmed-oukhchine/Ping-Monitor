@@ -51,6 +51,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/snmp/{target}/discover',  [SnmpController::class, 'discover'])->middleware(EnsureAdmin::class);
     Route::post('/api/snmp/{target}/poll',      [SnmpController::class, 'poll']);
     Route::get('/api/snmp/{target}/bandwidth',   [SnmpController::class, 'bandwidth']);
+    Route::get('/api/snmp/{target}/system',      [SnmpController::class, 'system']);
+    Route::get('/api/snmp/{target}/storage',     [SnmpController::class, 'storage']);
 
     Route::get('/api/users', [UserController::class, 'index']);
     Route::put('/api/profile/password', [UserController::class, 'updateOwnPassword']);

@@ -21,6 +21,10 @@ class SnmpService
     const OID_IF_IN_OCTETS  = '.1.3.6.1.2.1.2.2.1.10';
     const OID_IF_OUT_OCTETS = '.1.3.6.1.2.1.2.2.1.16';
 
+    const OID_CPU_IDLE     = '.1.3.6.1.4.1.2021.11.11.0';
+    const OID_MEM_TOTAL    = '.1.3.6.1.4.1.2021.4.5.0';
+    const OID_MEM_AVAIL    = '.1.3.6.1.4.1.2021.4.6.0';
+
     public function get(Target $target, string $oid, int $timeout = 3): string|false
     {
         if (!$target->snmp_enabled || !$target->snmp_community) {
@@ -185,6 +189,134 @@ class SnmpService
             ];
         }
         return $results;
+    }
+
+    public function pollSystem(Target $target): array
+    {
+        if (!$target->snmp_enabled) {
+            return ['cpu_load' => null, 'ram_total' => null, 'ram_used' => null];
+        }
+
+        $cpuIdle  = (int) $this->parseSnmpValue($this->get($target, self::OID_CPU_IDLE));
+        $memTotal = (int) $this->parseSnmpValue($this->get($target, self::OID_MEM_TOTAL));
+        $memAvail = (int) $this->parseSnmpValue($this->get($target, self::OID_MEM_AVAIL));
+
+        if ($cpuIdle > 0 && $memTotal > 0) {
+            return [
+                'cpu_load'  => max(0, min(100, 100 - $cpuIdle)),
+                'ram_total' => $memTotal,
+                'ram_used'  => ($memTotal > 0 && $memAvail > 0) ? ($memTotal - $memAvail) : null,
+            ];
+        }
+
+        return $this->pollSystemLocal();
+    }
+
+    private function pollSystemLocal(): array
+    {
+        $cpu = null;
+        $ramTotal = null;
+        $ramUsed  = null;
+
+        if (PHP_OS_FAMILY === 'Windows') {
+            $out = [];
+            exec('powershell -Command "$os = Get-CimInstance Win32_OperatingSystem; Write-Output $os.TotalVisibleMemorySize $os.FreePhysicalMemory" 2>NUL', $out);
+            if (count($out) >= 2) {
+                $ramTotal = (int) trim($out[0]);
+                $free    = (int) trim($out[1]);
+                if ($ramTotal > 0) {
+                    $ramUsed = $ramTotal - $free;
+                }
+            }
+
+            $out2 = [];
+            exec('powershell -Command "(Get-CimInstance Win32_Processor | Measure-Object -Property LoadPercentage -Average).Average" 2>NUL', $out2);
+            if (count($out2) >= 1) {
+                $v = trim($out2[0]);
+                if ($v !== '' && is_numeric($v)) {
+                    $cpu = (int) round((float) $v);
+                }
+            }
+        }
+
+        return [
+            'cpu_load'  => ($cpu !== null && $cpu >= 0) ? min(100, $cpu) : null,
+            'ram_total' => $ramTotal,
+            'ram_used'  => $ramUsed,
+        ];
+    }
+
+    public function getStorage(Target $target): array
+    {
+        if ($target->ip_address === '127.0.0.1' || $target->ip_address === 'localhost') {
+            return $this->getStorageLocal();
+        }
+
+        $raw = $this->walk($target, '.1.3.6.1.2.1.25.2.3.1');
+        if ($raw === false) return [];
+
+        $entries = [];
+        foreach ($raw as $oid => $rawValue) {
+            preg_match('/\.(\d+)\.(\d+)$/', $oid, $m);
+            $index = (int) ($m[1] ?? 0);
+            if ($index === 0) continue;
+            $col = (int) ($m[2] ?? 0);
+
+            $value = $this->parseSnmpValue($rawValue);
+            if ($col === 3) $entries[$index]['descr'] = $value;
+            if ($col === 2) $entries[$index]['type'] = $value;
+            if ($col === 4) $entries[$index]['alloc'] = (int) $value;
+            if ($col === 5) $entries[$index]['size'] = (int) $value;
+            if ($col === 6) $entries[$index]['used'] = (int) $value;
+        }
+
+        $disks = [];
+        foreach ($entries as $e) {
+            if (($e['size'] ?? 0) === 0) continue;
+            $totalBytes = ($e['alloc'] ?? 1) * ($e['size'] ?? 0);
+            $usedBytes  = ($e['alloc'] ?? 1) * ($e['used'] ?? 0);
+            $disks[] = [
+                'label'    => $e['descr'] ?? 'Unknown',
+                'total'    => $totalBytes,
+                'used'     => $usedBytes,
+                'free'     => $totalBytes - $usedBytes,
+                'pct'      => $totalBytes > 0 ? round($usedBytes / $totalBytes * 100) : 0,
+            ];
+        }
+        return $disks;
+    }
+
+    private function getStorageLocal(): array
+    {
+        $disks = [];
+
+        if (PHP_OS_FAMILY !== 'Windows') return $disks;
+
+        $out = [];
+        exec('powershell -Command "Get-CimInstance Win32_LogicalDisk | Where-Object DriveType -eq 3 | Select-Object DeviceID, Size, FreeSpace, FileSystem | ConvertTo-Json" 2>NUL', $out);
+        $json = implode('', $out);
+
+        if (empty($json)) return $disks;
+
+        $items = json_decode($json, true);
+        if ($items === null) return $disks;
+        if (isset($items['DeviceID'])) $items = [$items];
+
+        foreach ($items as $item) {
+            $total = (int) ($item['Size'] ?? 0);
+            $free  = (int) ($item['FreeSpace'] ?? 0);
+            $used  = $total - $free;
+            $disks[] = [
+                'label'      => $item['DeviceID'] ?? 'Unknown',
+                'total'      => $total,
+                'used'       => $used,
+                'free'       => $free,
+                'pct'        => $total > 0 ? round($used / $total * 100) : 0,
+                'filesystem' => $item['FileSystem'] ?? '',
+            ];
+        }
+
+        return $disks;
     }
 
     private function walkSingle(Target $target, string $oid): string|false

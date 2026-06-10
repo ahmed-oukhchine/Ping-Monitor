@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import Gauge from './Gauge';
 
 export default function TargetDetailModal({ target: t, isAdmin, isPinging, onPing, onEdit, onDelete, onChart, onPause, onResume, onClose }) {
     const [history, setHistory]         = useState([]);
@@ -9,9 +10,12 @@ export default function TargetDetailModal({ target: t, isAdmin, isPinging, onPin
     const [ifacesLoading, setIfacesLoading] = useState(false);
     const [quickCommunity, setQuickCommunity] = useState(t.snmp_community || '');
     const [quickSaving, setQuickSaving] = useState(false);
+    const [systemData, setSystemData] = useState(null);
+    const [sysLoading, setSysLoading] = useState(false);
     const [bwRange, setBwRange] = useState('24h');
     const [bwData, setBwData] = useState([]);
     const [bwLoading, setBwLoading] = useState(false);
+    const [selectedBwIface, setSelectedBwIface] = useState(null);
     const prevPinging = useRef(isPinging);
 
     const fetchHistory = () => {
@@ -44,10 +48,24 @@ export default function TargetDetailModal({ target: t, isAdmin, isPinging, onPin
         if (t.snmp_enabled) fetchInterfaces();
     }, [t.id, t.snmp_enabled]);
 
+    const fetchSystem = async () => {
+        setSysLoading(true);
+        try {
+            const { data } = await axios.get(`/api/snmp/${t.id}/system`);
+            setSystemData(data);
+        } catch {} finally { setSysLoading(false); }
+    };
+
     const fetchBandwidth = (range = bwRange) => {
         setBwLoading(true);
         axios.get(`/api/snmp/${t.id}/bandwidth`, { params: { range } })
-            .then(({ data }) => setBwData(data))
+            .then(({ data }) => {
+                setBwData(data);
+                const ids = new Set(data.map(d => d.network_interface_id));
+                if (!selectedBwIface || !ids.has(selectedBwIface)) {
+                    setSelectedBwIface(ids.values().next().value || null);
+                }
+            })
             .catch(() => {})
             .finally(() => setBwLoading(false));
     };
@@ -55,6 +73,10 @@ export default function TargetDetailModal({ target: t, isAdmin, isPinging, onPin
     useEffect(() => {
         if (t.snmp_enabled) fetchBandwidth();
     }, [t.id, t.snmp_enabled, bwRange]);
+
+    useEffect(() => {
+        if (t.snmp_enabled) fetchSystem();
+    }, [t.id, t.snmp_enabled]);
 
     useEffect(() => {
         if (prevPinging.current && !isPinging) fetchHistory();
@@ -85,6 +107,20 @@ export default function TargetDetailModal({ target: t, isAdmin, isPinging, onPin
         { label: 'Failed',       value: (t.failed_pings ?? 0).toLocaleString(), cls: t.failed_pings > 0 ? 'text-error' : 'text-base-content' },
         { label: 'Packet Loss',  value: loss != null ? `${loss}%` : '—',        cls: loss === 0 ? 'text-success' : loss != null && loss <= 5 ? 'text-warning' : 'text-error' },
     ];
+
+    const formatBits = (bits, decimals = 1) => {
+        if (bits == null || isNaN(bits)) return '—';
+        if (bits === 0) return '0 bps';
+        const k = 1000;
+        const sizes = ['bps', 'Kbps', 'Mbps', 'Gbps'];
+        const i = Math.min(Math.floor(Math.log(Math.abs(bits)) / Math.log(k)), sizes.length - 1);
+        return `${(bits / Math.pow(k, i)).toFixed(decimals)} ${sizes[i]}`;
+    };
+
+    const bwIfacesWithData = [...new Set(bwData.filter(d => d.network_interface_id).map(d => d.network_interface_id))];
+    const bwIfaceData = selectedBwIface ? bwData.filter(d => d.network_interface_id === selectedBwIface) : [];
+    const lastBwPoint = bwIfaceData.length > 0 ? bwIfaceData[bwIfaceData.length - 1] : null;
+    const selectedIface = interfaces.find(i => i.id === selectedBwIface);
 
     return (
         <div className="backdrop-enter fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md" onClick={onClose}>
@@ -294,6 +330,28 @@ export default function TargetDetailModal({ target: t, isAdmin, isPinging, onPin
                     </div>
                 )}
 
+                {t.snmp_enabled && (
+                    <div className="px-6 py-3 border-b border-base-300 flex-shrink-0">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-[10px] font-semibold text-base-content/35 uppercase tracking-wider flex items-center gap-1.5">
+                                <i className="fas fa-microchip text-[9px]"></i>
+                                System Resources
+                            </span>
+                            {sysLoading && (
+                                <span className="loading loading-spinner loading-xs text-primary"></span>
+                            )}
+                        </div>
+                        {systemData ? (
+                            <div className="flex items-center justify-center gap-6 py-2">
+                                <Gauge value={systemData.cpu_load ?? 0} label="CPU" size={100} />
+                                <Gauge value={systemData.ram_total ? Math.round((systemData.ram_used / systemData.ram_total) * 100) : 0} label="RAM" size={100} />
+                            </div>
+                        ) : (
+                            <p className="text-[11px] text-base-content/30 py-2 text-center">No system data yet.</p>
+                        )}
+                    </div>
+                )}
+
                 {t.snmp_enabled && interfaces.length > 0 && (
                     <div className="px-6 py-3 border-b border-base-300 flex-shrink-0">
                         <div className="flex items-center justify-between mb-2">
@@ -321,39 +379,74 @@ export default function TargetDetailModal({ target: t, isAdmin, isPinging, onPin
                         ) : bwData.length === 0 ? (
                             <p className="text-[11px] text-base-content/30 py-2 text-center">No bandwidth data yet. Run snmp:poll to collect.</p>
                         ) : (
-                            <div className="flex flex-col gap-3">
-                                {interfaces.map(iface => {
-                                    const ifaceData = bwData.filter(d => d.network_interface_id === iface.id);
-                                    return (
-                                        <div key={iface.id}>
-                                            <span className="text-[10px] font-medium text-base-content/50 block mb-1 truncate">{iface.name}</span>
-                                            <div className="h-20">
-                                                <ResponsiveContainer width="100%" height="100%">
-                                                    <AreaChart data={ifaceData}>
-                                                        <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-base-300" />
-                                                        <XAxis dataKey="created_at" hide />
-                                                        <YAxis hide domain={['dataMin', 'dataMax']} />
-                                                        <Tooltip
-                                                            contentStyle={{
-                                                                background: 'hsl(var(--b1))',
-                                                                border: '1px solid hsl(var(--b3))',
-                                                                borderRadius: '8px',
-                                                                fontSize: '11px',
-                                                            }}
-                                                            labelFormatter={(v) => new Date(v).toLocaleString()}
-                                                            formatter={(value, name) => [
-                                                                `${((value * 8) / 1_000_000).toFixed(2)} Mbps`,
-                                                                name === 'in_octets' ? 'In' : 'Out'
-                                                            ]}
-                                                        />
-                                                        <Area type="monotone" dataKey="in_octets" stroke="#22c55e" fill="#22c55e" fillOpacity={0.1} strokeWidth={1.5} dot={false} />
-                                                        <Area type="monotone" dataKey="out_octets" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.1} strokeWidth={1.5} dot={false} />
-                                                    </AreaChart>
-                                                </ResponsiveContainer>
-                                            </div>
+                            <div className="flex flex-col">
+                                <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+                                    {bwIfacesWithData.map(id => {
+                                        const iface = interfaces.find(i => i.id === id);
+                                        return iface ? (
+                                            <button key={id} onClick={() => setSelectedBwIface(id)}
+                                                className={`px-2 py-1 rounded-lg text-[9px] font-semibold transition-all border ${
+                                                    selectedBwIface === id
+                                                        ? 'bg-primary/20 text-primary border-primary/30'
+                                                        : 'bg-base-300/40 text-base-content/40 border-transparent hover:border-base-content/20 hover:text-base-content/60'
+                                                }`}>
+                                                {iface.name}
+                                            </button>
+                                        ) : null;
+                                    })}
+                                </div>
+                                {selectedIface && lastBwPoint && (
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0"></span>
+                                            <span className="text-[9px] text-base-content/40">In</span>
+                                            <span className="text-[10px] font-bold tabular-nums text-green-500">
+                                                {formatBits((lastBwPoint.in_octets ?? 0) * 8)}
+                                            </span>
                                         </div>
-                                    );
-                                })}
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0"></span>
+                                            <span className="text-[9px] text-base-content/40">Out</span>
+                                            <span className="text-[10px] font-bold tabular-nums text-blue-500">
+                                                {formatBits((lastBwPoint.out_octets ?? 0) * 8)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
+                                <div className="h-36">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <AreaChart data={bwIfaceData}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-base-300" />
+                                            <XAxis dataKey="created_at" tick={false} />
+                                            <YAxis hide domain={['dataMin', 'dataMax']} />
+                                            <Tooltip
+                                                contentStyle={{
+                                                    background: 'hsl(var(--b1))',
+                                                    border: '1px solid hsl(var(--b3))',
+                                                    borderRadius: '8px',
+                                                    fontSize: '11px',
+                                                }}
+                                                labelFormatter={(v) => new Date(v).toLocaleString()}
+                                                formatter={(value, name) => [
+                                                    formatBits((value ?? 0) * 8),
+                                                    name === 'in_octets' ? 'In' : 'Out'
+                                                ]}
+                                            />
+                                            <defs>
+                                                <linearGradient id="inGrad" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
+                                                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                                                </linearGradient>
+                                                <linearGradient id="outGrad" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                                                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                                                </linearGradient>
+                                            </defs>
+                                            <Area type="monotone" dataKey="in_octets" stroke="#22c55e" fill="url(#inGrad)" strokeWidth={1.5} dot={false} />
+                                            <Area type="monotone" dataKey="out_octets" stroke="#3b82f6" fill="url(#outGrad)" strokeWidth={1.5} dot={false} />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
+                                </div>
                             </div>
                         )}
                     </div>

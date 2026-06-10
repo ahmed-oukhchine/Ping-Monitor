@@ -14,6 +14,7 @@ const Maintenance = React.lazy(() => import('./pages/Maintenance'));
 const Topology = React.lazy(() => import('./pages/Topology'));
 const SwitchConfigs = React.lazy(() => import('./pages/SwitchConfigs'));
 const Vlans = React.lazy(() => import('./pages/Vlans'));
+const TargetDetail = React.lazy(() => import('./pages/TargetDetail'));
 const Login = React.lazy(() => import('./pages/Login'));
 import Sidebar from './components/Sidebar';
 import { LangContext } from './contexts/LanguageContext';
@@ -62,6 +63,7 @@ function AppContent() {
     const [topologyMounted, setTopologyMounted]       = useState(false);
     const [switchConfigsMounted, setSwitchConfigsMounted] = useState(false);
     const [vlansMounted, setVlansMounted] = useState(false);
+    const [targetDetailMounted, setTargetDetailMounted] = useState(false);
     const [sidebarOpen, setSidebarOpen]             = useState(true);
 
     const [targets, setTargets]             = useState([]);
@@ -132,6 +134,7 @@ function AppContent() {
         setTopologyMounted(pathname === '/topology');
         setSwitchConfigsMounted(pathname === '/switch-configs');
         setVlansMounted(pathname === '/vlans');
+        setTargetDetailMounted(pathname.startsWith('/target/'));
     }, [pathname]);
 
     if (authLoading) {
@@ -158,6 +161,7 @@ function AppContent() {
     const onTopology    = pathname === '/topology';
     const onSwitchConfigs = pathname === '/switch-configs';
     const onVlans = pathname === '/vlans';
+    const onTargetDetail = pathname.startsWith('/target/');
 
     return (
         <div className="flex min-h-screen bg-base-100">
@@ -236,6 +240,11 @@ function AppContent() {
                 {vlansMounted && (
                     <div className="page-slot" style={{ display: onVlans ? 'block' : 'none' }}>
                         <Vlans />
+                    </div>
+                )}
+                {targetDetailMounted && (
+                    <div className="page-slot" style={{ display: onTargetDetail ? 'block' : 'none' }}>
+                        <TargetDetail />
                     </div>
                 )}
 

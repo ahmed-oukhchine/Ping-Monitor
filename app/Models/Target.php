@@ -14,6 +14,7 @@ class Target extends Model
         'alert_email', 'alert_consecutive', 'alert_cooldown_minutes', 'alerted_at',
         'escalation_email', 'escalation_after_minutes',
         'snmp_enabled', 'snmp_community', 'snmp_version',
+        'cpu_load', 'ram_total', 'ram_used', 'system_polled_at',
     ];
 
     protected $casts = [
@@ -21,6 +22,10 @@ class Target extends Model
         'snmp_enabled'             => 'boolean',
         'alerted_at'               => 'datetime',
         'escalation_after_minutes' => 'integer',
+        'cpu_load'                 => 'integer',
+        'ram_total'                => 'integer',
+        'ram_used'                 => 'integer',
+        'system_polled_at'        => 'datetime',
     ];
 
     public function pingHistories()

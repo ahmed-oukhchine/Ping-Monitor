@@ -60,10 +60,24 @@ class SnmpController extends Controller
                 ]);
         }
 
+        $system = $this->snmp->pollSystem($target);
+        $target->update(array_merge($system, ['system_polled_at' => $now]));
+
         $interfaces = NetworkInterface::where('target_id', $target->id)
             ->orderBy('snmp_index')->get();
 
-        return response()->json($interfaces);
+        return response()->json([
+            'interfaces' => $interfaces,
+            'system'     => $system,
+        ]);
+    }
+
+    public function system(Target $target)
+    {
+        $system = $this->snmp->pollSystem($target);
+        $target->update(array_merge($system, ['system_polled_at' => now()]));
+
+        return response()->json($system);
     }
 
     public function allInterfaces(Request $request)
@@ -94,6 +108,12 @@ class SnmpController extends Controller
             ->orderBy('created_at')
             ->get(['network_interface_id', 'in_octets', 'out_octets', 'created_at']);
 
+        return response()->json($data);
+    }
+
+    public function storage(Target $target)
+    {
+        $data = $this->snmp->getStorage($target);
         return response()->json($data);
     }
 }

@@ -7,7 +7,6 @@ import EditModal from '../components/EditModal';
 import ChartModal from '../components/ChartModal';
 import ConfirmModal from '../components/ConfirmModal';
 import GroupManagerModal from '../components/GroupManagerModal';
-import TargetDetailModal from '../components/TargetDetailModal';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { useLang } from '../contexts/LanguageContext';
@@ -38,7 +37,6 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
     const [showImport, setShowImport]          = useState(false);
     const [showDiscover, setShowDiscover]      = useState(false);
     const [showGroupManager, setShowGroupManager] = useState(false);
-    const [detailTargetId, setDetailTargetId] = useState(null);
     const [editTarget, setEditTarget]         = useState(null);
     const [chartTarget, setChartTarget]       = useState(null);
     const [deleteTarget, setDeleteTarget]     = useState(null);
@@ -628,7 +626,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
 
                 <TargetTable targets={filteredTargets} loading={loading} pinging={pinging} isAdmin={isAdmin}
                     onPing={pingTarget} onEdit={setEditTarget} onDelete={setDeleteTarget} onChart={setChartTarget}
-                    onDetail={setDetailTargetId} onPause={pauseTarget} onResume={resumeTarget} paused={pingAllLoading}
+                    onDetail={(id) => window.location.href = '/target/' + id} onPause={pauseTarget} onResume={resumeTarget} paused={pingAllLoading}
                     selectedIds={selectedIds} onSelect={setSelectedIds} />
             </div>
 
@@ -664,24 +662,6 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
             {showGroupManager && (
                 <GroupManagerModal groups={groups} onSave={saveGroup} onDelete={deleteGroup} onClose={() => setShowGroupManager(false)} />
             )}
-            {detailTargetId && (() => {
-                const dt = targets.find(t => t.id === detailTargetId);
-                return dt ? (
-                    <TargetDetailModal
-                        target={dt}
-                        isAdmin={isAdmin}
-                        isPinging={!!pinging[dt.id]}
-                        onPing={pingTarget}
-                        onEdit={setEditTarget}
-                        onDelete={setDeleteTarget}
-                        onChart={setChartTarget}
-                        onPause={pauseTarget}
-                        onResume={resumeTarget}
-                        onClose={() => setDetailTargetId(null)}
-                    />
-                ) : null;
-            })()}
-
 
             {offlineTargets.length > 0 && showFloatAlert && (
                 <div className="fixed top-4 right-6 z-50 pointer-events-none">
