@@ -233,7 +233,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
                     }));
                 } catch {} finally { setPinging(p => ({ ...p, [toPing[i].id]: false })); }
             }
-        } finally { inProgressRef.current = false; if (!auto) setPingAllLoading(false); }
+        } finally { inProgressRef.current = false; if (!auto) { setPingAllLoading(false); setShowActions(false); } }
     };
 
     const pingOffline = async () => {

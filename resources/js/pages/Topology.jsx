@@ -174,6 +174,7 @@ export default function Topology() {
   const [hiddenTargets, setHiddenTargets] = useState(new Set());
   const [hiddenGroupIds, setHiddenGroupIds] = useState(new Set());
   const [showTargetFilter, setShowTargetFilter] = useState(false);
+  const [filterSearch, setFilterSearch] = useState('');
   const [showMiniMap, setShowMiniMap] = useState(true);
   const [showGrid, setShowGrid] = useState(true);
   const [selectedInMonitoring, setSelectedInMonitoring] = useState(new Set());
@@ -610,16 +611,30 @@ export default function Topology() {
       {/* ── target filter dropdown ── */}
       {showTargetFilter && (
         <div className="relative z-10">
-          <div className="absolute left-6 top-0 bg-base-200 border border-base-300 rounded-xl p-3 shadow-xl w-56 max-h-64 overflow-y-auto">
+          <div className="absolute left-6 top-0 bg-base-200 border border-base-300 rounded-xl p-3 shadow-xl w-64 max-h-80 overflow-y-auto">
             <div className="text-[9px] font-semibold text-base-content/40 uppercase tracking-wider mb-2">Toggle Targets</div>
-            {topologyData.targets.map(t => (
-              <label key={t.id} className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-base-300/50 cursor-pointer text-[11px]">
-                <input type="checkbox" checked={!hiddenTargets.has(t.id)} onChange={() => toggleTarget(t.id)}
-                  className="checkbox checkbox-xs checkbox-primary" />
-                <span className={`flex-1 truncate ${hiddenTargets.has(t.id) ? 'line-through text-base-content/30' : 'text-base-content'}`}>{t.name}</span>
-                <span className={`w-1.5 h-1.5 rounded-full ${t.last_status === true ? 'bg-success' : t.last_status === false ? 'bg-error' : 'bg-base-300'}`}></span>
-              </label>
-            ))}
+            <div className="relative mb-2">
+              <i className="fas fa-search absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-base-content/20"></i>
+              <input type="text" value={filterSearch} onChange={e => setFilterSearch(e.target.value)}
+                placeholder="Search by name or IP…"
+                className="w-full bg-base-100 border border-base-300 rounded-lg pl-5 pr-2 py-1 text-[10px] text-base-content outline-none focus:border-primary/40 transition-colors placeholder:text-base-content/20" />
+            </div>
+            <div className="max-h-52 overflow-y-auto space-y-0.5">
+              {(() => {
+                const q = filterSearch.toLowerCase().trim();
+                const filtered = q
+                  ? topologyData.targets.filter(t => t.name.toLowerCase().includes(q) || t.ip_address.toLowerCase().includes(q))
+                  : topologyData.targets;
+                return filtered.map(t => (
+                  <label key={t.id} className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-base-300/50 cursor-pointer text-[11px]">
+                    <input type="checkbox" checked={!hiddenTargets.has(t.id)} onChange={() => toggleTarget(t.id)}
+                      className="checkbox checkbox-xs checkbox-primary" />
+                    <span className={`flex-1 truncate ${hiddenTargets.has(t.id) ? 'line-through text-base-content/30' : 'text-base-content'}`}>{t.name}</span>
+                    <span className={`w-1.5 h-1.5 rounded-full ${t.last_status === true ? 'bg-success' : t.last_status === false ? 'bg-error' : 'bg-base-300'}`}></span>
+                  </label>
+                ));
+              })()}
+            </div>
           </div>
         </div>
       )}
