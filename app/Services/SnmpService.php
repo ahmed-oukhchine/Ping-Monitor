@@ -197,6 +197,8 @@ class SnmpService
             return ['cpu_load' => null, 'ram_total' => null, 'ram_used' => null];
         }
 
+        $isLocal = $target->ip_address === '127.0.0.1' || $target->ip_address === 'localhost';
+
         $cpuIdle  = (int) $this->parseSnmpValue($this->get($target, self::OID_CPU_IDLE));
         $memTotal = (int) $this->parseSnmpValue($this->get($target, self::OID_MEM_TOTAL));
         $memAvail = (int) $this->parseSnmpValue($this->get($target, self::OID_MEM_AVAIL));
@@ -209,7 +211,11 @@ class SnmpService
             ];
         }
 
-        return $this->pollSystemLocal();
+        if ($isLocal) {
+            return $this->pollSystemLocal();
+        }
+
+        return ['cpu_load' => null, 'ram_total' => null, 'ram_used' => null];
     }
 
     private function pollSystemLocal(): array
