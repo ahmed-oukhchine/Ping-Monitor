@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useLang } from '../contexts/LanguageContext';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../contexts/AuthContext';
+import TerminalModal from '../components/TerminalModal';
 
 export default function SwitchConfigs() {
     const { t } = useLang();
@@ -19,6 +20,7 @@ export default function SwitchConfigs() {
     const [tab, setTab] = useState('config');
     const [saving, setSaving] = useState(false);
     const [deleting, setDeleting] = useState(null);
+    const [showTerminal, setShowTerminal] = useState(false);
 
     const [form, setForm] = useState({ hostname: '', vendor: '', model: '', os_version: '', serial_number: '', ports_count: '', target_id: '', config_text: '' });
     const [targetSearch, setTargetSearch] = useState('');
@@ -323,6 +325,11 @@ export default function SwitchConfigs() {
                                         <span className="text-sm font-bold text-base-content">{selected.hostname}</span>
                                     </div>
                                     <div className="flex items-center gap-1">
+                                        <button onClick={() => setShowTerminal(true)}
+                                            className="w-7 h-7 flex items-center justify-center rounded-lg text-base-content/40 hover:text-primary hover:bg-primary/10 transition-all"
+                                            title={t('configs.terminal') || 'Terminal'}>
+                                            <i className="fas fa-terminal text-[10px]"></i>
+                                        </button>
                                         <a href={`/api/switch-configs/${selected.id}/export-pdf`} target="_blank" rel="noopener noreferrer"
                                             className="w-7 h-7 flex items-center justify-center rounded-lg text-base-content/40 hover:text-primary hover:bg-primary/10 transition-all"
                                             title={t('configs.exportPdf')}>
@@ -429,6 +436,10 @@ export default function SwitchConfigs() {
                     )}
                 </div>
             </div>
+
+            {showTerminal && selected?.target && (
+                <TerminalModal target={selected.target} onClose={() => setShowTerminal(false)} />
+            )}
         </div>
     );
 }

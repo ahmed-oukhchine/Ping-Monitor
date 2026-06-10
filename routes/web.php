@@ -13,6 +13,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DiscoveryController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SwitchConfigController;
+use App\Http\Controllers\TerminalController;
 use App\Http\Controllers\VlanController;
 use App\Http\Middleware\EnsureAdmin;
 use App\Http\Middleware\EnsureConfigManager;
@@ -75,6 +76,8 @@ Route::middleware('auth')->group(function () {
         Route::put('/api/vlans/{vlan}',        [VlanController::class, 'update']);
         Route::delete('/api/vlans/{vlan}',     [VlanController::class, 'destroy']);
     });
+    Route::post('/api/terminal/exec', [TerminalController::class, 'exec']);
+
     Route::get('/api/settings', [SettingsController::class, 'index']);
     Route::put('/api/settings', [SettingsController::class, 'update']);
 
