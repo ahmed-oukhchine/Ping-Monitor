@@ -153,13 +153,11 @@ export default function SwitchConfigs() {
                                     <>
                                         <div className="fixed inset-0 z-10" onClick={() => setShowTools(false)}></div>
                                         <div className="absolute right-0 top-full mt-1 z-20 w-36 bg-base-200 border border-base-300 rounded-xl shadow-xl overflow-hidden">
-                                            {selected && (
-                                                <button onClick={() => { setShowTools(false); setShowTerminal(true); }}
-                                                    className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-base-content/70 hover:text-base-content hover:bg-base-300/50 transition-all text-left">
-                                                    <i className="fas fa-terminal text-[9px]"></i>
-                                                    Terminal
-                                                </button>
-                                            )}
+                                            <button onClick={() => { setShowTools(false); setShowTerminal(true); }}
+                                                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-base-content/70 hover:text-base-content hover:bg-base-300/50 transition-all text-left">
+                                                <i className="fas fa-terminal text-[9px]"></i>
+                                                Terminal
+                                            </button>
                                         </div>
                                     </>
                                 )}
@@ -462,8 +460,8 @@ export default function SwitchConfigs() {
                 </div>
             </div>
 
-            {showTerminal && selected?.target && (
-                <TerminalModal target={selected.target} onClose={() => setShowTerminal(false)} />
+            {showTerminal && (
+                <TerminalModal target={selected?.target || null} onClose={() => setShowTerminal(false)} />
             )}
         </div>
     );
