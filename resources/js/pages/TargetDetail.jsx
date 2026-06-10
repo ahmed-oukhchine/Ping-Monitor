@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { ComposedChart, Area, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine } from 'recharts';
 import Gauge from '../components/Gauge';
+import EditModal from '../components/EditModal';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 
@@ -23,6 +24,8 @@ export default function TargetDetail() {
     const [deleting, setDeleting] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [error, setError] = useState(null);
+    const [editTarget, setEditTarget] = useState(null);
+    const [groups, setGroups] = useState([]);
     const [chartData, setChartData] = useState([]);
     const [chartLoading, setChartLoading] = useState(true);
     const [isDark, setIsDark] = useState(
@@ -140,6 +143,21 @@ export default function TargetDetail() {
         } catch { toast('Failed to delete', 'error'); }
         finally { setDeleting(false); setShowDeleteConfirm(false); }
     };
+
+    const updateTarget = async (id, data) => {
+        try {
+            await axios.put(`/targets/${id}`, data);
+            toast('Target updated', 'success');
+            setEditTarget(null);
+            const { data: targets } = await axios.get('/api/targets');
+            const t = targets.find(x => x.id === targetId);
+            if (t) setTarget(t);
+        } catch { toast('Failed to update target', 'error'); }
+    };
+
+    useEffect(() => {
+        axios.get('/api/groups').then(({ data }) => setGroups(data)).catch(() => {});
+    }, []);
 
     const formatBytes = (b) => {
         if (!b) return '—';
@@ -261,11 +279,18 @@ export default function TargetDetail() {
                         </button>
                     )}
                     {isAdmin && (
-                        <button onClick={() => setShowDeleteConfirm(true)}
-                            className="flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-error/70 border border-error/20 rounded-xl hover:bg-error/10 hover:text-error transition-all">
-                            <i className="fas fa-trash text-xs"></i>
-                            Delete
-                        </button>
+                        <>
+                            <button onClick={() => setEditTarget(target)}
+                                className="flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-primary/70 border border-primary/20 rounded-xl hover:bg-primary/10 hover:text-primary transition-all">
+                                <i className="fas fa-pen text-xs"></i>
+                                Edit
+                            </button>
+                            <button onClick={() => setShowDeleteConfirm(true)}
+                                className="flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-error/70 border border-error/20 rounded-xl hover:bg-error/10 hover:text-error transition-all">
+                                <i className="fas fa-trash text-xs"></i>
+                                Delete
+                            </button>
+                        </>
                     )}
                 </div>
             </div>
@@ -521,6 +546,10 @@ export default function TargetDetail() {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {editTarget && (
+                <EditModal target={editTarget} groups={groups} onSave={updateTarget} onClose={() => setEditTarget(null)} />
             )}
         </div>
     );
