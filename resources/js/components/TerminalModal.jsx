@@ -186,6 +186,10 @@ export default function TerminalModal({ target, onClose }) {
                                 className="px-3 py-1 rounded-lg text-[10px] font-bold bg-primary/15 text-primary border border-primary/25 hover:bg-primary/25 disabled:opacity-30 transition-all">
                                 {running ? <span className="loading loading-spinner loading-xs"></span> : 'Send'}
                             </button>
+                            <button onClick={() => setLines([])}
+                                className="px-3 py-1 rounded-lg text-[10px] font-bold bg-base-300/30 text-base-content/40 border border-base-300/30 hover:bg-base-300/50 hover:text-base-content/60 transition-all">
+                                <i className="fas fa-eraser text-[9px]"></i>
+                            </button>
                             <button onClick={handleDisconnect}
                                 className="px-3 py-1 rounded-lg text-[10px] font-bold bg-error/15 text-error border border-error/25 hover:bg-error/25 transition-all">
                                 <i className="fas fa-power-off text-[9px]"></i>

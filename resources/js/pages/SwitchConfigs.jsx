@@ -21,6 +21,7 @@ export default function SwitchConfigs() {
     const [saving, setSaving] = useState(false);
     const [deleting, setDeleting] = useState(null);
     const [showTerminal, setShowTerminal] = useState(false);
+    const [showTools, setShowTools] = useState(false);
 
     const [form, setForm] = useState({ hostname: '', vendor: '', model: '', os_version: '', serial_number: '', ports_count: '', target_id: '', config_text: '' });
     const [targetSearch, setTargetSearch] = useState('');
@@ -325,11 +326,26 @@ export default function SwitchConfigs() {
                                         <span className="text-sm font-bold text-base-content">{selected.hostname}</span>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <button onClick={() => setShowTerminal(true)}
-                                            className="w-7 h-7 flex items-center justify-center rounded-lg text-base-content/40 hover:text-primary hover:bg-primary/10 transition-all"
-                                            title={t('configs.terminal') || 'Terminal'}>
-                                            <i className="fas fa-terminal text-[10px]"></i>
-                                        </button>
+                                        <div className="relative">
+                                            <button onClick={() => setShowTools(!showTools)}
+                                                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold text-base-content/50 hover:text-base-content hover:bg-base-300/50 transition-all">
+                                                <i className="fas fa-wrench text-[9px]"></i>
+                                                Tools
+                                                <i className={`fas fa-chevron-down text-[7px] transition-transform ${showTools ? 'rotate-180' : ''}`}></i>
+                                            </button>
+                                            {showTools && (
+                                                <>
+                                                    <div className="fixed inset-0 z-10" onClick={() => setShowTools(false)}></div>
+                                                    <div className="absolute right-0 top-full mt-1 z-20 w-36 bg-base-200 border border-base-300 rounded-xl shadow-xl overflow-hidden">
+                                                        <button onClick={() => { setShowTools(false); setShowTerminal(true); }}
+                                                            className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-base-content/70 hover:text-base-content hover:bg-base-300/50 transition-all text-left">
+                                                            <i className="fas fa-terminal text-[9px]"></i>
+                                                            Terminal
+                                                        </button>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
                                         <a href={`/api/switch-configs/${selected.id}/export-pdf`} target="_blank" rel="noopener noreferrer"
                                             className="w-7 h-7 flex items-center justify-center rounded-lg text-base-content/40 hover:text-primary hover:bg-primary/10 transition-all"
                                             title={t('configs.exportPdf')}>
