@@ -141,11 +141,35 @@ export default function SwitchConfigs() {
                         <p className="text-xs text-base-content/40 mt-0.5">{t('configs.subtitle')}</p>
                     </div>
                     {canManage && !showForm && (
-                        <button onClick={() => { resetForm(); setShowForm(true); }}
-                            className="flex items-center gap-1.5 px-2.5 py-1.5 text-[10px] font-semibold border border-primary/40 text-primary rounded-lg hover:bg-primary/10 transition-colors">
-                            <i className="fas fa-plus text-[8px]"></i>
-                            {t('configs.newConfig')}
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <div className="relative">
+                                <button onClick={() => setShowTools(!showTools)}
+                                    className="flex items-center gap-1.5 px-2.5 py-1.5 text-[10px] font-semibold text-base-content/50 border border-base-300 rounded-lg hover:text-base-content hover:bg-base-300/50 transition-all">
+                                    <i className="fas fa-wrench text-[8px]"></i>
+                                    Tools
+                                    <i className={`fas fa-chevron-down text-[6px] transition-transform ${showTools ? 'rotate-180' : ''}`}></i>
+                                </button>
+                                {showTools && (
+                                    <>
+                                        <div className="fixed inset-0 z-10" onClick={() => setShowTools(false)}></div>
+                                        <div className="absolute right-0 top-full mt-1 z-20 w-36 bg-base-200 border border-base-300 rounded-xl shadow-xl overflow-hidden">
+                                            {selected && (
+                                                <button onClick={() => { setShowTools(false); setShowTerminal(true); }}
+                                                    className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-base-content/70 hover:text-base-content hover:bg-base-300/50 transition-all text-left">
+                                                    <i className="fas fa-terminal text-[9px]"></i>
+                                                    Terminal
+                                                </button>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                            <button onClick={() => { resetForm(); setShowForm(true); }}
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 text-[10px] font-semibold border border-primary/40 text-primary rounded-lg hover:bg-primary/10 transition-colors">
+                                <i className="fas fa-plus text-[8px]"></i>
+                                {t('configs.newConfig')}
+                            </button>
+                        </div>
                     )}
                 </div>
 
@@ -326,26 +350,11 @@ export default function SwitchConfigs() {
                                         <span className="text-sm font-bold text-base-content">{selected.hostname}</span>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <div className="relative">
-                                            <button onClick={() => setShowTools(!showTools)}
-                                                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold text-base-content/50 hover:text-base-content hover:bg-base-300/50 transition-all">
-                                                <i className="fas fa-wrench text-[9px]"></i>
-                                                Tools
-                                                <i className={`fas fa-chevron-down text-[7px] transition-transform ${showTools ? 'rotate-180' : ''}`}></i>
-                                            </button>
-                                            {showTools && (
-                                                <>
-                                                    <div className="fixed inset-0 z-10" onClick={() => setShowTools(false)}></div>
-                                                    <div className="absolute right-0 top-full mt-1 z-20 w-36 bg-base-200 border border-base-300 rounded-xl shadow-xl overflow-hidden">
-                                                        <button onClick={() => { setShowTools(false); setShowTerminal(true); }}
-                                                            className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-base-content/70 hover:text-base-content hover:bg-base-300/50 transition-all text-left">
-                                                            <i className="fas fa-terminal text-[9px]"></i>
-                                                            Terminal
-                                                        </button>
-                                                    </div>
-                                                </>
-                                            )}
-                                        </div>
+                                        <button onClick={() => setShowTerminal(true)}
+                                            className="w-7 h-7 flex items-center justify-center rounded-lg text-base-content/40 hover:text-primary hover:bg-primary/10 transition-all"
+                                            title={t('configs.terminal') || 'Terminal'}>
+                                            <i className="fas fa-terminal text-[10px]"></i>
+                                        </button>
                                         <a href={`/api/switch-configs/${selected.id}/export-pdf`} target="_blank" rel="noopener noreferrer"
                                             className="w-7 h-7 flex items-center justify-center rounded-lg text-base-content/40 hover:text-primary hover:bg-primary/10 transition-all"
                                             title={t('configs.exportPdf')}>
