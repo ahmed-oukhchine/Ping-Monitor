@@ -9,7 +9,7 @@ class Target extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'name', 'ip_address', 'location', 'notes',
+        'name', 'ip_address', 'location', 'type', 'notes',
         'warn_ms', 'critical_ms', 'is_paused',
         'alert_email', 'alert_consecutive', 'alert_cooldown_minutes', 'alerted_at',
         'escalation_email', 'escalation_after_minutes',

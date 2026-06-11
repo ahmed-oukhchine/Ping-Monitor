@@ -44,6 +44,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
     const [lastUpdated, setLastUpdated]       = useState(null);
     const [tick, setTick]                     = useState(0);
     const [search, setSearch]                 = useState('');
+    const [typeFilter, setTypeFilter]         = useState('');
     const [showActions, setShowActions]       = useState(false);
     const { t } = useLang();
     const { toast } = useToast();
@@ -321,6 +322,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
         ? targets.filter(t => t.groups?.some(g => g.id === selectedGroup))
         : targets
     ).filter(t => {
+        if (typeFilter && t.type !== typeFilter) return false;
         if (!search) return true;
         const q = search.toLowerCase();
         return t.name.toLowerCase().includes(q)
@@ -385,6 +387,18 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
                             </button>
                         )}
                     </div>
+                    <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}
+                        className="flex-shrink-0 px-3 py-2 text-xs bg-base-200 border border-base-300 rounded-xl outline-none text-base-content/60 focus:border-primary/50 focus:text-base-content transition-all">
+                        <option value="">{t('dashboard.allTypes')}</option>
+                        <option value="switch">Switch</option>
+                        <option value="router">Router</option>
+                        <option value="firewall">Firewall</option>
+                        <option value="server">Server</option>
+                        <option value="workstation">Workstation</option>
+                        <option value="printer">Printer</option>
+                        <option value="access_point">Access Point</option>
+                        <option value="other">Other</option>
+                    </select>
                     <div className="flex items-center gap-2 flex-shrink-0">
                         {isAdmin && (
                             <>

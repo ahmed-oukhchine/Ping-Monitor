@@ -166,6 +166,13 @@ export default function TargetDetail() {
         return (b / Math.pow(k, i)).toFixed(1) + ' ' + s[i];
     };
 
+    const deviceIcons = {
+        switch: 'fa-network-wired', router: 'fa-route', firewall: 'fa-shield-halved',
+        server: 'fa-server', workstation: 'fa-desktop', printer: 'fa-print',
+        access_point: 'fa-wifi',
+    };
+    const devIcon = deviceIcons[target?.type] || 'fa-server';
+
     if (loading) return (
         <div className="flex items-center justify-center py-20">
             <span className="loading loading-spinner loading-lg text-primary"></span>
@@ -235,7 +242,7 @@ export default function TargetDetail() {
                             t.last_status === false ? 'bg-error/15 border border-error/25' :
                             'bg-base-300 border border-base-300'
                         }`}>
-                            <i className={`fas fa-server text-base ${
+                            <i className={`fas ${devIcon} text-base ${
                                 t.is_paused ? 'text-warning/70' :
                                 t.last_status === true ? 'text-success' :
                                 t.last_status === false ? 'text-error' :
@@ -249,6 +256,12 @@ export default function TargetDetail() {
                             </div>
                             <div className="flex items-center gap-2.5 mt-0.5">
                                 <code className="ip-code text-xs">{t.ip_address}</code>
+                                {t.type && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary/80 border border-primary/20">
+                                        <i className="fas fa-tag text-[8px]"></i>
+                                        {t.type.charAt(0).toUpperCase() + t.type.slice(1).replace('_', ' ')}
+                                    </span>
+                                )}
                                 {t.location && (
                                     <span className="flex items-center gap-1 text-xs text-base-content/50">
                                         <i className="fas fa-map-marker-alt text-[10px] text-base-content/30"></i>

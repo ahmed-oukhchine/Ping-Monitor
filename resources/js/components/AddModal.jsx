@@ -6,6 +6,7 @@ export default function AddModal({ groups = [], onSave, onClose }) {
     const [name, setName]               = useState('');
     const [ip, setIp]                   = useState('');
     const [location, setLocation]       = useState('');
+    const [type, setType]               = useState('');
     const [notes, setNotes]             = useState('');
     const [selectedGroups, setSelectedGroups] = useState([]);
     const [warnMs, setWarnMs]           = useState('');
@@ -34,6 +35,7 @@ export default function AddModal({ groups = [], onSave, onClose }) {
                 name:                    name.trim(),
                 ip_address:              ip.trim(),
                 location:                location.trim(),
+                type:                    type || null,
                 notes:                   notes.trim() || null,
                 group_ids:               selectedGroups,
                 warn_ms:                 warnMs     ? parseInt(warnMs)     : null,
@@ -98,6 +100,24 @@ export default function AddModal({ groups = [], onSave, onClose }) {
                                     value={location} onChange={e => setLocation(e.target.value)}
                                     required />
                             </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-semibold text-base-content/55 mb-1.5">
+                                Device Type <span className="text-base-content/30 font-normal">(optional)</span>
+                            </label>
+                            <select className={INPUT}
+                                value={type} onChange={e => setType(e.target.value)}>
+                                <option value="">— Not specified —</option>
+                                <option value="switch">Switch</option>
+                                <option value="router">Router</option>
+                                <option value="firewall">Firewall</option>
+                                <option value="server">Server</option>
+                                <option value="workstation">Workstation</option>
+                                <option value="printer">Printer</option>
+                                <option value="access_point">Access Point</option>
+                                <option value="other">Other</option>
+                            </select>
                         </div>
 
                         <div>

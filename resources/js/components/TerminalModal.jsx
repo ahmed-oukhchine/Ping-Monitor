@@ -2,19 +2,24 @@ import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { useToast } from '../contexts/ToastContext';
 
-export default function TerminalModal({ target, onClose }) {
+export default function TerminalModal({ target, sshConfig, onClose }) {
     const { toast } = useToast();
-    const [host, setHost] = useState(target?.ip_address || '');
-    const [port, setPort] = useState(22);
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
+    const auto = sshConfig?.host && sshConfig?.username && sshConfig?.password;
+    const [protocol, setProtocol] = useState(sshConfig?.protocol || 'ssh');
+    const [host, setHost] = useState(sshConfig?.host || target?.ip_address || '');
+    const [port, setPort] = useState(sshConfig?.port || (sshConfig?.protocol === 'telnet' ? 23 : 22));
+    const [username, setUsername] = useState(sshConfig?.username || '');
+    const [password, setPassword] = useState(sshConfig?.password || '');
     const [connected, setConnected] = useState(false);
+    const [connecting, setConnecting] = useState(false);
     const [lines, setLines] = useState([]);
     const [running, setRunning] = useState(false);
     const [history, setHistory] = useState([]);
     const [histIdx, setHistIdx] = useState(-1);
     const [typed, setTyped] = useState('');
     const outputRef = useRef(null);
+    const mountedRef = useRef(true);
+    const [showForm, setShowForm] = useState(false);
 
     useEffect(() => {
         if (outputRef.current) {
@@ -27,6 +32,13 @@ export default function TerminalModal({ target, onClose }) {
             outputRef.current.focus();
         }
     }, [connected]);
+
+    useEffect(() => {
+        mountedRef.current = true;
+        if (auto) handleConnect();
+        else setShowForm(true);
+        return () => { mountedRef.current = false; };
+    }, []);
 
     const focusInput = () => {
         setTimeout(() => outputRef.current?.focus(), 50);
@@ -41,9 +53,12 @@ export default function TerminalModal({ target, onClose }) {
             toast('Fill in host, username and password', 'error');
             return;
         }
-        addLine(`Connecting to ${host}:${port}...`, 'info');
-        axios.post('/api/terminal/exec', { host, port, username, password, command: 'echo CONNECTED' })
+        setConnecting(true);
+        addLine(`Connecting to ${host}:${port} via ${protocol.toUpperCase()}...`, 'info');
+        axios.post('/api/terminal/exec', { protocol, host, port, username, password, command: 'echo CONNECTED' })
             .then(({ data }) => {
+                if (!mountedRef.current) return;
+                setConnecting(false);
                 if (data.success) {
                     setConnected(true);
                     addLine('Connected successfully', 'success');
@@ -53,7 +68,11 @@ export default function TerminalModal({ target, onClose }) {
                     addLine(`Connection failed: ${data.output}`, 'error');
                 }
             })
-            .catch(() => addLine('Connection failed: server unreachable', 'error'));
+            .catch(() => {
+                if (!mountedRef.current) return;
+                setConnecting(false);
+                addLine('Connection failed: server unreachable', 'error');
+            });
     };
 
     const handleDisconnect = () => {
@@ -62,6 +81,7 @@ export default function TerminalModal({ target, onClose }) {
         setHistory([]);
         setHistIdx(-1);
         setTyped('');
+        setShowForm(true);
     };
 
     const sendCommand = async (cmd) => {
@@ -72,7 +92,7 @@ export default function TerminalModal({ target, onClose }) {
         setHistIdx(-1);
 
         try {
-            const { data } = await axios.post('/api/terminal/exec', { host, port, username, password, command: cmd });
+            const { data } = await axios.post('/api/terminal/exec', { protocol, host, port, username, password, command: cmd });
             if (data.success) {
                 const prev = [...lines];
                 const promptLine = prev[prev.length - 1];
@@ -150,7 +170,7 @@ export default function TerminalModal({ target, onClose }) {
                     </div>
                     <div className="flex items-center gap-2">
                         <span className={`text-[10px] font-semibold ${connected ? 'text-success' : 'text-base-content/40'}`}>
-                            {connected ? 'CONNECTED' : 'DISCONNECTED'}
+                            {connected ? 'CONNECTED' : connecting ? 'CONNECTING…' : 'DISCONNECTED'}
                         </span>
                         <button onClick={onClose} className="w-6 h-6 flex items-center justify-center rounded-lg text-base-content/40 hover:text-base-content hover:bg-base-300 transition-all">
                             <i className="fas fa-times text-[11px]"></i>
@@ -158,9 +178,22 @@ export default function TerminalModal({ target, onClose }) {
                     </div>
                 </div>
 
-                {!connected ? (
+                {!connected && showForm && (
                     <div className="p-5 space-y-3 bg-base-200">
-                        <div className="grid grid-cols-4 gap-3">
+                        <div className="grid grid-cols-5 gap-3">
+                            <div>
+                                <label className="text-[10px] font-semibold text-base-content/40 uppercase tracking-wider mb-1 block">Protocol</label>
+                                <div className="flex bg-base-300 border border-base-300 rounded-xl overflow-hidden">
+                                    <button onClick={() => setProtocol('ssh')}
+                                        className={`flex-1 px-2 py-2 text-[10px] font-bold transition-all ${protocol === 'ssh' ? 'bg-primary/20 text-primary' : 'text-base-content/40 hover:text-base-content/60'}`}>
+                                        SSH
+                                    </button>
+                                    <button onClick={() => setProtocol('telnet')}
+                                        className={`flex-1 px-2 py-2 text-[10px] font-bold transition-all ${protocol === 'telnet' ? 'bg-primary/20 text-primary' : 'text-base-content/40 hover:text-base-content/60'}`}>
+                                        Telnet
+                                    </button>
+                                </div>
+                            </div>
                             <div className="col-span-2">
                                 <label className="text-[10px] font-semibold text-base-content/40 uppercase tracking-wider mb-1 block">Host</label>
                                 <input value={host} onChange={e => setHost(e.target.value)}
@@ -168,14 +201,14 @@ export default function TerminalModal({ target, onClose }) {
                             </div>
                             <div>
                                 <label className="text-[10px] font-semibold text-base-content/40 uppercase tracking-wider mb-1 block">Port</label>
-                                <input type="number" value={port} onChange={e => setPort(parseInt(e.target.value) || 22)}
+                                <input type="number" value={port} onChange={e => setPort(parseInt(e.target.value) || (protocol === 'telnet' ? 23 : 22))}
                                     className="w-full bg-base-300 border border-base-300 rounded-xl px-3 py-2 text-xs text-base-content font-mono outline-none focus:border-primary/30 transition-all" />
                             </div>
                             <div className="flex items-end">
-                                <button onClick={handleConnect}
-                                    className="w-full px-4 py-2 rounded-xl text-xs font-bold bg-primary/15 text-primary border border-primary/25 hover:bg-primary/25 transition-all">
-                                    <i className="fas fa-plug text-[10px] mr-1"></i>
-                                    Connect
+                                <button onClick={handleConnect} disabled={connecting}
+                                    className="w-full px-4 py-2 rounded-xl text-xs font-bold bg-primary/15 text-primary border border-primary/25 hover:bg-primary/25 disabled:opacity-40 transition-all">
+                                    {connecting ? <i className="fas fa-spinner fa-spin text-[10px] mr-1"></i> : <i className="fas fa-plug text-[10px] mr-1"></i>}
+                                    {connecting ? 'Connecting…' : 'Connect'}
                                 </button>
                             </div>
                         </div>
@@ -193,12 +226,21 @@ export default function TerminalModal({ target, onClose }) {
                             </div>
                         </div>
                     </div>
-                ) : (
+                )}
+
+                {!connected && connecting && (
+                    <div className="flex items-center justify-center py-20 bg-base-200 text-base-content/40">
+                        <span className="loading loading-spinner loading-md mr-3"></span>
+                        <span className="text-xs font-medium">Connecting to {host}:{port}…</span>
+                    </div>
+                )}
+
+                {connected && (
                     <div className="flex flex-col bg-base-100">
                         <div ref={outputRef} tabIndex={0} onKeyDown={handleKeyDown}
                             className="overflow-y-auto p-4 font-mono text-xs leading-relaxed select-text outline-none cursor-text"
                             style={{ minHeight: '360px', maxHeight: '420px' }}>
-                            {lines.map((l, i) => (
+                            {lines.map((l) => (
                                 <div key={l.id} className={`whitespace-pre-wrap break-all ${
                                     l.type === 'error' ? 'text-error' :
                                     l.type === 'success' ? 'text-success' :

@@ -51,7 +51,7 @@ const TargetTable = React.memo(({ targets, loading, pinging, onPing, onEdit, onD
         onSelect(next);
     };
 
-    const headerLabels = ['', t('table.device'), t('table.location'), t('table.ipAddress'), t('table.status'), t('table.latency'), t('table.avgLatency'), t('table.trend'), t('table.uptime'), t('table.loss'), t('table.lastCheck')];
+    const headerLabels = ['', t('table.device'), t('table.type'), t('table.location'), t('table.ipAddress'), t('table.status'), t('table.latency'), t('table.avgLatency'), t('table.trend'), t('table.uptime'), t('table.loss'), t('table.lastCheck')];
 
     if (loading) {
         return (
@@ -114,7 +114,7 @@ const TargetTable = React.memo(({ targets, loading, pinging, onPing, onEdit, onD
                         <tbody>
                             {targets.length === 0 ? (
                                 <tr>
-                                    <td colSpan={11} className="text-center py-20 text-base-content/30">
+                                    <td colSpan={12} className="text-center py-20 text-base-content/30">
                                         <div className="empty-float mb-4">
                                             <svg width="64" height="64" viewBox="0 0 64 64" fill="none" className="mx-auto opacity-15">
                                                 <rect x="12" y="20" width="40" height="30" rx="4" stroke="currentColor" strokeWidth="2" fill="none"/>
@@ -168,6 +168,12 @@ const TargetTable = React.memo(({ targets, loading, pinging, onPing, onEdit, onD
 });
 
 function TargetRow({ target: t, isPinging, isAdmin, onPing, onEdit, onDelete, onChart, onDetail, onPause, onResume, selected, onToggleSelect }) {
+    const deviceIcons = {
+        switch: 'fa-network-wired', router: 'fa-route', firewall: 'fa-shield-halved',
+        server: 'fa-server', workstation: 'fa-desktop', printer: 'fa-print',
+        access_point: 'fa-wifi',
+    };
+
     const { t: tr } = useLang();
     const loss = t.total_pings > 0 ? Math.round(t.failed_pings / t.total_pings * 100) : null;
 
@@ -188,6 +194,8 @@ function TargetRow({ target: t, isPinging, isAdmin, onPing, onEdit, onDelete, on
         : t.last_status === false         ? 'bg-error/8 border-error/20'
         : 'bg-base-300/60 border-base-300';
 
+    const devIcon = deviceIcons[t.type] || 'fa-server';
+
     return (
         <tr onClick={e => { if (e.target.type !== 'checkbox') onDetail(); }}
             className={`target-row border-b border-base-300/30 group cursor-pointer ${t.is_paused ? 'paused-row' : ''} ${selected ? 'bg-primary/5' : ''}`}>
@@ -200,7 +208,7 @@ function TargetRow({ target: t, isPinging, isAdmin, onPing, onEdit, onDelete, on
             <td className="py-3.5 px-4">
                 <div className="flex items-center gap-2.5">
                     <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 border ${iconBg}`}>
-                        <i className={`fas fa-server text-[11px] ${iconColor}`}></i>
+                        <i className={`fas ${devIcon} text-[11px] ${iconColor}`}></i>
                     </div>
                     <div className="min-w-0">
                         <span className="block font-semibold text-sm text-base-content leading-tight">{t.name}</span>
@@ -211,6 +219,17 @@ function TargetRow({ target: t, isPinging, isAdmin, onPing, onEdit, onDelete, on
                         )}
                     </div>
                 </div>
+            </td>
+
+            <td className="py-3.5 px-4">
+                {t.type ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary/80 border border-primary/20 whitespace-nowrap">
+                        <i className="fas fa-tag text-[8px]"></i>
+                        {t.type.charAt(0).toUpperCase() + t.type.slice(1).replace('_', ' ')}
+                    </span>
+                ) : (
+                    <span className="text-base-content/20 text-xs">—</span>
+                )}
             </td>
 
             <td className="py-3.5 px-4">
@@ -342,10 +361,16 @@ function GroupBadge({ group }) {
 }
 
 function TargetCard({ target: t, isPinging, isAdmin, onPing, onDetail, onEdit, onDelete, onChart, onPause, onResume, selected, onToggleSelect }) {
+    const deviceIcons = {
+        switch: 'fa-network-wired', router: 'fa-route', firewall: 'fa-shield-halved',
+        server: 'fa-server', workstation: 'fa-desktop', printer: 'fa-print',
+        access_point: 'fa-wifi',
+    };
     const { t: tc } = useLang();
     const loss = t.total_pings > 0 ? Math.round(t.failed_pings / t.total_pings * 100) : null;
     const statusColor = t.is_paused ? 'text-warning' : t.last_status === true ? 'text-success' : t.last_status === false ? 'text-error' : 'text-base-content/30';
     const statusLabel = t.is_paused ? tc('table.maintenance') : t.last_status === true ? tc('table.online') : t.last_status === false ? tc('table.offline') : tc('table.unknown');
+    const devIcon = deviceIcons[t.type] || 'fa-server';
     return (
         <div onClick={e => { if (e.target.type !== 'checkbox') onDetail(); }} className={`target-card cursor-pointer bg-base-200 border border-base-300 rounded-xl p-4 ${selected ? 'ring-1 ring-primary/30' : ''}`}>
             <div className="flex items-start justify-between mb-3">
@@ -359,7 +384,7 @@ function TargetCard({ target: t, isPinging, isAdmin, onPing, onDetail, onEdit, o
                         t.last_status === false ? 'bg-error/8 border-error/20 text-error offline-pulse' :
                         'bg-base-300/60 border-base-300 text-base-content/30'
                     }`}>
-                        <i className="fas fa-server text-[11px]"></i>
+                        <i className={`fas ${devIcon} text-[11px]`}></i>
                     </div>
                     <div className="min-w-0">
                         <span className="block font-semibold text-sm text-base-content leading-tight truncate">{t.name}</span>

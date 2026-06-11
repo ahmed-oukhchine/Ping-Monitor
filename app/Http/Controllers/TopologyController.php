@@ -24,6 +24,7 @@ class TopologyController extends Controller
                 'name'               => $t->name,
                 'ip_address'         => $t->ip_address,
                 'location'           => $t->location,
+                'type'               => $t->type,
                 'is_paused'          => (bool) $t->is_paused,
                 'warn_ms'            => $t->warn_ms,
                 'critical_ms'        => $t->critical_ms,

@@ -37,6 +37,7 @@ class PingController extends Controller
                 'name'               => $t->name,
                 'ip_address'         => $t->ip_address,
                 'location'           => $t->location,
+                'type'               => $t->type,
                 'is_paused'          => (bool) $t->is_paused,
                 'warn_ms'            => $t->warn_ms,
                 'critical_ms'        => $t->critical_ms,
@@ -487,6 +488,7 @@ class PingController extends Controller
             'name'                   => 'required|string|max:100',
             'ip_address'             => 'required|string|max:100|regex:/^[\w.\-:]+$/',
             'location'               => 'required|string|max:100',
+            'type'                   => 'nullable|string|max:50',
             'notes'                  => 'nullable|string|max:1000',
             'warn_ms'                => 'nullable|integer|min:1|max:60000',
             'critical_ms'            => 'nullable|integer|min:1|max:60000',
@@ -502,7 +504,7 @@ class PingController extends Controller
             'group_ids.*'            => 'integer|exists:groups,id',
         ]);
 
-        $data = $request->only('name', 'ip_address', 'location', 'notes', 'warn_ms', 'critical_ms', 'alert_email', 'alert_consecutive', 'alert_cooldown_minutes', 'escalation_email', 'escalation_after_minutes', 'snmp_enabled', 'snmp_community', 'snmp_version');
+        $data = $request->only('name', 'ip_address', 'location', 'type', 'notes', 'warn_ms', 'critical_ms', 'alert_email', 'alert_consecutive', 'alert_cooldown_minutes', 'escalation_email', 'escalation_after_minutes', 'snmp_enabled', 'snmp_community', 'snmp_version');
         $data['warn_ms'] ??= Setting::getValue('alert_default_warn_ms', 100);
         $data['critical_ms'] ??= Setting::getValue('alert_default_critical_ms', 300);
         $data['alert_email'] ??= Setting::getValue('alert_default_email', '');
@@ -525,6 +527,7 @@ class PingController extends Controller
             'name'                   => 'required|string|max:100',
             'ip_address'             => 'required|string|max:100|regex:/^[\w.\-:]+$/',
             'location'               => 'required|string|max:100',
+            'type'                   => 'nullable|string|max:50',
             'notes'                  => 'nullable|string|max:1000',
             'warn_ms'                => 'nullable|integer|min:1|max:60000',
             'critical_ms'            => 'nullable|integer|min:1|max:60000',
@@ -541,7 +544,7 @@ class PingController extends Controller
         ]);
 
         $old = $target->toArray();
-        $data = $request->only('name', 'ip_address', 'location', 'notes', 'warn_ms', 'critical_ms', 'alert_email', 'alert_consecutive', 'alert_cooldown_minutes', 'escalation_email', 'escalation_after_minutes', 'snmp_enabled', 'snmp_community', 'snmp_version');
+        $data = $request->only('name', 'ip_address', 'location', 'type', 'notes', 'warn_ms', 'critical_ms', 'alert_email', 'alert_consecutive', 'alert_cooldown_minutes', 'escalation_email', 'escalation_after_minutes', 'snmp_enabled', 'snmp_community', 'snmp_version');
         $data['alert_consecutive'] ??= 3;
         $data['alert_cooldown_minutes'] ??= 60;
         $target->update($data);

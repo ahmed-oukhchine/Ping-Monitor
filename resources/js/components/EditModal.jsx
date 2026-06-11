@@ -7,6 +7,7 @@ export default function EditModal({ target, groups = [], onSave, onClose }) {
     const [name, setName]         = useState(target.name);
     const [ip, setIp]             = useState(target.ip_address);
     const [location, setLocation] = useState(target.location || '');
+    const [type, setType]         = useState(target.type || '');
     const [notes, setNotes]       = useState(target.notes || '');
     const [selectedGroups, setSelectedGroups] = useState(
         (target.groups || []).map(g => g.id)
@@ -55,6 +56,7 @@ export default function EditModal({ target, groups = [], onSave, onClose }) {
                 name:                   name.trim(),
                 ip_address:             ip.trim(),
                 location:               location.trim(),
+                type:                   type || null,
                 notes:                  notes.trim() || null,
                 group_ids:              selectedGroups,
                 warn_ms:                warnMs     ? parseInt(warnMs)     : null,
@@ -118,6 +120,24 @@ export default function EditModal({ target, groups = [], onSave, onClose }) {
                                     value={location} onChange={e => setLocation(e.target.value)}
                                     required />
                             </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-semibold text-base-content/55 mb-1.5">
+                                Device Type <span className="text-base-content/30 font-normal">(optional)</span>
+                            </label>
+                            <select className={INPUT}
+                                value={type} onChange={e => setType(e.target.value)}>
+                                <option value="">— Not specified —</option>
+                                <option value="switch">Switch</option>
+                                <option value="router">Router</option>
+                                <option value="firewall">Firewall</option>
+                                <option value="server">Server</option>
+                                <option value="workstation">Workstation</option>
+                                <option value="printer">Printer</option>
+                                <option value="access_point">Access Point</option>
+                                <option value="other">Other</option>
+                            </select>
                         </div>
 
                         <div>

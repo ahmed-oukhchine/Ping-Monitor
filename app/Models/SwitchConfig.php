@@ -11,6 +11,7 @@ class SwitchConfig extends Model
     protected $fillable = [
         'target_id', 'hostname', 'vendor', 'model', 'os_version',
         'serial_number', 'ports_count', 'config_text', 'version', 'created_by',
+        'ssh_host', 'ssh_port', 'ssh_username', 'ssh_password', 'ssh_protocol',
     ];
 
     protected $casts = [
