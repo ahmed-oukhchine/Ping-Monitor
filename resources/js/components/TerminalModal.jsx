@@ -2,9 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { useToast } from '../contexts/ToastContext';
 
-const termGreen = '#00ff41';
-const termDark = '#0a0a0a';
-
 export default function TerminalModal({ target, onClose }) {
     const { toast } = useToast();
     const [host, setHost] = useState(target?.ip_address || '');
@@ -17,7 +14,6 @@ export default function TerminalModal({ target, onClose }) {
     const [history, setHistory] = useState([]);
     const [histIdx, setHistIdx] = useState(-1);
     const [typed, setTyped] = useState('');
-    const inputRef = useRef(null);
     const outputRef = useRef(null);
 
     useEffect(() => {
@@ -70,16 +66,6 @@ export default function TerminalModal({ target, onClose }) {
 
     const sendCommand = async (cmd) => {
         if (!cmd.trim()) return;
-        const promptLine = lines[lines.length - 1];
-        if (promptLine?.type === 'prompt') {
-            setLines(prev => {
-                const updated = [...prev];
-                updated[updated.length - 1] = { ...updated[updated.length - 1], text: `${updated[updated.length - 1].text}${cmd}` };
-                return updated;
-            });
-        } else {
-            addLine(`$ ${cmd}`, 'input');
-        }
         setRunning(true);
         setTyped('');
         setHistory(prev => [cmd, ...prev.slice(0, 99)]);
@@ -88,10 +74,17 @@ export default function TerminalModal({ target, onClose }) {
         try {
             const { data } = await axios.post('/api/terminal/exec', { host, port, username, password, command: cmd });
             if (data.success) {
+                const prev = [...lines];
+                const promptLine = prev[prev.length - 1];
+                if (promptLine?.type === 'prompt') {
+                    prev[prev.length - 1] = { ...promptLine, text: `${promptLine.text}${cmd}` };
+                }
                 const out = data.output.trim();
                 if (out) {
-                    out.split('\n').forEach(l => addLine(l || ' ', 'output'));
+                    out.split('\n').forEach(l => prev.push({ text: l || ' ', type: 'output', id: Date.now() + Math.random() }));
                 }
+                prev.push({ text: `[${username}@${host}]$ `, type: 'prompt', id: Date.now() + Math.random() });
+                setLines(prev);
             } else {
                 addLine(`Error: ${data.output}`, 'error');
             }
@@ -100,7 +93,6 @@ export default function TerminalModal({ target, onClose }) {
             setConnected(false);
         }
         setRunning(false);
-        addLine(`[${username}@${host}]$ `, 'prompt');
         focusInput();
     };
 
@@ -142,90 +134,82 @@ export default function TerminalModal({ target, onClose }) {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
             onClick={onClose}>
-            <div className="w-full max-w-3xl shadow-2xl flex flex-col overflow-hidden"
-                style={{ background: termDark, border: '1px solid #1a1a2e', borderRadius: 0 }}
+            <div className="w-full max-w-3xl shadow-2xl flex flex-col overflow-hidden rounded-2xl border border-base-300 bg-base-200"
                 onClick={e => e.stopPropagation()}>
-                <div className="flex items-center justify-between px-4 py-2 border-b"
-                    style={{ background: '#0d0d0d', borderColor: '#1a1a2e' }}>
+                <div className="flex items-center justify-between px-4 py-2.5 border-b border-base-300 bg-base-300/30">
                     <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold" style={{ color: termGreen }}>{'>'}_ TERMINAL</span>
+                        <span className="text-xs font-bold text-primary">{'\u003E_'} TERMINAL</span>
                         {connected && (
                             <>
-                                <span className="text-[9px]" style={{ color: '#555' }}>|</span>
-                                <span className="text-[9px]" style={{ color: '#555' }}>{username}@{host}:{port}</span>
+                                <span className="text-[10px] text-base-content/30">|</span>
+                                <span className="text-[10px] text-base-content/50">{username}@{host}:{port}</span>
                             </>
                         )}
                     </div>
                     <div className="flex items-center gap-2">
-                        <span className="text-[9px]" style={{ color: connected ? termGreen : '#666' }}>
+                        <span className={`text-[10px] font-semibold ${connected ? 'text-success' : 'text-base-content/40'}`}>
                             {connected ? 'CONNECTED' : 'DISCONNECTED'}
                         </span>
-                        <button onClick={onClose} className="text-xs" style={{ color: '#666' }}>
-                            <i className="fas fa-times"></i>
+                        <button onClick={onClose} className="w-6 h-6 flex items-center justify-center rounded-lg text-base-content/40 hover:text-base-content hover:bg-base-300 transition-all">
+                            <i className="fas fa-times text-[11px]"></i>
                         </button>
                     </div>
                 </div>
 
                 {!connected ? (
-                    <div className="p-5 space-y-3" style={{ background: termDark }}>
+                    <div className="p-5 space-y-3 bg-base-200">
                         <div className="grid grid-cols-4 gap-3">
                             <div className="col-span-2">
-                                <label className="text-[9px] font-bold uppercase tracking-widest mb-1 block" style={{ color: '#666' }}>Host</label>
+                                <label className="text-[10px] font-semibold text-base-content/40 uppercase tracking-wider mb-1 block">Host</label>
                                 <input value={host} onChange={e => setHost(e.target.value)}
-                                    className="w-full px-3 py-2 text-xs font-mono outline-none"
-                                    style={{ background: '#0d0d0d', border: '1px solid #1a1a2e', color: termGreen, borderRadius: 0 }} />
+                                    className="w-full bg-base-300 border border-base-300 rounded-xl px-3 py-2 text-xs text-base-content font-mono outline-none focus:border-primary/30 transition-all" />
                             </div>
                             <div>
-                                <label className="text-[9px] font-bold uppercase tracking-widest mb-1 block" style={{ color: '#666' }}>Port</label>
+                                <label className="text-[10px] font-semibold text-base-content/40 uppercase tracking-wider mb-1 block">Port</label>
                                 <input type="number" value={port} onChange={e => setPort(parseInt(e.target.value) || 22)}
-                                    className="w-full px-3 py-2 text-xs font-mono outline-none"
-                                    style={{ background: '#0d0d0d', border: '1px solid #1a1a2e', color: termGreen, borderRadius: 0 }} />
+                                    className="w-full bg-base-300 border border-base-300 rounded-xl px-3 py-2 text-xs text-base-content font-mono outline-none focus:border-primary/30 transition-all" />
                             </div>
                             <div className="flex items-end">
                                 <button onClick={handleConnect}
-                                    className="w-full px-4 py-2 text-xs font-bold transition-all"
-                                    style={{ background: '#0d0d0d', border: '1px solid #1a1a2e', color: termGreen, borderRadius: 0 }}>
-                                    {'>'} CONNECT
+                                    className="w-full px-4 py-2 rounded-xl text-xs font-bold bg-primary/15 text-primary border border-primary/25 hover:bg-primary/25 transition-all">
+                                    <i className="fas fa-plug text-[10px] mr-1"></i>
+                                    Connect
                                 </button>
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="text-[9px] font-bold uppercase tracking-widest mb-1 block" style={{ color: '#666' }}>Username</label>
+                                <label className="text-[10px] font-semibold text-base-content/40 uppercase tracking-wider mb-1 block">Username</label>
                                 <input value={username} onChange={e => setUsername(e.target.value)}
-                                    className="w-full px-3 py-2 text-xs font-mono outline-none"
-                                    style={{ background: '#0d0d0d', border: '1px solid #1a1a2e', color: termGreen, borderRadius: 0 }} />
+                                    className="w-full bg-base-300 border border-base-300 rounded-xl px-3 py-2 text-xs text-base-content font-mono outline-none focus:border-primary/30 transition-all" />
                             </div>
                             <div>
-                                <label className="text-[9px] font-bold uppercase tracking-widest mb-1 block" style={{ color: '#666' }}>Password</label>
+                                <label className="text-[10px] font-semibold text-base-content/40 uppercase tracking-wider mb-1 block">Password</label>
                                 <input type="password" value={password} onChange={e => setPassword(e.target.value)}
                                     onKeyDown={e => { if (e.key === 'Enter') handleConnect(); }}
-                                    className="w-full px-3 py-2 text-xs font-mono outline-none"
-                                    style={{ background: '#0d0d0d', border: '1px solid #1a1a2e', color: termGreen, borderRadius: 0 }} />
+                                    className="w-full bg-base-300 border border-base-300 rounded-xl px-3 py-2 text-xs text-base-content font-mono outline-none focus:border-primary/30 transition-all" />
                             </div>
                         </div>
                     </div>
                 ) : (
-                    <div className="flex flex-col" style={{ background: '#000000' }}>
+                    <div className="flex flex-col bg-base-100">
                         <div ref={outputRef} tabIndex={0} onKeyDown={handleKeyDown}
                             className="overflow-y-auto p-4 font-mono text-xs leading-relaxed select-text outline-none cursor-text"
-                            style={{ background: '#000000', minHeight: '360px', maxHeight: '420px', color: '#c0c0c0', caretColor: termGreen }}>
+                            style={{ minHeight: '360px', maxHeight: '420px' }}>
                             {lines.map((l, i) => (
-                                <div key={l.id} className="whitespace-pre-wrap break-all"
-                                    style={{
-                                        color: l.type === 'error' ? '#ff4444' :
-                                               l.type === 'success' ? termGreen :
-                                               l.type === 'info' ? '#888' :
-                                               l.type === 'input' ? termGreen :
-                                               l.type === 'prompt' ? termGreen :
-                                               '#c0c0c0'
-                                    }}>{l.text}</div>
+                                <div key={l.id} className={`whitespace-pre-wrap break-all ${
+                                    l.type === 'error' ? 'text-error' :
+                                    l.type === 'success' ? 'text-success' :
+                                    l.type === 'info' ? 'text-base-content/50' :
+                                    l.type === 'prompt' ? 'text-primary' :
+                                    'text-base-content'
+                                }`}>{l.text}</div>
                             ))}
                             {connected && (
-                                <div className="whitespace-pre-wrap break-all" style={{ color: termGreen }}>
-                                    {typed}<span className="animate-pulse" style={{ color: termGreen }}>▊</span>
+                                <div className="whitespace-pre-wrap break-all text-primary">
+                                    {typed}<span className="animate-pulse">▊</span>
                                 </div>
                             )}
                         </div>
