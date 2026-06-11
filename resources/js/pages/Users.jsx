@@ -27,6 +27,7 @@ export default function Users() {
     const [showConfirmPw, setShowConfirmPw] = useState(false);
     const [saving, setSaving]               = useState(false);
     const [formError, setFormError]         = useState('');
+    const [adminPw, setAdminPw]             = useState('');
     const [searchQuery, setSearchQuery]     = useState('');
     const [pwTarget, setPwTarget] = useState(null);
     const [pwAdminPw, setPwAdminPw] = useState('');
@@ -47,7 +48,7 @@ export default function Users() {
 
     const resetForm = () => {
         setName(''); setEmail(''); setPassword(''); setConfirmPassword(''); setRole('user');
-        setShowPw(false); setShowConfirmPw(false); setFormError(''); setShowForm(false);
+        setShowPw(false); setShowConfirmPw(false); setFormError(''); setAdminPw(''); setShowForm(false);
     };
 
     const createUser = async (e) => {
@@ -59,7 +60,7 @@ export default function Users() {
         setSaving(true);
         setFormError('');
         try {
-            const { data } = await axios.post('/api/users', { name, email, password, role });
+            const { data } = await axios.post('/api/users', { name, email, password, role, admin_password: adminPw });
             setUsers(u => [...u, data]);
             setNewestId(data.id);
             setTimeout(() => setNewestId(null), 1800);
@@ -247,6 +248,14 @@ export default function Users() {
                                         </button>
                                     </div>
                                 </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-base-content/60 mb-1">Your Password (Admin)</label>
+                                <input type="password" value={adminPw} onChange={e => setAdminPw(e.target.value)}
+                                    placeholder="Enter your password to confirm"
+                                    required
+                                    className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-sm text-base-content outline-none focus:border-primary/60 transition-colors" />
                             </div>
 
                             {formError && (

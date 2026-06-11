@@ -368,6 +368,7 @@ class SirenTest extends TestCase
             'email' => 'tech@province.ma',
             'password' => 'password',
             'role' => 'user',
+            'admin_password' => 'password',
         ]);
         $response->assertStatus(201);
         $this->assertDatabaseHas('users', ['email' => 'tech@province.ma']);

@@ -26,7 +26,15 @@ class UserController extends Controller
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
             'role'     => 'required|string|in:user,admin,config_manager',
+            'admin_password' => 'required|string',
         ]);
+
+        $admin = Auth::user();
+        if (!Hash::check($request->admin_password, $admin->password)) {
+            throw ValidationException::withMessages([
+                'admin_password' => ['Your password is incorrect.'],
+            ]);
+        }
 
         $user = User::create([
             'name'     => $request->name,
