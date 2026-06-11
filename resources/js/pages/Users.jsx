@@ -27,6 +27,7 @@ export default function Users() {
     const [showConfirmPw, setShowConfirmPw] = useState(false);
     const [saving, setSaving]               = useState(false);
     const [formError, setFormError]         = useState('');
+    const [searchQuery, setSearchQuery]     = useState('');
 
     const fetchUsers = async () => {
         try {
@@ -83,9 +84,12 @@ export default function Users() {
         await deleteUser(pendingDeleteUser);
         setPendingDeleteUser(null);
     };
-    const admins  = users.filter(u => u.role === 'admin' || u.role === 'config_manager');
 
-    const usersList = users.filter(u => u.role === 'user');
+    const q = searchQuery.toLowerCase();
+    const filtered = users.filter(u => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
+    const admins  = filtered.filter(u => u.role === 'admin' || u.role === 'config_manager');
+
+    const usersList = filtered.filter(u => u.role === 'user');
 
     return (
         <div className="min-h-screen bg-base-100">
@@ -103,6 +107,21 @@ export default function Users() {
                         </button>
                     )}
                 </div>
+
+                {!showForm && (
+                    <div className="relative mb-4">
+                        <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-base-content/30"></i>
+                        <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                            placeholder="Search users by name or email..."
+                            className="w-full bg-base-200 border border-base-300 rounded-xl pl-8 pr-3 py-2 text-xs text-base-content font-mono outline-none focus:border-primary/30 transition-all" />
+                        {searchQuery && (
+                            <button onClick={() => setSearchQuery('')}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-base-content/30 hover:text-base-content/60">
+                                <i className="fas fa-times"></i>
+                            </button>
+                        )}
+                    </div>
+                )}
 
                 {showForm && (
                     <div className="form-enter modal-glass border border-base-300 rounded-xl p-5 mb-5">
