@@ -28,6 +28,12 @@ export default function Users() {
     const [saving, setSaving]               = useState(false);
     const [formError, setFormError]         = useState('');
     const [searchQuery, setSearchQuery]     = useState('');
+    const [pwTarget, setPwTarget] = useState(null);
+    const [pwAdminPw, setPwAdminPw] = useState('');
+    const [pwNewPw, setPwNewPw] = useState('');
+    const [pwConfirmPw, setPwConfirmPw] = useState('');
+    const [pwSaving, setPwSaving] = useState(false);
+    const [pwError, setPwError] = useState('');
 
     const fetchUsers = async () => {
         try {
@@ -83,6 +89,19 @@ export default function Users() {
     const confirmDeleteUser = async () => {
         await deleteUser(pendingDeleteUser);
         setPendingDeleteUser(null);
+    };
+
+    const changePassword = async () => {
+        if (pwNewPw !== pwConfirmPw) { setPwError('Passwords do not match'); return; }
+        if (pwNewPw.length < 6) { setPwError('Password must be at least 6 characters'); return; }
+        setPwSaving(true); setPwError('');
+        try {
+            await axios.put(`/api/users/${pwTarget.id}/password`, { admin_password: pwAdminPw, password: pwNewPw });
+            toast('Password changed', 'success');
+            setPwTarget(null); setPwAdminPw(''); setPwNewPw(''); setPwConfirmPw('');
+        } catch (err) {
+            setPwError(err.response?.data?.errors?.admin_password?.[0] || err.response?.data?.message || 'Failed to change password');
+        } finally { setPwSaving(false); }
     };
 
     const q = searchQuery.toLowerCase();
@@ -286,6 +305,7 @@ export default function Users() {
                                             isExiting={exitingId === u.id}
                                             isNew={newestId === u.id}
                                             onDelete={() => deleteUser(u)}
+                                            onPassword={() => setPwTarget(u)}
                                         />
                                     ))}
                                 </div>
@@ -319,6 +339,7 @@ export default function Users() {
                                             isExiting={exitingId === u.id}
                                             isNew={newestId === u.id}
                                             onDelete={() => setPendingDeleteUser(u)}
+                                            onPassword={() => setPwTarget(u)}
                                         />
                                     ))}
                                 </div>
@@ -335,6 +356,52 @@ export default function Users() {
                     onConfirm={confirmDeleteUser}
                     onClose={() => setPendingDeleteUser(null)}
                 />
+            )}
+
+            {pwTarget && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+                    onClick={() => { setPwTarget(null); setPwAdminPw(''); setPwNewPw(''); setPwConfirmPw(''); setPwError(''); }}>
+                    <div className="bg-base-200 border border-base-300 rounded-2xl p-6 w-full max-w-sm shadow-2xl"
+                        onClick={e => e.stopPropagation()}>
+                        <h3 className="text-sm font-bold text-base-content mb-1">Change Password</h3>
+                        <p className="text-xs text-base-content/50 mb-4">for <strong>{pwTarget.name}</strong></p>
+
+                        {pwError && (
+                            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-error/10 border border-error/20 text-xs text-error mb-3">
+                                <i className="fas fa-exclamation-circle flex-shrink-0"></i>
+                                <span>{pwError}</span>
+                            </div>
+                        )}
+
+                        <div className="space-y-3">
+                            <div>
+                                <label className="text-[10px] font-semibold text-base-content/40 uppercase tracking-wider mb-1 block">Your Password (Admin)</label>
+                                <input type="password" value={pwAdminPw} onChange={e => setPwAdminPw(e.target.value)}
+                                    className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-xs text-base-content font-mono outline-none focus:border-primary/60 transition-colors" />
+                            </div>
+                            <div>
+                                <label className="text-[10px] font-semibold text-base-content/40 uppercase tracking-wider mb-1 block">New Password</label>
+                                <input type="password" value={pwNewPw} onChange={e => setPwNewPw(e.target.value)}
+                                    className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-xs text-base-content font-mono outline-none focus:border-primary/60 transition-colors" />
+                            </div>
+                            <div>
+                                <label className="text-[10px] font-semibold text-base-content/40 uppercase tracking-wider mb-1 block">Confirm New Password</label>
+                                <input type="password" value={pwConfirmPw} onChange={e => setPwConfirmPw(e.target.value)}
+                                    onKeyDown={e => { if (e.key === 'Enter') changePassword(); }}
+                                    className="w-full bg-base-100 border border-base-300 rounded-lg px-3 py-2 text-xs text-base-content font-mono outline-none focus:border-primary/60 transition-colors" />
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-2 mt-5">
+                            <button onClick={() => { setPwTarget(null); setPwAdminPw(''); setPwNewPw(''); setPwConfirmPw(''); setPwError(''); }}
+                                className="px-4 py-2 text-xs font-medium rounded-xl border border-base-300 hover:bg-base-300 transition-all">Cancel</button>
+                            <button onClick={changePassword} disabled={pwSaving || !pwAdminPw || !pwNewPw || !pwConfirmPw}
+                                className="px-4 py-2 text-xs font-medium rounded-xl bg-primary/15 text-primary border border-primary/25 hover:bg-primary/25 disabled:opacity-40 transition-all">
+                                {pwSaving ? 'Saving…' : 'Change Password'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );
@@ -357,7 +424,7 @@ function avatarStyle(name) {
     return AVATAR_PALETTE[hash % AVATAR_PALETTE.length];
 }
 
-function UserRow({ user: u, isMe, isLast, deleting, isExiting, isNew, onDelete }) {
+function UserRow({ user: u, isMe, isLast, deleting, isExiting, isNew, onDelete, onPassword }) {
     const { t } = useLang();
     const av = avatarStyle(u.name);
     return (
@@ -386,18 +453,25 @@ function UserRow({ user: u, isMe, isLast, deleting, isExiting, isNew, onDelete }
                 </div>
             </div>
             {u.role !== 'admin' && u.role !== 'config_manager' && !isMe && (
-                <button
-                    onClick={onDelete}
-                    disabled={deleting}
-                                                    title={t('users.deleteUser')}
-                    className="w-7 h-7 flex items-center justify-center rounded-lg text-base-content/30 hover:text-error hover:bg-error/10 transition-all disabled:opacity-40 opacity-0 group-hover:opacity-100"
-                >
-                    {deleting
-                        ? <span className="loading loading-spinner loading-xs"></span>
-                        : <i className="fas fa-trash text-[10px]"></i>}
-                </button>
+                <>
+                    <button onClick={onPassword}
+                        className="w-7 h-7 flex items-center justify-center rounded-lg text-base-content/30 hover:text-primary hover:bg-primary/10 transition-all opacity-0 group-hover:opacity-100"
+                        title="Change password">
+                        <i className="fas fa-key text-[10px]"></i>
+                    </button>
+                    <button
+                        onClick={onDelete}
+                        disabled={deleting}
+                        title={t('users.deleteUser')}
+                        className="w-7 h-7 flex items-center justify-center rounded-lg text-base-content/30 hover:text-error hover:bg-error/10 transition-all disabled:opacity-40 opacity-0 group-hover:opacity-100"
+                    >
+                        {deleting
+                            ? <span className="loading loading-spinner loading-xs"></span>
+                            : <i className="fas fa-trash text-[10px]"></i>}
+                    </button>
+                </>
             )}
-            {(u.role === 'admin' || isMe) && <div className="w-7 flex-shrink-0" />}
+            {(u.role === 'admin' || isMe) && <div className="w-14 flex-shrink-0" />}
         </div>
     );
 }

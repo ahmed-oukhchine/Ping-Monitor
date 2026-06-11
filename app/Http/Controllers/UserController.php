@@ -82,8 +82,16 @@ class UserController extends Controller
     public function changePassword(Request $request, User $user)
     {
         $request->validate([
-            'password' => 'required|string|min:6',
+            'admin_password' => 'required|string',
+            'password'       => 'required|string|min:6',
         ]);
+
+        $admin = Auth::user();
+        if (!Hash::check($request->admin_password, $admin->password)) {
+            throw ValidationException::withMessages([
+                'admin_password' => ['Your password is incorrect.'],
+            ]);
+        }
 
         $user->update(['password' => Hash::make($request->password)]);
         AuditLog::log('password_changed_by_admin', 'user', $user->id);
