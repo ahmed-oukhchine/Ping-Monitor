@@ -12,11 +12,11 @@ export default function TerminalModal({ target, onClose }) {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [connected, setConnected] = useState(false);
-    const [command, setCommand] = useState('');
     const [lines, setLines] = useState([]);
     const [running, setRunning] = useState(false);
     const [history, setHistory] = useState([]);
     const [histIdx, setHistIdx] = useState(-1);
+    const [typed, setTyped] = useState('');
     const inputRef = useRef(null);
     const outputRef = useRef(null);
 
@@ -24,13 +24,17 @@ export default function TerminalModal({ target, onClose }) {
         if (outputRef.current) {
             outputRef.current.scrollTop = outputRef.current.scrollHeight;
         }
-    }, [lines]);
+    }, [lines, typed]);
 
     useEffect(() => {
-        if (connected && inputRef.current) {
-            inputRef.current.focus();
+        if (connected && outputRef.current) {
+            outputRef.current.focus();
         }
     }, [connected]);
+
+    const focusInput = () => {
+        setTimeout(() => outputRef.current?.focus(), 50);
+    };
 
     const addLine = (text, type = 'output') => {
         setLines(prev => [...prev, { text, type, id: Date.now() + Math.random() }]);
@@ -48,6 +52,7 @@ export default function TerminalModal({ target, onClose }) {
                     setConnected(true);
                     addLine('Connected successfully', 'success');
                     addLine(`[${username}@${host}]$ `, 'prompt');
+                    focusInput();
                 } else {
                     addLine(`Connection failed: ${data.output}`, 'error');
                 }
@@ -60,15 +65,25 @@ export default function TerminalModal({ target, onClose }) {
         setLines(prev => [...prev, { text: 'Disconnected', type: 'info', id: Date.now() }]);
         setHistory([]);
         setHistIdx(-1);
+        setTyped('');
     };
 
-    const handleCommand = async (cmd) => {
+    const sendCommand = async (cmd) => {
         if (!cmd.trim()) return;
+        const promptLine = lines[lines.length - 1];
+        if (promptLine?.type === 'prompt') {
+            setLines(prev => {
+                const updated = [...prev];
+                updated[updated.length - 1] = { ...updated[updated.length - 1], text: `${updated[updated.length - 1].text}${cmd}` };
+                return updated;
+            });
+        } else {
+            addLine(`$ ${cmd}`, 'input');
+        }
         setRunning(true);
-        addLine(`$ ${cmd}`, 'input');
+        setTyped('');
         setHistory(prev => [cmd, ...prev.slice(0, 99)]);
         setHistIdx(-1);
-        setCommand('');
 
         try {
             const { data } = await axios.post('/api/terminal/exec', { host, port, username, password, command: cmd });
@@ -85,28 +100,44 @@ export default function TerminalModal({ target, onClose }) {
             setConnected(false);
         }
         setRunning(false);
+        addLine(`[${username}@${host}]$ `, 'prompt');
+        focusInput();
     };
 
     const handleKeyDown = (e) => {
+        if (!connected) return;
         if (e.key === 'Enter') {
-            handleCommand(command);
+            e.preventDefault();
+            const cmd = typed;
+            setTyped('');
+            sendCommand(cmd);
+        } else if (e.key === 'Backspace') {
+            e.preventDefault();
+            setTyped(prev => prev.slice(0, -1));
         } else if (e.key === 'ArrowUp') {
             e.preventDefault();
             if (history.length > 0) {
                 const next = Math.min(histIdx + 1, history.length - 1);
                 setHistIdx(next);
-                setCommand(history[next]);
+                setTyped(history[next]);
             }
         } else if (e.key === 'ArrowDown') {
             e.preventDefault();
             if (histIdx > 0) {
                 const next = histIdx - 1;
                 setHistIdx(next);
-                setCommand(history[next]);
+                setTyped(history[next]);
             } else {
                 setHistIdx(-1);
-                setCommand('');
+                setTyped('');
             }
+        } else if (e.key === 'l' && e.ctrlKey) {
+            e.preventDefault();
+            setLines([]);
+            addLine(`[${username}@${host}]$ `, 'prompt');
+        } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+            e.preventDefault();
+            setTyped(prev => prev + e.key);
         }
     };
 
@@ -118,15 +149,23 @@ export default function TerminalModal({ target, onClose }) {
                 onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between px-4 py-2 border-b"
                     style={{ background: '#0d0d0d', borderColor: '#1a1a2e' }}>
-                    <span className="text-xs font-bold" style={{ color: termGreen }}>{'>'}_ TERMINAL</span>
-                    <span className="text-[10px]" style={{ color: '#666' }}>
-                        {target?.name || 'SSH'}
-                        <span className="mx-2">|</span>
-                        {connected ? <span style={{ color: termGreen }}>CONNECTED</span> : 'DISCONNECTED'}
-                    </span>
-                    <button onClick={onClose} className="text-xs" style={{ color: '#666' }}>
-                        <i className="fas fa-times"></i>
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold" style={{ color: termGreen }}>{'>'}_ TERMINAL</span>
+                        {connected && (
+                            <>
+                                <span className="text-[9px]" style={{ color: '#555' }}>|</span>
+                                <span className="text-[9px]" style={{ color: '#555' }}>{username}@{host}:{port}</span>
+                            </>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="text-[9px]" style={{ color: connected ? termGreen : '#666' }}>
+                            {connected ? 'CONNECTED' : 'DISCONNECTED'}
+                        </span>
+                        <button onClick={onClose} className="text-xs" style={{ color: '#666' }}>
+                            <i className="fas fa-times"></i>
+                        </button>
+                    </div>
                 </div>
 
                 {!connected ? (
@@ -169,11 +208,11 @@ export default function TerminalModal({ target, onClose }) {
                         </div>
                     </div>
                 ) : (
-                    <div className="flex-1 flex flex-col p-0" style={{ background: termDark }}>
-                        <div ref={outputRef}
-                            className="overflow-y-auto p-4 font-mono text-xs leading-relaxed select-text"
-                            style={{ background: '#000000', minHeight: '320px', maxHeight: '400px', color: '#c0c0c0' }}>
-                            {lines.map(l => (
+                    <div className="flex flex-col" style={{ background: '#000000' }}>
+                        <div ref={outputRef} tabIndex={0} onKeyDown={handleKeyDown}
+                            className="overflow-y-auto p-4 font-mono text-xs leading-relaxed select-text outline-none cursor-text"
+                            style={{ background: '#000000', minHeight: '360px', maxHeight: '420px', color: '#c0c0c0', caretColor: termGreen }}>
+                            {lines.map((l, i) => (
                                 <div key={l.id} className="whitespace-pre-wrap break-all"
                                     style={{
                                         color: l.type === 'error' ? '#ff4444' :
@@ -184,29 +223,11 @@ export default function TerminalModal({ target, onClose }) {
                                                '#c0c0c0'
                                     }}>{l.text}</div>
                             ))}
-                        </div>
-                        <div className="flex items-center gap-2 px-3 py-2"
-                            style={{ background: '#000000', borderTop: '1px solid #0a0a0a' }}>
-                            <span className="text-xs font-mono flex-shrink-0" style={{ color: termGreen }}>$</span>
-                            <input ref={inputRef} value={command} onChange={e => setCommand(e.target.value)}
-                                onKeyDown={handleKeyDown} disabled={running}
-                                className="flex-1 bg-transparent border-none outline-none text-xs font-mono"
-                                style={{ color: '#c0c0c0' }} placeholder={running ? '' : ''} />
-                            <button onClick={() => handleCommand(command)} disabled={running || !command.trim()}
-                                className="text-[9px] font-bold px-2 py-1 transition-all"
-                                style={{ background: '#0a0a0a', border: '1px solid #1a1a2e', color: running ? '#555' : termGreen, borderRadius: 0 }}>
-                                {running ? '...' : 'SEND'}
-                            </button>
-                            <button onClick={() => setLines([])}
-                                className="text-[9px] font-bold px-2 py-1 transition-all"
-                                style={{ background: '#0a0a0a', border: '1px solid #1a1a2e', color: '#666', borderRadius: 0 }}>
-                                CLS
-                            </button>
-                            <button onClick={handleDisconnect}
-                                className="text-[9px] font-bold px-2 py-1 transition-all"
-                                style={{ background: '#0a0a0a', border: '1px solid #1a1a2e', color: '#ff4444', borderRadius: 0 }}>
-                                EXIT
-                            </button>
+                            {connected && (
+                                <div className="whitespace-pre-wrap break-all" style={{ color: termGreen }}>
+                                    {typed}<span className="animate-pulse" style={{ color: termGreen }}>▊</span>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
