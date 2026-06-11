@@ -83,8 +83,8 @@ export default function Users() {
         await deleteUser(pendingDeleteUser);
         setPendingDeleteUser(null);
     };
+    const admins  = users.filter(u => u.role === 'admin' || u.role === 'config_manager');
 
-    const admins  = users.filter(u => u.role === 'admin');
     const usersList = users.filter(u => u.role === 'user');
 
     return (
