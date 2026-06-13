@@ -4,7 +4,7 @@ import { useToast } from '../contexts/ToastContext';
 
 export default function TerminalModal({ target, sshConfig, onClose }) {
     const { toast } = useToast();
-    const auto = sshConfig?.host && sshConfig?.username && sshConfig?.password;
+    const auto = sshConfig?.host && sshConfig?.password && (sshConfig?.protocol !== 'telnet' ? sshConfig?.username : true);
     const [protocol, setProtocol] = useState(sshConfig?.protocol || 'ssh');
     const [host, setHost] = useState(sshConfig?.host || target?.ip_address || '');
     const [port, setPort] = useState(sshConfig?.port || (sshConfig?.protocol === 'telnet' ? 23 : 22));
@@ -49,8 +49,12 @@ export default function TerminalModal({ target, sshConfig, onClose }) {
     };
 
     const handleConnect = () => {
-        if (!host || !username || !password) {
-            toast('Fill in host, username and password', 'error');
+        if (!host || !password) {
+            toast('Fill in host and password', 'error');
+            return;
+        }
+        if (protocol !== 'telnet' && !username) {
+            toast('Fill in username for SSH', 'error');
             return;
         }
         setConnecting(true);
@@ -62,7 +66,7 @@ export default function TerminalModal({ target, sshConfig, onClose }) {
                 if (data.success) {
                     setConnected(true);
                     addLine('Connected successfully', 'success');
-                    addLine(`[${username}@${host}]$ `, 'prompt');
+                    addLine(protocol === 'telnet' ? `[${host}]$ ` : `[${username}@${host}]$ `, 'prompt');
                     focusInput();
                 } else {
                     addLine(`Connection failed: ${data.output}`, 'error');
@@ -103,7 +107,8 @@ export default function TerminalModal({ target, sshConfig, onClose }) {
                 if (out) {
                     out.split('\n').forEach(l => prev.push({ text: l || ' ', type: 'output', id: Date.now() + Math.random() }));
                 }
-                prev.push({ text: `[${username}@${host}]$ `, type: 'prompt', id: Date.now() + Math.random() });
+                const prompt = protocol === 'telnet' ? `[${host}]$ ` : `[${username}@${host}]$ `;
+                prev.push({ text: prompt, type: 'prompt', id: Date.now() + Math.random() });
                 setLines(prev);
             } else {
                 addLine(`Error: ${data.output}`, 'error');
@@ -146,7 +151,7 @@ export default function TerminalModal({ target, sshConfig, onClose }) {
         } else if (e.key === 'l' && e.ctrlKey) {
             e.preventDefault();
             setLines([]);
-            addLine(`[${username}@${host}]$ `, 'prompt');
+            addLine(protocol === 'telnet' ? `[${host}]$ ` : `[${username}@${host}]$ `, 'prompt');
         } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
             e.preventDefault();
             setTyped(prev => prev + e.key);
@@ -213,12 +218,14 @@ export default function TerminalModal({ target, sshConfig, onClose }) {
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
-                            <div>
-                                <label className="text-[10px] font-semibold text-base-content/40 uppercase tracking-wider mb-1 block">Username</label>
-                                <input value={username} onChange={e => setUsername(e.target.value)}
-                                    className="w-full bg-base-300 border border-base-300 rounded-xl px-3 py-2 text-xs text-base-content font-mono outline-none focus:border-primary/30 transition-all" />
-                            </div>
-                            <div>
+                            {protocol !== 'telnet' && (
+                                <div>
+                                    <label className="text-[10px] font-semibold text-base-content/40 uppercase tracking-wider mb-1 block">Username</label>
+                                    <input value={username} onChange={e => setUsername(e.target.value)}
+                                        className="w-full bg-base-300 border border-base-300 rounded-xl px-3 py-2 text-xs text-base-content font-mono outline-none focus:border-primary/30 transition-all" />
+                                </div>
+                            )}
+                            <div className={protocol === 'telnet' ? 'col-span-2' : ''}>
                                 <label className="text-[10px] font-semibold text-base-content/40 uppercase tracking-wider mb-1 block">Password</label>
                                 <input type="password" value={password} onChange={e => setPassword(e.target.value)}
                                     onKeyDown={e => { if (e.key === 'Enter') handleConnect(); }}

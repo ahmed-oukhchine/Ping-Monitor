@@ -19,19 +19,20 @@ class TerminalController extends Controller
             'protocol' => 'nullable|in:ssh,telnet',
             'host'     => 'required|string',
             'port'     => 'required|integer|min:1|max:65535',
-            'username' => 'required|string',
+            'username' => 'nullable|string',
             'password' => 'required|string',
             'command'  => 'required|string',
         ]);
 
         $protocol = $data['protocol'] ?? 'ssh';
+        $username = $data['username'] ?? '';
 
         $service = $protocol === 'telnet' ? $this->telnet : $this->ssh;
 
         $result = $service->exec(
             $data['host'],
             (int) $data['port'],
-            $data['username'],
+            $username,
             $data['password'],
             $data['command']
         );

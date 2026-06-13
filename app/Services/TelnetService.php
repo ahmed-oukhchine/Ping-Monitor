@@ -17,6 +17,10 @@ class TelnetService
 
     public function exec(string $host, int $port, string $username, string $password, string $command): array
     {
+        if ($username === '' && $password === '') {
+            return ['success' => false, 'output' => 'Password is required for Telnet'];
+        }
+
         try {
             $this->connect($host, $port, 10);
             $this->negotiate();
@@ -88,11 +92,56 @@ class TelnetService
 
     private function login(string $username, string $password): void
     {
-        $resp = $this->readUntil(':', 5);
-        fwrite($this->socket, $username . "\r\n");
-        $resp = $this->readUntil(':', 5);
+        $resp = $this->readUntil(':', 8);
+
+        $respLower = strtolower($resp);
+        if ($username !== '' && (str_contains($respLower, 'username') || str_contains($respLower, 'login'))) {
+            fwrite($this->socket, $username . "\r\n");
+            $resp = $this->readUntil(':', 5);
+        }
+
         fwrite($this->socket, $password . "\r\n");
-        $resp = $this->readUntil('#', 3);
+        $this->readUntilAny(['#', '>', '$'], 3);
+    }
+
+    private function readUntilAny(array $expectTokens, int $timeout = 5): string
+    {
+        if (!$this->socket) return '';
+
+        $buffer = '';
+        $start = time();
+
+        while (true) {
+            if ((time() - $start) > $timeout) break;
+
+            $char = fgetc($this->socket);
+            if ($char === false) break;
+
+            $byte = ord($char);
+
+            if ($byte === self::TELNET_IAC) {
+                $cmd = ord(fgetc($this->socket));
+                if ($cmd === self::TELNET_IAC) {
+                    $buffer .= $char;
+                    continue;
+                }
+                $opt = ord(fgetc($this->socket));
+                if ($cmd === self::TELNET_DO || $cmd === self::TELNET_DONT) {
+                    fwrite($this->socket, chr(self::TELNET_IAC) . chr(self::TELNET_WONT) . chr($opt));
+                } elseif ($cmd === self::TELNET_WILL || $cmd === self::TELNET_WONT) {
+                    fwrite($this->socket, chr(self::TELNET_IAC) . chr(self::TELNET_DONT) . chr($opt));
+                }
+                continue;
+            }
+
+            $buffer .= $char;
+
+            foreach ($expectTokens as $token) {
+                if (str_contains($buffer, $token)) break 2;
+            }
+        }
+
+        return $buffer;
     }
 
     private function sendCommand(string $command): string
