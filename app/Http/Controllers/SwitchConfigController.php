@@ -21,7 +21,7 @@ class SwitchConfigController extends Controller
             ->pluck('id');
 
         $configs = SwitchConfig::whereIn('id', $latestIds)
-            ->with(['target:id,name', 'creator:id,name'])
+            ->with(['target:id,name,ip_address', 'creator:id,name'])
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(fn($c) => [
@@ -34,7 +34,7 @@ class SwitchConfigController extends Controller
                 'ports_count'  => $c->ports_count,
                 'version'      => $c->version,
                 'config_text'  => $c->config_text,
-                'target'       => $c->target ? ['id' => $c->target->id, 'name' => $c->target->name] : null,
+                'target'       => $c->target ? ['id' => $c->target->id, 'name' => $c->target->name, 'ip_address' => $c->target->ip_address] : null,
                 'created_by'   => $c->creator->name ?? null,
                 'ssh_host'     => $c->ssh_host,
                 'ssh_port'     => $c->ssh_port,
@@ -50,7 +50,7 @@ class SwitchConfigController extends Controller
 
     public function show(SwitchConfig $switchConfig)
     {
-        $switchConfig->load(['target:id,name', 'creator:id,name']);
+        $switchConfig->load(['target:id,name,ip_address', 'creator:id,name']);
         return response()->json([
             'id'           => $switchConfig->id,
             'hostname'     => $switchConfig->hostname,
@@ -61,7 +61,7 @@ class SwitchConfigController extends Controller
             'ports_count'  => $switchConfig->ports_count,
             'version'      => $switchConfig->version,
             'config_text'  => $switchConfig->config_text,
-            'target'       => $switchConfig->target ? ['id' => $switchConfig->target->id, 'name' => $switchConfig->target->name] : null,
+            'target'       => $switchConfig->target ? ['id' => $switchConfig->target->id, 'name' => $switchConfig->target->name, 'ip_address' => $switchConfig->target->ip_address] : null,
             'created_by'   => $switchConfig->creator->name ?? null,
             'ssh_host'     => $switchConfig->ssh_host,
             'ssh_port'     => $switchConfig->ssh_port,
@@ -117,7 +117,7 @@ class SwitchConfigController extends Controller
         $data['created_by'] = Auth::id();
 
         $config = SwitchConfig::create($data);
-        $config->load(['target:id,name', 'creator:id,name']);
+        $config->load(['target:id,name,ip_address', 'creator:id,name']);
 
         AuditLog::log('created', 'switch_config', $config->id, null, $config->toArray());
 
@@ -131,7 +131,7 @@ class SwitchConfigController extends Controller
             'ports_count'  => $config->ports_count,
             'version'      => $config->version,
             'config_text'  => $config->config_text,
-            'target'       => $config->target ? ['id' => $config->target->id, 'name' => $config->target->name] : null,
+            'target'       => $config->target ? ['id' => $config->target->id, 'name' => $config->target->name, 'ip_address' => $config->target->ip_address] : null,
             'created_by'   => $config->creator->name ?? null,
             'ssh_host'     => $config->ssh_host,
             'ssh_port'     => $config->ssh_port,
@@ -165,7 +165,7 @@ class SwitchConfigController extends Controller
         $data['created_by'] = Auth::id();
 
         $config = SwitchConfig::create($data);
-        $config->load(['target:id,name', 'creator:id,name']);
+        $config->load(['target:id,name,ip_address', 'creator:id,name']);
 
         AuditLog::log('updated', 'switch_config', $config->id, $switchConfig->toArray(), $config->toArray());
 
@@ -179,7 +179,7 @@ class SwitchConfigController extends Controller
             'ports_count'  => $config->ports_count,
             'version'      => $config->version,
             'config_text'  => $config->config_text,
-            'target'       => $config->target ? ['id' => $config->target->id, 'name' => $config->target->name] : null,
+            'target'       => $config->target ? ['id' => $config->target->id, 'name' => $config->target->name, 'ip_address' => $config->target->ip_address] : null,
             'created_by'   => $config->creator->name ?? null,
             'ssh_host'     => $config->ssh_host,
             'ssh_port'     => $config->ssh_port,

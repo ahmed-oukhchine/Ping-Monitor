@@ -19,6 +19,19 @@ export default function AddModal({ groups = [], onSave, onClose }) {
     const [snmpCommunity, setSnmpCommunity] = useState('');
     const [loading, setLoading]         = useState(false);
     const [error, setError]             = useState('');
+    const [confirmClose, setConfirmClose] = useState(false);
+
+    const dirty = name || ip || location || type || notes || alertEmail || snmpCommunity
+        || selectedGroups.length > 0 || warnMs || criticalMs;
+
+    const handleClose = () => {
+        if (dirty && !confirmClose) {
+            setConfirmClose(true);
+            return;
+        }
+        setConfirmClose(false);
+        onClose();
+    };
 
     const toggleGroup = (id) => {
         setSelectedGroups(prev =>
@@ -54,7 +67,7 @@ export default function AddModal({ groups = [], onSave, onClose }) {
     };
 
     return (
-        <div className="backdrop-enter fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md" onClick={onClose}>
+        <div className="backdrop-enter fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md" onClick={handleClose}>
             <div className="modal-enter bg-base-200 border border-base-300 rounded-2xl shadow-2xl w-full max-w-md" onClick={e => e.stopPropagation()}>
 
                 <div className="flex items-center justify-between px-6 py-4 border-b border-base-300">
@@ -67,7 +80,7 @@ export default function AddModal({ groups = [], onSave, onClose }) {
                             <p className="text-xs text-base-content/40 mt-0.5">Monitor a new device</p>
                         </div>
                     </div>
-                    <button className="w-8 h-8 rounded-lg hover:bg-base-300 flex items-center justify-center text-base-content/50 hover:text-base-content transition-colors" onClick={onClose}>
+                    <button className="w-8 h-8 rounded-lg hover:bg-base-300 flex items-center justify-center text-base-content/50 hover:text-base-content transition-colors" onClick={handleClose}>
                         <i className="fas fa-times text-sm"></i>
                     </button>
                 </div>
@@ -273,7 +286,7 @@ export default function AddModal({ groups = [], onSave, onClose }) {
                     </div>
 
                     <div className="flex justify-end gap-2 px-6 py-4 border-t border-base-300">
-                        <button type="button" onClick={onClose}
+                        <button type="button" onClick={handleClose}
                             className="px-3 py-1.5 text-xs font-semibold text-base-content/50 hover:text-base-content hover:bg-base-300/50 rounded-lg transition-colors">
                             Cancel
                         </button>
@@ -286,6 +299,27 @@ export default function AddModal({ groups = [], onSave, onClose }) {
                     </div>
                 </form>
             </div>
+            {confirmClose && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => setConfirmClose(false)}>
+                    <div className="bg-base-200 border border-base-300 rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center" onClick={e => e.stopPropagation()}>
+                        <div className="w-10 h-10 rounded-xl bg-warning/15 border border-warning/25 flex items-center justify-center mx-auto mb-3">
+                            <i className="fas fa-exclamation-triangle text-warning text-sm"></i>
+                        </div>
+                        <h3 className="text-sm font-bold text-base-content mb-1">Discard changes?</h3>
+                        <p className="text-xs text-base-content/50 mb-5">You have unsaved changes. Are you sure you want to close?</p>
+                        <div className="flex gap-2 justify-center">
+                            <button onClick={() => setConfirmClose(false)}
+                                className="px-4 py-2 text-xs font-semibold bg-base-300 text-base-content rounded-lg hover:bg-base-300/70 transition-colors">
+                                Keep editing
+                            </button>
+                            <button onClick={() => { setConfirmClose(false); onClose(); }}
+                                className="px-4 py-2 text-xs font-semibold bg-error text-white rounded-lg hover:opacity-90 transition-opacity">
+                                Discard
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

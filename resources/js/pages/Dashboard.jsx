@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import StatsBar from '../components/StatsBar';
 import TargetTable from '../components/TargetTable';
@@ -40,6 +40,8 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
     const [editTarget, setEditTarget]         = useState(null);
     const [chartTarget, setChartTarget]       = useState(null);
     const [deleteTarget, setDeleteTarget]     = useState(null);
+
+    const lastDeletedRef = useRef(null);
 
     const [lastUpdated, setLastUpdated]       = useState(null);
     const [tick, setTick]                     = useState(0);
@@ -182,7 +184,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
 
     const fetchGroups = async () => {
         try { const { data } = await axios.get('/api/groups'); setGroups(data); }
-        catch {}
+        catch (e) { console.error('Failed to fetch groups:', e); }
     };
 
     const pingTarget = async (target) => {
@@ -230,7 +232,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
                             uptime_percent: Math.round((total - failed) / total * 100 * 10) / 10,
                             threshold_status: data.threshold_status ?? null };
                     }));
-                } catch {} finally { setPinging(p => ({ ...p, [toPing[i].id]: false })); }
+                } catch (e) { console.error('Batch ping failed for', toPing[i].name, e); } finally { setPinging(p => ({ ...p, [toPing[i].id]: false })); }
             }
         } finally { inProgressRef.current = false; if (!auto) { setPingAllLoading(false); setShowActions(false); } }
     };
@@ -253,7 +255,7 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
                             uptime_percent: Math.round((total - failed) / total * 100 * 10) / 10,
                             threshold_status: data.threshold_status ?? null };
                     }));
-                } catch {} finally { setPinging(p => ({ ...p, [target.id]: false })); }
+                } catch (e) { console.error('Offline ping failed for', target.name, e); } finally { setPinging(p => ({ ...p, [target.id]: false })); }
             }
         } finally { inProgressRef.current = false; setPingAllLoading(false); }
     };
@@ -278,10 +280,33 @@ export default function Dashboard({ targets, setTargets, fetchTargets, loading, 
 
     const confirmDelete = async (target) => {
         try {
+            const backup = (({ id, ...rest }) => rest)(target);
+            backup.groups = target.groups;
             await axios.delete(`/targets/${target.id}`);
-            toast(t('dashboard.targetDeleted'));
+            lastDeletedRef.current = backup;
             setTargets(ts => ts.filter(t => t.id !== target.id));
             setDeleteTarget(null);
+            toast(t('dashboard.targetDeleted'), 'success', 5000, {
+                label: t('dashboard.undo'),
+                onClick: () => {
+                    const data = lastDeletedRef.current;
+                    if (!data) return;
+                    axios.post('/targets', {
+                        name: data.name,
+                        ip_address: data.ip_address,
+                        port: data.port,
+                        location: data.location,
+                        type: data.type,
+                        group_ids: data.groups?.map(g => g.id) || [],
+                    }).then(() => {
+                        toast(t('dashboard.targetRestored'), 'success');
+                        fetchTargets();
+                    }).catch(() => {
+                        toast(t('dashboard.failedToAdd'), 'error');
+                    });
+                    lastDeletedRef.current = null;
+                },
+            });
         } catch { toast(t('dashboard.failedToDelete'), 'error'); }
     };
 

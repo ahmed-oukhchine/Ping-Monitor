@@ -55,41 +55,55 @@ const TargetTable = React.memo(({ targets, loading, pinging, onPing, onEdit, onD
 
     if (loading) {
         return (
-            <div className="bg-base-200 border border-base-300 rounded-xl overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full target-table">
-                        <thead>
-                            <tr className="border-b border-base-300/80 bg-base-300/25">
-                                {headerLabels.map(h => (
-                                    <th key={h} className="text-left py-3 px-4 text-[10px] font-semibold text-base-content/35 uppercase tracking-widest whitespace-nowrap">{h}</th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {[...Array(6)].map((_, i) => (
-                                <tr key={i} className="border-b border-base-300/30" style={{ animationDelay: `${i * 0.06}s` }}>
-                                    <td className="py-3.5 px-4"></td>
-                                    <td className="py-3.5 px-4">
-                                        <div className="flex items-center gap-2.5">
-                                            <div className="skeleton-row w-8 h-8 rounded-xl flex-shrink-0" style={{ animationDelay: `${i * 0.06}s` }}></div>
-                                            <div className="skeleton-row h-4 w-24 rounded" style={{ animationDelay: `${i * 0.06 + 0.05}s` }}></div>
-                                        </div>
-                                    </td>
-                                    <td className="py-3.5 px-4"><div className="skeleton-row h-3.5 w-20 rounded" style={{ animationDelay: `${i * 0.06}s` }}></div></td>
-                                    <td className="py-3.5 px-4"><div className="skeleton-row h-5 w-24 rounded-md" style={{ animationDelay: `${i * 0.06}s` }}></div></td>
-                                    <td className="py-3.5 px-4"><div className="skeleton-row h-6 w-16 rounded-full" style={{ animationDelay: `${i * 0.06}s` }}></div></td>
-                                    <td className="py-3.5 px-4"><div className="skeleton-row h-3.5 w-12 rounded" style={{ animationDelay: `${i * 0.06}s` }}></div></td>
-                                    <td className="py-3.5 px-4"><div className="skeleton-row h-3.5 w-12 rounded" style={{ animationDelay: `${i * 0.06}s` }}></div></td>
-                                    <td className="py-3.5 px-4"><div className="skeleton-row h-2 w-24 rounded-full" style={{ animationDelay: `${i * 0.06}s` }}></div></td>
-                                    <td className="py-3.5 px-4"><div className="skeleton-row h-3.5 w-8 rounded" style={{ animationDelay: `${i * 0.06}s` }}></div></td>
-                                    <td className="py-3.5 px-4"><div className="skeleton-row h-3.5 w-16 rounded" style={{ animationDelay: `${i * 0.06}s` }}></div></td>
-                                    <td className="py-3.5 px-4"></td>
+            <>
+                <div className="hidden lg:block bg-base-200 border border-base-300 rounded-xl overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full target-table">
+                            <thead>
+                                <tr className="border-b border-base-300/80 bg-base-300/25">
+                                    {headerLabels.map(h => (
+                                        <th key={h} className="text-left py-3 px-4 text-[10px] font-semibold text-base-content/35 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                                    ))}
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {[...Array(6)].map((_, i) => (
+                                    <tr key={i} className="border-b border-base-300/30" style={{ animationDelay: `${i * 0.06}s` }}>
+                                        <td className="py-3.5 px-4"></td>
+                                        <td className="py-3.5 px-4">
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="skeleton-row w-8 h-8 rounded-xl flex-shrink-0" style={{ animationDelay: `${i * 0.06}s` }}></div>
+                                                <div className="skeleton-row h-4 w-24 rounded" style={{ animationDelay: `${i * 0.06 + 0.05}s` }}></div>
+                                            </div>
+                                        </td>
+                                        <td className="py-3.5 px-4"><div className="skeleton-row h-3.5 w-20 rounded" style={{ animationDelay: `${i * 0.06}s` }}></div></td>
+                                        <td className="py-3.5 px-4"><div className="skeleton-row h-5 w-24 rounded-md" style={{ animationDelay: `${i * 0.06}s` }}></div></td>
+                                        <td className="py-3.5 px-4"><div className="skeleton-row h-6 w-16 rounded-full" style={{ animationDelay: `${i * 0.06}s` }}></div></td>
+                                        <td className="py-3.5 px-4"><div className="skeleton-row h-3.5 w-12 rounded" style={{ animationDelay: `${i * 0.06}s` }}></div></td>
+                                        <td className="py-3.5 px-4"><div className="skeleton-row h-3.5 w-12 rounded" style={{ animationDelay: `${i * 0.06}s` }}></div></td>
+                                        <td className="py-3.5 px-4"><div className="skeleton-row h-2 w-24 rounded-full" style={{ animationDelay: `${i * 0.06}s` }}></div></td>
+                                        <td className="py-3.5 px-4"><div className="skeleton-row h-3.5 w-8 rounded" style={{ animationDelay: `${i * 0.06}s` }}></div></td>
+                                        <td className="py-3.5 px-4"><div className="skeleton-row h-3.5 w-16 rounded" style={{ animationDelay: `${i * 0.06}s` }}></div></td>
+                                        <td className="py-3.5 px-4"></td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
+                <div className="lg:hidden space-y-2.5">
+                    {[...Array(4)].map((_, i) => (
+                        <div key={i} className="skeleton-card p-4 flex items-center gap-3" style={{ animationDelay: `${i * 0.08}s` }}>
+                            <div className="skeleton-row w-9 h-9 rounded-xl flex-shrink-0"></div>
+                            <div className="flex-1 space-y-2">
+                                <div className="skeleton-row h-3.5 w-32 rounded"></div>
+                                <div className="skeleton-row h-3 w-20 rounded"></div>
+                            </div>
+                            <div className="skeleton-row h-6 w-14 rounded-full"></div>
+                        </div>
+                    ))}
+                </div>
+            </>
         );
     }
 

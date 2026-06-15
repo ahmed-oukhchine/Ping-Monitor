@@ -97,6 +97,8 @@ const translations = {
   'dashboard.targetUpdated': { en: 'Target updated successfully', fr: 'Cible mise à jour', ar: 'تم تحديث الهدف بنجاح' },
   'dashboard.failedToUpdate': { en: 'Failed to update target', fr: 'Échec de la mise à jour', ar: 'فشل تحديث الهدف' },
   'dashboard.targetDeleted': { en: 'Target deleted', fr: 'Cible supprimée', ar: 'تم حذف الهدف' },
+  'dashboard.undo': { en: 'Undo', fr: 'Annuler', ar: 'تراجع' },
+  'dashboard.targetRestored': { en: 'Target restored', fr: 'Cible restaurée', ar: 'تمت استعادة الهدف' },
   'dashboard.maintenanceEnabled': { en: 'Maintenance mode enabled', fr: 'Mode maintenance activé', ar: 'تم تفعيل وضع الصيانة' },
   'dashboard.monitoringResumed': { en: 'Monitoring resumed', fr: 'Surveillance reprise', ar: 'تم استئناف المراقبة' },
   'dashboard.responded': { en: '{name} responded ({ms} ms)', fr: '{name} a répondu ({ms} ms)', ar: '{name} استجاب ({ms} مللي)' },
@@ -116,6 +118,7 @@ const translations = {
   'stats.fast': { en: 'Fast', fr: 'Rapide', ar: 'سريع' },
   'stats.moderate': { en: 'Moderate', fr: 'Modéré', ar: 'معتدل' },
   'stats.slow': { en: 'Slow', fr: 'Lent', ar: 'بطيء' },
+  'stats.allTime': { en: 'All', fr: 'Tout', ar: 'الكل' },
   'stats.fleetUptime': { en: '{pct}% fleet uptime', fr: '{pct}% disponibilité', ar: '{pct}% وقت تشغيل الأسطول' },
   /* ── TargetTable ── */
    'table.device': { en: 'Device', fr: 'Appareil', ar: 'الجهاز' },

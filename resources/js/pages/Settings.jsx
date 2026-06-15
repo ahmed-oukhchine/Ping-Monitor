@@ -95,7 +95,7 @@ export default function Settings({ themePref, onCycleTheme }) {
 
     const saveSettings = async (payload) => {
         setAlertSaving(true);
-        try { await axios.put('/api/settings', payload); setSuccess(true); setTimeout(() => setSuccess(false), 3000); } catch {}
+        try { await axios.put('/api/settings', payload); setSuccess(true); setTimeout(() => setSuccess(false), 3000); } catch (e) { console.error('Failed to save settings:', e); }
         setAlertSaving(false);
     };
 

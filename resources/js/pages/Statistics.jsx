@@ -67,6 +67,13 @@ function StatusDot({ status, paused }) {
 export default function Statistics({ targets = [], loading = false }) {
     const { t } = useLang();
     const [activeTab, setActiveTab] = useState('latency');
+    const [timeRange, setTimeRange] = useState('all');
+    const timeRanges = [
+        { id: '24h', label: '24h' },
+        { id: '7d',  label: '7d' },
+        { id: '30d', label: '30d' },
+        { id: 'all', label: t('stats.allTime') },
+    ];
     const [tick, setTick] = useState(0);
     useEffect(() => { const id = setInterval(() => setTick(t => t + 1), 1000); return () => clearInterval(id); }, []);
     const [isDark, setIsDark] = useState(
@@ -221,6 +228,18 @@ export default function Statistics({ targets = [], loading = false }) {
                             <h1 className="text-base font-bold text-base-content leading-tight">{t('stats.networkDashboard')}</h1>
                             <p className="text-xs text-base-content/40 mt-0.5">{targets.length === 1 ? t('stats.nDevicesMonitored', { n: targets.length }) : t('stats.nDevicesMonitored_plural', { n: targets.length })}</p>
                         </div>
+                    </div>
+                    <div className="flex items-center gap-0.5 bg-base-300/60 rounded-lg p-0.5">
+                        {timeRanges.map(r => (
+                            <button key={r.id} onClick={() => setTimeRange(r.id)}
+                                className={`px-3 py-1.5 rounded-md text-[11px] font-medium transition-all ${
+                                    timeRange === r.id
+                                        ? 'bg-primary/15 text-primary shadow-sm'
+                                        : 'text-base-content/45 hover:text-base-content'
+                                }`}>
+                                {r.label}
+                            </button>
+                        ))}
                     </div>
                 </div>
 

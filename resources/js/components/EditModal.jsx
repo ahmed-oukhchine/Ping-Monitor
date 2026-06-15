@@ -26,6 +26,27 @@ export default function EditModal({ target, groups = [], onSave, onClose }) {
     const [loading, setLoading]     = useState(false);
     const [allTargets, setAllTargets] = useState([]);
     const [deps, setDeps]           = useState([]);
+    const [confirmClose, setConfirmClose] = useState(false);
+
+    const dirty = name !== target.name || ip !== target.ip_address
+        || location !== (target.location || '') || type !== (target.type || '')
+        || notes !== (target.notes || '')
+        || JSON.stringify(selectedGroups.sort()) !== JSON.stringify((target.groups || []).map(g => g.id).sort())
+        || (warnMs !== (target.warn_ms ?? ''))
+        || (criticalMs !== (target.critical_ms ?? ''))
+        || alertEnabled !== !!target.alert_email
+        || alertEmail !== (target.alert_email || '')
+        || snmpEnabled !== !!target.snmp_enabled
+        || snmpCommunity !== (target.snmp_community || '');
+
+    const handleClose = () => {
+        if (dirty && !confirmClose) {
+            setConfirmClose(true);
+            return;
+        }
+        setConfirmClose(false);
+        onClose();
+    };
 
     useEffect(() => {
         axios.get('/api/targets').then(r => setAllTargets(r.data.filter(t => t.id !== target.id))).catch(() => {});
@@ -76,20 +97,20 @@ export default function EditModal({ target, groups = [], onSave, onClose }) {
     };
 
     return (
-        <div className="backdrop-enter fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md" onClick={onClose}>
-            <div className="modal-enter bg-base-200 border border-base-300 rounded-2xl shadow-2xl w-full max-w-md" onClick={e => e.stopPropagation()}>
+        <div className="backdrop-enter fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md" onClick={handleClose}>
+            <div className="modal-enter bg-base-200 border border-base-300 rounded-2xl shadow-2xl w-full max-w-lg" onClick={e => e.stopPropagation()}>
 
                 <div className="flex items-center justify-between px-6 py-4 border-b border-base-300">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-warning/10 border border-warning/20 flex items-center justify-center">
-                            <i className="fas fa-pen text-warning text-sm"></i>
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+                            <i className="fas fa-pen text-primary text-sm"></i>
                         </div>
                         <div>
                             <h3 className="font-bold text-base text-base-content leading-none">Edit Target</h3>
-                            <p className="text-xs text-base-content/40 mt-0.5">{target.ip_address}</p>
+                            <p className="text-xs text-base-content/40 mt-0.5">Modify device settings</p>
                         </div>
                     </div>
-                    <button className="w-8 h-8 rounded-lg hover:bg-base-300 flex items-center justify-center text-base-content/50 hover:text-base-content transition-colors" onClick={onClose}>
+                    <button className="w-8 h-8 rounded-lg hover:bg-base-300 flex items-center justify-center text-base-content/50 hover:text-base-content transition-colors" onClick={handleClose}>
                         <i className="fas fa-times text-sm"></i>
                     </button>
                 </div>

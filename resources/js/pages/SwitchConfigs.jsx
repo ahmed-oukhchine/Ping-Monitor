@@ -23,7 +23,7 @@ export default function SwitchConfigs() {
     const [deleting, setDeleting] = useState(null);
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [adminPassword, setAdminPassword] = useState('');
-    const [showTerminal, setShowTerminal] = useState(false);
+    const [showTerminal, setShowTerminal] = useState(null); // null=closed, 'blank'=Tools, 'config'=detail
     const [showTools, setShowTools] = useState(false);
 
     const [form, setForm] = useState({ hostname: '', vendor: '', model: '', os_version: '', serial_number: '', ports_count: '', target_id: '', config_text: '', ssh_host: '', ssh_port: '22', ssh_username: '', ssh_password: '', ssh_protocol: 'ssh' });
@@ -176,7 +176,7 @@ export default function SwitchConfigs() {
                                 <>
                                     <div className="fixed inset-0 z-10" onClick={() => setShowTools(false)}></div>
                                     <div className="absolute right-0 top-full mt-1.5 z-20 w-40 bg-base-200 border border-base-300 rounded-xl shadow-xl overflow-hidden">
-                                        <button onClick={() => { setShowTools(false); setShowTerminal(true); }}
+                                        <button onClick={() => { setShowTools(false); setShowTerminal('blank'); }}
                                             className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-base-content/70 hover:text-base-content hover:bg-base-300/50 transition-all text-left">
                                             <i className="fas fa-terminal text-[10px]"></i>
                                             Terminal
@@ -412,7 +412,7 @@ export default function SwitchConfigs() {
                                         <span className="text-base font-bold text-base-content">{selected.hostname}</span>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <button onClick={() => setShowTerminal(true)}
+                                        <button onClick={() => setShowTerminal('config')}
                                             className="w-8 h-8 flex items-center justify-center rounded-xl text-base-content/40 hover:text-primary hover:bg-primary/10 transition-all"
                                             title={t('configs.terminal') || 'Terminal'}>
                                             <i className="fas fa-terminal text-xs"></i>
@@ -434,6 +434,11 @@ export default function SwitchConfigs() {
                                                 </button>
                                             </>
                                         )}
+                                        <button onClick={() => { setSelected(null); setVersions([]); }}
+                                            className="w-8 h-8 flex items-center justify-center rounded-xl text-base-content/40 hover:text-base-content hover:bg-base-300 transition-all ml-auto"
+                                            title="Close">
+                                            <i className="fas fa-times text-xs"></i>
+                                        </button>
                                     </div>
                                 </div>
                                 <div className="flex gap-5 px-5 pb-2">
@@ -546,7 +551,7 @@ export default function SwitchConfigs() {
                 </ConfirmModal>
             )}
 
-            {showTerminal && (
+            {showTerminal === 'config' && (
                 <TerminalModal target={selected?.target || null}
                     sshConfig={selected?.ssh_host ? {
                         host: selected.ssh_host,
@@ -555,7 +560,10 @@ export default function SwitchConfigs() {
                         password: selected.ssh_password || '',
                         protocol: selected.ssh_protocol || 'ssh',
                     } : null}
-                    onClose={() => setShowTerminal(false)} />
+                    onClose={() => setShowTerminal(null)} />
+            )}
+            {showTerminal === 'blank' && (
+                <TerminalModal target={null} sshConfig={null} onClose={() => setShowTerminal(null)} />
             )}
         </div>
     );
