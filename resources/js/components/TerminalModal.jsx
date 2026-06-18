@@ -189,11 +189,11 @@ export default function TerminalModal({ target, sshConfig, onClose }) {
                             <div>
                                 <label className="text-[10px] font-semibold text-base-content/40 uppercase tracking-wider mb-1 block">Protocol</label>
                                 <div className="flex bg-base-300 border border-base-300 rounded-xl overflow-hidden">
-                                    <button onClick={() => setProtocol('ssh')}
+                                    <button onClick={() => { setProtocol('ssh'); setPort(22); }}
                                         className={`flex-1 px-2 py-2 text-[10px] font-bold transition-all ${protocol === 'ssh' ? 'bg-primary/20 text-primary' : 'text-base-content/40 hover:text-base-content/60'}`}>
                                         SSH
                                     </button>
-                                    <button onClick={() => setProtocol('telnet')}
+                                    <button onClick={() => { setProtocol('telnet'); setPort(23); }}
                                         className={`flex-1 px-2 py-2 text-[10px] font-bold transition-all ${protocol === 'telnet' ? 'bg-primary/20 text-primary' : 'text-base-content/40 hover:text-base-content/60'}`}>
                                         Telnet
                                     </button>

@@ -284,11 +284,11 @@ export default function SwitchConfigs() {
                                     <div>
                                         <label className="text-xs font-medium text-base-content/60 mb-1.5 block">Protocol</label>
                                         <div className="flex bg-base-100 border border-base-300 rounded-xl overflow-hidden">
-                                            <button type="button" onClick={() => setForm(f => ({ ...f, ssh_protocol: 'ssh', ssh_port: f.ssh_port === '23' ? '22' : f.ssh_port }))}
+                                            <button type="button" onClick={() => setForm(f => ({ ...f, ssh_protocol: 'ssh', ssh_port: '22' }))}
                                                 className={`flex-1 px-2 py-2 text-[10px] font-bold transition-all ${form.ssh_protocol === 'ssh' ? 'bg-primary/20 text-primary' : 'text-base-content/40 hover:text-base-content/60'}`}>
                                                 SSH
                                             </button>
-                                            <button type="button" onClick={() => setForm(f => ({ ...f, ssh_protocol: 'telnet', ssh_port: f.ssh_port === '22' ? '23' : f.ssh_port }))}
+                                            <button type="button" onClick={() => setForm(f => ({ ...f, ssh_protocol: 'telnet', ssh_port: '23' }))}
                                                 className={`flex-1 px-2 py-2 text-[10px] font-bold transition-all ${form.ssh_protocol === 'telnet' ? 'bg-primary/20 text-primary' : 'text-base-content/40 hover:text-base-content/60'}`}>
                                                 Telnet
                                             </button>
